@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-2020-12/schema#",
+  "$id": "https://adactainternational.com/schemas/AdactaReportsShoppingBag.json",
+  "title": "Adacta Reports Shopping Bag",
+  "description": "Adacta Reports Shopping Bag project file.",
+  "type": "object",
+  "properties": {
+    "version": {
+      "format": "regex",
+      "minLength": 5,
+      "pattern": "^\\d{1,}\\.\\d{1,}\\.\\d{1,}$",
+      "type": "string"
+    }
+  },
+  "required": [
+    "version"
+  ],
+  "additionalProperties": false
+}
