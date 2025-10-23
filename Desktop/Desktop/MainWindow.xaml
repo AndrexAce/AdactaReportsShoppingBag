@@ -25,7 +25,7 @@
                Width="18" Height="18"
                Margin="8,0,0,0"/>
 
-            <TextBlock x:Name="TitleTextBlock" FontSize="12"/>
+            <TextBlock x:Name="TitleTextBlock" FontSize="12" Text="{x:Bind MainViewModel.ReportPrj.ProjectCode}"/>
         </StackPanel>
 
         <muxc:MenuBar Grid.Row="1">
@@ -56,6 +56,14 @@
             </muxc:MenuBarItem>
         </muxc:MenuBar>
 
-        <Frame x:Name="RootFrame" Grid.Row="2" Padding="8" CornerRadius="8,8,0,0" VerticalAlignment="Stretch" Background="{StaticResource LayerFillColorDefaultBrush}" />
+        <Border Grid.Row="2" CornerRadius="8,8,0,0" VerticalAlignment="Stretch" Background="Transparent">
+            <Grid>
+                <Rectangle Fill="{StaticResource LayerFillColorDefaultBrush}" />
+
+                <Image Source="/Assets/LogoDarkTheme.png" Stretch="Uniform" Opacity="0.02" />
+
+                <Frame x:Name="RootFrame" Background="Transparent" />
+            </Grid>
+        </Border>
     </Grid>
 </Window>

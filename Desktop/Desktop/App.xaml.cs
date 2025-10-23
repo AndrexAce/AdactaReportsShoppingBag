@@ -8,7 +8,7 @@ namespace AdactaInternational.AdactaReportsShoppingBag.Desktop;
 
 public partial class App : Application
 {
-    private Window? _window;
+    private MainWindow? _window;
 
     public App()
     {
@@ -19,20 +19,21 @@ public partial class App : Application
     {
         var activationArgs = AppInstance.GetCurrent().GetActivatedEventArgs();
 
+        _window = new MainWindow();
+        _window.Activate();
+
         if (activationArgs.Kind == ExtendedActivationKind.File && activationArgs.Data is IFileActivatedEventArgs fileArgs && fileArgs.Files[0] is IStorageFile file)
         {
 
             if (ProjectManager.IsProjectFileValid(file, out ReportPrj? reportPrj))
             {
-                // Assign project to ViewModel and go to main window with loaded project
+                _window.MainViewModel.ReportPrj = reportPrj;
+                _window.MainViewModel.IsLoaded = true;
             }
             else
             {
-                // Show error dialog about invalid project file
+                _window.MainViewModel.IsLoaded = false;
             }
         }
-
-        _window = new MainWindow();
-        _window.Activate();
     }
 }

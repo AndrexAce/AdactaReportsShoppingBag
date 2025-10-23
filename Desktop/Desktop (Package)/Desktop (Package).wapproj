@@ -37,7 +37,7 @@
     <ProjectGuid>c4f77810-bfb9-4c06-bf3e-599c978e4d7a</ProjectGuid>
     <TargetPlatformVersion>10.0.26100.0</TargetPlatformVersion>
     <TargetPlatformMinVersion>10.0.20348.0</TargetPlatformMinVersion>
-    <AssetTargetFallback>net10.0-windows$(TargetPlatformVersion);$(AssetTargetFallback)</AssetTargetFallback>
+    <AssetTargetFallback>net9.0-windows$(TargetPlatformVersion);$(AssetTargetFallback)</AssetTargetFallback>
     <DefaultLanguage>it</DefaultLanguage>
     <AppxPackageSigningEnabled>false</AppxPackageSigningEnabled>
     <EntryPointProjectUniqueName>..\Desktop\Desktop.csproj</EntryPointProjectUniqueName>

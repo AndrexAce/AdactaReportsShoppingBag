@@ -1,8 +1,12 @@
+using AdactaInternational.AdactaReportsShoppingBag.Desktop.ViewModels;
 using Microsoft.UI;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media.Imaging;
 using System;
+using System.Threading.Tasks;
+using Windows.ApplicationModel.Resources;
 using Windows.UI;
 using Windows.UI.ViewManagement;
 using WinRT.Interop;
@@ -11,6 +15,7 @@ namespace AdactaInternational.AdactaReportsShoppingBag.Desktop;
 
 internal sealed partial class MainWindow : Window
 {
+    public MainViewModel MainViewModel { get; } = new();
     private readonly UISettings _uiSettings = new();
 
     public MainWindow()
@@ -19,7 +24,7 @@ internal sealed partial class MainWindow : Window
 
         InitializeAppWindowAndSize(640, 480);
 
-        TitleTextBlock.Text = "Adacta Reports Shopping Bag";
+        RootFrame.Loaded += async (source, _) => await RootFrame_Loaded((FrameworkElement)source);
     }
 
     private void InitializeAppWindowAndSize(int width, int height)
@@ -85,5 +90,22 @@ internal sealed partial class MainWindow : Window
     {
         int brightness = (color.R * 299 + color.G * 587 + color.B * 114) / 1000;
         return brightness > 128;
+    }
+
+    private async Task RootFrame_Loaded(FrameworkElement source)
+    {
+        if (MainViewModel.IsLoaded is true or null) return;
+
+        var resourceLoader = ResourceLoader.GetForViewIndependentUse();
+
+        var dialog = new ContentDialog
+        {
+            Title = resourceLoader.GetString("InvalidProjectFileDialog.Title"),
+            Content = resourceLoader.GetString("InvalidProjectFileDialog.Content"),
+            CloseButtonText = resourceLoader.GetString("InvalidProjectFileDialog.CloseButtonText"),
+            XamlRoot = source.XamlRoot
+        };
+
+        await dialog.ShowAsync();
     }
 }

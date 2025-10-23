@@ -10,10 +10,18 @@
       "minLength": 5,
       "pattern": "^\\d{1,}\\.\\d{1,}\\.\\d{1,}$",
       "type": "string"
+    },
+    "projectCode": {
+      "format": "regex",
+      "minLength": 6,
+      "maxLength": 7,
+      "pattern": "^\\d{2}\\.\\d{3}[a-zA-Z]{0,1}$",
+      "type": "string"
     }
   },
   "required": [
-    "version"
+    "version",
+    "projectCode"
   ],
   "additionalProperties": false
 }
