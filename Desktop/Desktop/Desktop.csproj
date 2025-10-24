@@ -28,10 +28,13 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\..\Model\Model.fsproj" />
+    </ItemGroup>
+
+    <ItemGroup>
       <Content Update="Assets\favicon.ico">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </Content>
-	  <PRIResource Include="Strings\**\*.resw" />
     </ItemGroup>
 
     <!-- Publish Properties -->

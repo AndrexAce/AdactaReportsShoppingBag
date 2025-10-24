@@ -29,28 +29,28 @@
         </StackPanel>
 
         <muxc:MenuBar Grid.Row="1">
-            <muxc:MenuBarItem x:Uid="/MainWindow/ProjectMenuBarItem">
-                <MenuFlyoutItem x:Uid="/MainWindow/NewProjectMenuFlyoutItem" Icon="Add">
+            <muxc:MenuBarItem Title="Progetto">
+                <MenuFlyoutItem Text="Nuovo" Icon="Add" Click="NewProjectButton_Click">
                     <MenuFlyoutItem.KeyboardAccelerators>
                         <KeyboardAccelerator Key="N" Modifiers="Control"/>
                     </MenuFlyoutItem.KeyboardAccelerators>
                 </MenuFlyoutItem>
-                <MenuFlyoutItem x:Uid="/MainWindow/OpenProjectMenuFlyoutItem" Icon="Import">
+                <MenuFlyoutItem Text="Apri" Icon="Import" Click="OpenProjectButton_Click">
                     <MenuFlyoutItem.KeyboardAccelerators>
-                        <KeyboardAccelerator Key="O" Modifiers="Control"/>
+                        <KeyboardAccelerator Key="A" Modifiers="Control"/>
                     </MenuFlyoutItem.KeyboardAccelerators>
                 </MenuFlyoutItem>
-                <MenuFlyoutItem x:Name="SaveProjectMenuFlyoutItem" x:Uid="/MainWindow/SaveProjectMenuFlyoutItem" Icon="Save" Visibility="Collapsed">
+                <MenuFlyoutItem x:Name="SaveProjectMenuFlyoutItem" Text="Salva" Icon="Save" Click="SaveProjectButton_Click" Visibility="Collapsed">
                     <MenuFlyoutItem.KeyboardAccelerators>
                         <KeyboardAccelerator Key="S" Modifiers="Control"/>
                     </MenuFlyoutItem.KeyboardAccelerators>
                 </MenuFlyoutItem>
             </muxc:MenuBarItem>
 
-            <muxc:MenuBarItem x:Uid="/MainWindow/HelpMenuBarItem">
-                <MenuFlyoutItem x:Uid="/MainWindow/AboutMenuFlyoutItem" Icon="Help">
+            <muxc:MenuBarItem Title="Aiuto">
+                <MenuFlyoutItem Text="Informazioni" Icon="Help" Click="HelpButton_Click">
                     <MenuFlyoutItem.KeyboardAccelerators>
-                        <KeyboardAccelerator Key="H" Modifiers="Control"/>
+                        <KeyboardAccelerator Key="I" Modifiers="Control"/>
                     </MenuFlyoutItem.KeyboardAccelerators>
                 </MenuFlyoutItem>
             </muxc:MenuBarItem>
@@ -62,7 +62,7 @@
 
                 <Image Source="/Assets/LogoDarkTheme.png" Stretch="Uniform" Opacity="0.02" />
 
-                <Frame x:Name="RootFrame" Background="Transparent" />
+                <Frame x:Name="RootFrame" Background="Transparent" Loaded="RootFrame_Loaded"/>
             </Grid>
         </Border>
     </Grid>

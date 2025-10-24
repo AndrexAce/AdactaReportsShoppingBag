@@ -8,8 +8,14 @@
     "version": {
       "format": "regex",
       "minLength": 5,
+      "maxLength": 8,
       "pattern": "^\\d{1,}\\.\\d{1,}\\.\\d{1,}$",
       "type": "string"
+    },
+    "projectName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100
     },
     "projectCode": {
       "format": "regex",
@@ -21,6 +27,7 @@
   },
   "required": [
     "version",
+    "projectName",
     "projectCode"
   ],
   "additionalProperties": false

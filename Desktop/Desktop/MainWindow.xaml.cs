@@ -6,7 +6,8 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media.Imaging;
 using System;
 using System.Threading.Tasks;
-using Windows.ApplicationModel.Resources;
+using Windows.Storage;
+using Windows.Storage.Pickers;
 using Windows.UI;
 using Windows.UI.ViewManagement;
 using WinRT.Interop;
@@ -23,8 +24,6 @@ internal sealed partial class MainWindow : Window
         InitializeComponent();
 
         InitializeAppWindowAndSize(640, 480);
-
-        RootFrame.Loaded += async (source, _) => await RootFrame_Loaded((FrameworkElement)source);
     }
 
     private void InitializeAppWindowAndSize(int width, int height)
@@ -92,20 +91,67 @@ internal sealed partial class MainWindow : Window
         return brightness > 128;
     }
 
-    private async Task RootFrame_Loaded(FrameworkElement source)
+    private async Task ShowInvalidProjectDialogAsync()
     {
-        if (MainViewModel.IsLoaded is true or null) return;
-
-        var resourceLoader = ResourceLoader.GetForViewIndependentUse();
-
         var dialog = new ContentDialog
         {
-            Title = resourceLoader.GetString("InvalidProjectFileDialog.Title"),
-            Content = resourceLoader.GetString("InvalidProjectFileDialog.Content"),
-            CloseButtonText = resourceLoader.GetString("InvalidProjectFileDialog.CloseButtonText"),
-            XamlRoot = source.XamlRoot
+            Title = "File progetto non valido",
+            Content = "Si è verificato un errore cercando di leggere il file del progetto. Potrebbe essere danneggiato.",
+            CloseButtonText = "Ok",
+            XamlRoot = Content.XamlRoot
         };
 
         await dialog.ShowAsync();
+    }
+
+    private async void RootFrame_Loaded(object sender, RoutedEventArgs args)
+    {
+        RootFrame.Loaded -= RootFrame_Loaded;
+
+        if (MainViewModel.IsLoaded == false)
+        {
+            await ShowInvalidProjectDialogAsync();
+        }
+    }
+
+    private async void OpenProjectButton_Click(object sender, RoutedEventArgs e)
+    {
+        FileOpenPicker openPicker = new()
+        {
+            ViewMode = PickerViewMode.Thumbnail,
+            SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
+            FileTypeFilter = { ".reportprj" },
+            SettingsIdentifier = "AdactaReportsShoppingBagOpenProjectPicker"
+        };
+
+        var hwnd = WindowNative.GetWindowHandle(this);
+        InitializeWithWindow.Initialize(openPicker, hwnd);
+
+        StorageFile file = await openPicker.PickSingleFileAsync();
+
+        if (file != null)
+        {
+            MainViewModel.LoadProjectFile(file);
+
+            if (MainViewModel.IsLoaded == false)
+            {
+                await ShowInvalidProjectDialogAsync();
+            }
+        }
+    }
+
+    private async void NewProjectButton_Click(object sender, RoutedEventArgs e)
+    {
+        // TODO
+    }
+
+    private async void SaveProjectButton_Click(object sender, RoutedEventArgs e)
+    {
+        // TODO
+    }
+
+    private async void HelpButton_Click(object sender, RoutedEventArgs e)
+    {
+        // TODO
     }
 }
