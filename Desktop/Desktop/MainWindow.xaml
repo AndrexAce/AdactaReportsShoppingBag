@@ -52,6 +52,14 @@
                     </MenuFlyoutItem.KeyboardAccelerators>
                 </MenuFlyoutItem>
             </muxc:MenuBarItem>
+
+            <muxc:MenuBarItem Title="Aiuto">
+                <MenuFlyoutItem Text="Informazioni" Icon="Help" Command="{x:Bind ViewModel.OpenInfoCommand}">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="I" Modifiers="Control"/>
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+            </muxc:MenuBarItem>
         </muxc:MenuBar>
 
         <Border Grid.Row="2" CornerRadius="8,8,0,0" VerticalAlignment="Stretch" Background="Transparent">
@@ -60,7 +68,7 @@
 
                 <Image Source="/Assets/LogoDarkTheme.png" Stretch="Uniform" Opacity="0.02" />
 
-                <Frame Background="Transparent" Loaded="RootFrame_Loaded" Unloaded="RootFrame_Unloaded"/>
+                <Frame Background="Transparent" Loaded="RootFrame_Loaded" />
             </Grid>
         </Border>
     </Grid>

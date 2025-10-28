@@ -96,14 +96,9 @@ internal sealed partial class MainWindow
         if (_projectFile != null) await ViewModel.LoadProjectFileAsync(_projectFile);
     }
 
-    private void RootFrame_Unloaded(object sender, RoutedEventArgs e)
+    private void MainWindow_Closed(object sender, WindowEventArgs e)
     {
         // Unsubscribe from the ColorValuesChanged event to prevent memory leaks
         _uiSettings.ColorValuesChanged -= UiSettings_ColorValuesChanged;
-    }
-
-    private async void MainWindow_Closed(object sender, WindowEventArgs e)
-    {
-        // TODO
     }
 }

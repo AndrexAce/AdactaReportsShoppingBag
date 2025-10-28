@@ -68,6 +68,12 @@ internal sealed partial class MainViewModel(IProjectFileService projectFileServi
         IsProjectEdited = false;
     }
 
+    [RelayCommand]
+    private async Task OpenInfoAsync()
+    {
+        // TODO
+    }
+
     public async Task LoadProjectFileAsync(IStorageFile file)
     {
         ReportProject = await projectFileService.LoadProjectFileAsync(file);

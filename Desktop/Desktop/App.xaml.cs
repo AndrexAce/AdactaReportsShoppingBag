@@ -8,7 +8,7 @@ using Windows.Storage;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop;
 
-internal sealed partial class App
+public sealed partial class App
 {
     public App()
     {
