@@ -2,30 +2,29 @@
 using AdactaInternational.AdactaReportsShoppingBag.Desktop.ViewModels;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.UI.Xaml;
 using Microsoft.Windows.AppLifecycle;
 using Windows.ApplicationModel.Activation;
 using Windows.Storage;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop;
 
-public partial class App : Application
+internal sealed partial class App
 {
     public App()
     {
         InitializeComponent();
 
-        ConfigureDI();
+        ConfigureDependencyInjection();
     }
 
-    private static void ConfigureDI()
+    private static void ConfigureDependencyInjection()
     {
         Ioc.Default.ConfigureServices(
             new ServiceCollection()
-            .AddSingleton<MainViewModel>()
-            .AddSingleton<IProjectFileService, ProjectFileService>()
-            .AddSingleton<IDialogService, DialogService>()
-            .BuildServiceProvider());
+                .AddSingleton<MainViewModel>()
+                .AddSingleton<IProjectFileService, ProjectFileService>()
+                .AddSingleton<IDialogService, DialogService>()
+                .BuildServiceProvider());
     }
 
     protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
@@ -33,8 +32,7 @@ public partial class App : Application
         IStorageFile? projectFile = null;
 
         var activationArgs = AppInstance.GetCurrent().GetActivatedEventArgs();
-        if (activationArgs?.Kind == ExtendedActivationKind.File &&
-            activationArgs.Data is IFileActivatedEventArgs fileArgs &&
+        if (activationArgs is { Kind: ExtendedActivationKind.File, Data: IFileActivatedEventArgs fileArgs } &&
             fileArgs.Files.Count > 0 &&
             fileArgs.Files[0] is IStorageFile file)
         {

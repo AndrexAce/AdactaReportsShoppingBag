@@ -5,6 +5,7 @@ using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media.Imaging;
 using System;
+using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.UI;
 using Windows.UI.ViewManagement;
@@ -12,9 +13,9 @@ using WinRT.Interop;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop;
 
-internal sealed partial class MainWindow : Window
+internal sealed partial class MainWindow
 {
-    public MainViewModel ViewModel { get; private set; }
+    public MainViewModel ViewModel { get; }
     private readonly IStorageFile? _projectFile;
     private readonly UISettings _uiSettings = new();
 
@@ -87,15 +88,12 @@ internal sealed partial class MainWindow : Window
 
     private static bool IsColorLight(Color color)
     {
-        int brightness = (color.R * 299 + color.G * 587 + color.B * 114) / 1000;
+        var brightness = (color.R * 299 + color.G * 587 + color.B * 114) / 1000;
         return brightness > 128;
     }
 
-    public async void RootFrame_Loaded(object sender, RoutedEventArgs e)
+    private async void RootFrame_Loaded(object sender, RoutedEventArgs e)
     {
-        if (_projectFile != null)
-        {
-            await ViewModel.LoadProjectFileAsync(_projectFile);
-        }
+        if (_projectFile != null) await ViewModel.LoadProjectFileAsync(_projectFile);
     }
 }

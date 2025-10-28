@@ -8,7 +8,8 @@ using Windows.Storage;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.ViewModels;
 
-internal sealed partial class MainViewModel(IProjectFileService _projectFileService, IDialogService _dialogService) : ObservableObject
+internal sealed partial class MainViewModel(IProjectFileService projectFileService, IDialogService dialogService)
+    : ObservableObject
 {
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(SaveStateText), nameof(SaveButtonVisibility))]
@@ -20,14 +21,15 @@ internal sealed partial class MainViewModel(IProjectFileService _projectFileServ
 
     public string SaveStateText => IsProjectEdited switch
     {
-        true => "- Modifiche non salvate",
-        false => "- Nessuna modifica non salvata",
+        true => "– Modifiche non salvate",
+        false => "– Nessuna modifica non salvata",
         _ => string.Empty
     };
 
-    public Visibility SaveButtonVisibility => IsProjectEdited is null or false ? Visibility.Collapsed : Visibility.Visible;
+    public Visibility SaveButtonVisibility =>
+        IsProjectEdited is null or false ? Visibility.Collapsed : Visibility.Visible;
 
-    private string? _projectFilePath = null;
+    private string? _projectFilePath;
 
     [RelayCommand]
     private async Task NewProjectAsync()
@@ -38,15 +40,16 @@ internal sealed partial class MainViewModel(IProjectFileService _projectFileServ
     [RelayCommand]
     private async Task OpenProjectAsync()
     {
-        StorageFile? file = await _dialogService.ShowFilePickerAsync();
+        var file = await dialogService.ShowFilePickerAsync();
 
         if (file == null) return;
 
-        ReportProject = await _projectFileService.LoadProjectFileAsync(file);
+        ReportProject = await projectFileService.LoadProjectFileAsync(file);
 
         if (ReportProject is null)
         {
-            await _dialogService.ShowInformationDialogAsync("Progetto non caricato", "Il file del progetto è danneggiato.", "Ok");
+            await dialogService.ShowInformationDialogAsync("Progetto non caricato",
+                "Il file del progetto è danneggiato.", "Ok");
         }
         else
         {
@@ -60,18 +63,19 @@ internal sealed partial class MainViewModel(IProjectFileService _projectFileServ
     {
         if (ReportProject == null || _projectFilePath == null) return;
 
-        await _projectFileService.SaveProjectFileAsync(ReportProject, _projectFilePath);
+        await projectFileService.SaveProjectFileAsync(ReportProject, _projectFilePath);
 
         IsProjectEdited = false;
     }
 
     public async Task LoadProjectFileAsync(IStorageFile file)
     {
-        ReportProject = await _projectFileService.LoadProjectFileAsync(file);
+        ReportProject = await projectFileService.LoadProjectFileAsync(file);
 
         if (ReportProject is null)
         {
-            await _dialogService.ShowInformationDialogAsync("Progetto non caricato", "Il file del progetto è danneggiato.", "Ok");
+            await dialogService.ShowInformationDialogAsync("Progetto non caricato",
+                "Il file del progetto è danneggiato.", "Ok");
         }
         else
         {

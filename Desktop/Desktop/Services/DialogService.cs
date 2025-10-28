@@ -8,37 +8,23 @@ using WinRT.Interop;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.Services;
 
-internal class DialogService : IDialogService
+internal sealed class DialogService : IDialogService
 {
-    private Window? _window = null;
+    private Window? _window;
 
     public void SetWindow(Window window)
     {
         _window = window;
     }
 
-    public async Task<ContentDialogResult> ShowInformationDialogAsync(string title, string content, string closeButtonText)
+    public async Task<ContentDialogResult> ShowInformationDialogAsync(string title, string content,
+        string closeButtonText)
     {
         var dialog = new ContentDialog
         {
             Title = title,
             Content = content,
             CloseButtonText = closeButtonText,
-            XamlRoot = _window?.Content.XamlRoot
-        };
-
-        return await dialog.ShowAsync();
-    }
-
-    public async Task<ContentDialogResult> ShowConfirmationDialogAsync(string title, string content, string closeButtonText, string confirmButtonText, string cancelButtonText)
-    {
-        var dialog = new ContentDialog
-        {
-            Title = title,
-            Content = content,
-            CloseButtonText = closeButtonText,
-            PrimaryButtonText = confirmButtonText,
-            SecondaryButtonText = cancelButtonText,
             XamlRoot = _window?.Content.XamlRoot
         };
 

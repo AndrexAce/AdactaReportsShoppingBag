@@ -1,14 +1,14 @@
 ﻿using AdactaInternational.AdactaReportsShoppingBag.Model.Project;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Schema;
-using System;
 using System.IO;
+using System.Reflection;
 using System.Threading.Tasks;
 using Windows.Storage;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.Services;
 
-internal class ProjectFileService : IProjectFileService
+internal sealed class ProjectFileService : IProjectFileService
 {
     public async Task<ReportPrj?> LoadProjectFileAsync(IStorageFile projectFile)
     {
@@ -16,37 +16,33 @@ internal class ProjectFileService : IProjectFileService
         {
             (false, _) => null,
             (true, null) => null,
-            (true, ReportPrj project) => project
+            (true, { } project) => project
         };
     }
 
     private static async Task<(bool, ReportPrj?)> IsProjectFileValidAsync(IStorageFile file)
     {
-        // Validate file type
-        if (file is null || file.FileType != ".reportprj")
-        {
-            return (false, null);
-        }
+        // Validate the file type
+        if (file.FileType != ".reportprj") return (false, null);
 
         try
         {
-            // TODO: Load schema from app package resources
-
             // Validate file content
-            var schemaJson = await FileIO.ReadTextAsync(schemaFile).AsTask();
-            var projectJson = await FileIO.ReadTextAsync(file).AsTask();
+            await using var schemaStream = Assembly.GetExecutingAssembly()
+                .GetManifestResourceStream(
+                    "AdactaInternational.AdactaReportsShoppingBag.Desktop.Assets.ReportPrj.schema.json");
 
-            JSchema schema = JSchema.Parse(schemaJson);
+            if (schemaStream is null) return (false, null);
 
-            JObject project = JObject.Parse(projectJson);
+            using var schemaStreamReader = new StreamReader(schemaStream);
+            var schemaJson = await schemaStreamReader.ReadToEndAsync();
+            var projectJson = await File.ReadAllTextAsync(file.Path);
+
+            var schema = JSchema.Parse(schemaJson);
+            var project = JObject.Parse(projectJson);
 
             // If the project is valid, deserialize it to ReportPrj
-            if (project.IsValid(schema))
-            {
-                return (true, project.ToObject<ReportPrj>());
-            }
-
-            return (false, null);
+            return project.IsValid(schema) ? (true, project.ToObject<ReportPrj>()) : (false, null);
         }
         catch
         {
@@ -54,14 +50,9 @@ internal class ProjectFileService : IProjectFileService
         }
     }
 
-    public async Task SaveProjectFileAsync(ReportPrj project, string projectFilePath)
+    public Task SaveProjectFileAsync(ReportPrj project, string projectFilePath)
     {
-        if (project is null || projectFilePath is null)
-        {
-            return;
-        }
-
         var projectJson = JObject.FromObject(project).ToString();
-        await File.WriteAllTextAsync(projectFilePath, projectJson);
+        return File.WriteAllTextAsync(projectFilePath, projectJson);
     }
 }

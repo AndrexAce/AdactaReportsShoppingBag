@@ -9,7 +9,7 @@
       "format": "regex",
       "minLength": 5,
       "maxLength": 8,
-      "pattern": "^\\d{1,}\\.\\d{1,}\\.\\d{1,}$",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
       "type": "string"
     },
     "projectName": {
@@ -21,7 +21,7 @@
       "format": "regex",
       "minLength": 6,
       "maxLength": 7,
-      "pattern": "^\\d{2}\\.\\d{3}[a-zA-Z]{0,1}$",
+      "pattern": "^\\d{2}\\.\\d{3}[a-zA-Z]?$",
       "type": "string"
     }
   },
