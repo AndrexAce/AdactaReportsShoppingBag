@@ -6,7 +6,8 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     mc:Ignorable="d"
-    Title="AdactaReports Shopping Bag">
+    Title="AdactaReports Shopping Bag"
+    Closed="MainWindow_Closed">
 
     <Window.SystemBackdrop>
         <MicaBackdrop />
@@ -59,7 +60,7 @@
 
                 <Image Source="/Assets/LogoDarkTheme.png" Stretch="Uniform" Opacity="0.02" />
 
-                <Frame Background="Transparent" Loaded="RootFrame_Loaded" />
+                <Frame Background="Transparent" Loaded="RootFrame_Loaded" Unloaded="RootFrame_Unloaded"/>
             </Grid>
         </Border>
     </Grid>

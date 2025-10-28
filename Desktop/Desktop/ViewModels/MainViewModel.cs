@@ -13,7 +13,7 @@ internal sealed partial class MainViewModel(IProjectFileService projectFileServi
 {
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(SaveStateText), nameof(SaveButtonVisibility))]
-    private partial bool? IsProjectEdited { get; set; } = null;
+    public partial bool? IsProjectEdited { get; private set; } = null;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsProjectEdited))]

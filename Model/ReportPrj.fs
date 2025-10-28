@@ -20,7 +20,7 @@ type ReportPrj() =
     
     // Version property with validation attributes
     [<Required>]
-    [<RegularExpression(@"^\d{1,}\.\d{1,}\.\d{1,}$")>]
+    [<RegularExpression(@"^\d{1,2}\.\d{1,2}\.\d{1,2}$")>]
     [<StringLength(8, MinimumLength = 5)>]
     member this.Version
         with get() = version
@@ -41,7 +41,7 @@ type ReportPrj() =
     
     // ProjectCode property with validation attributes
     [<Required>]
-    [<RegularExpression(@"^\d{2}\.\d{3}[a-zA-Z]{0,1}$")>]
+    [<RegularExpression(@"^\d{2}\.\d{3}[a-zA-Z]?$")>]
     [<StringLength(7, MinimumLength = 6)>]
     member this.ProjectCode
         with get() = projectCode

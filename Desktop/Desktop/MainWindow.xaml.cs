@@ -5,7 +5,6 @@ using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media.Imaging;
 using System;
-using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.UI;
 using Windows.UI.ViewManagement;
@@ -95,5 +94,16 @@ internal sealed partial class MainWindow
     private async void RootFrame_Loaded(object sender, RoutedEventArgs e)
     {
         if (_projectFile != null) await ViewModel.LoadProjectFileAsync(_projectFile);
+    }
+
+    private void RootFrame_Unloaded(object sender, RoutedEventArgs e)
+    {
+        // Unsubscribe from the ColorValuesChanged event to prevent memory leaks
+        _uiSettings.ColorValuesChanged -= UiSettings_ColorValuesChanged;
+    }
+
+    private async void MainWindow_Closed(object sender, WindowEventArgs e)
+    {
+        // TODO
     }
 }
