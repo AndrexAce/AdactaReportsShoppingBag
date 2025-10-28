@@ -1,59 +1,82 @@
-﻿using AdactaInternational.AdactaReportsShoppingBag.Desktop.Project;
+﻿using AdactaInternational.AdactaReportsShoppingBag.Desktop.Services;
+using AdactaInternational.AdactaReportsShoppingBag.Model.Project;
 using CommunityToolkit.Mvvm.ComponentModel;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Schema;
-using System.IO;
+using CommunityToolkit.Mvvm.Input;
+using Microsoft.UI.Xaml;
+using System.Threading.Tasks;
 using Windows.Storage;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.ViewModels;
 
-internal partial class MainViewModel : ObservableObject
+internal sealed partial class MainViewModel(IProjectFileService _projectFileService, IDialogService _dialogService) : ObservableObject
 {
-    public bool? IsLoaded { get; private set; } = null;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SaveStateText), nameof(SaveButtonVisibility))]
+    private partial bool? IsProjectEdited { get; set; } = null;
 
     [ObservableProperty]
-    public partial ReportPrj? ReportPrj { get; private set; } = null;
+    [NotifyPropertyChangedFor(nameof(IsProjectEdited))]
+    public partial ReportPrj? ReportProject { get; private set; } = null;
 
-    public void LoadProjectFile(IStorageFile file)
+    public string SaveStateText => IsProjectEdited switch
     {
-        IsLoaded = IsProjectFileValid(file, out ReportPrj? reportPrj);
+        true => "- Modifiche non salvate",
+        false => "- Nessuna modifica non salvata",
+        _ => string.Empty
+    };
 
-        ReportPrj = reportPrj;
+    public Visibility SaveButtonVisibility => IsProjectEdited is null or false ? Visibility.Collapsed : Visibility.Visible;
+
+    private string? _projectFilePath = null;
+
+    [RelayCommand]
+    private async Task NewProjectAsync()
+    {
+        // TODO
     }
 
-    private static bool IsProjectFileValid(IStorageFile file, out ReportPrj? reportPrj)
+    [RelayCommand]
+    private async Task OpenProjectAsync()
     {
-        reportPrj = null;
+        StorageFile? file = await _dialogService.ShowFilePickerAsync();
 
-        // Validate file type
-        if (file is null || file.FileType != ".reportprj")
+        if (file == null) return;
+
+        ReportProject = await _projectFileService.LoadProjectFileAsync(file);
+
+        if (ReportProject is null)
         {
-            return false;
+            await _dialogService.ShowInformationDialogAsync("Progetto non caricato", "Il file del progetto è danneggiato.", "Ok");
         }
-
-        try
+        else
         {
-            // Validate file content
-            var schemaJson = File.ReadAllText("Assets/Schemas/ProjectSchema.json");
-            var projectJson = File.ReadAllText(file.Path);
-
-            JSchema schema = JSchema.Parse(schemaJson);
-
-            JObject project = JObject.Parse(projectJson);
-
-            // If the project is valid, deserialize it to ReportPrj
-            if (project.IsValid(schema))
-            {
-                reportPrj = project.ToObject<ReportPrj>();
-
-                return true;
-            }
-
-            return false;
+            _projectFilePath = file.Path;
+            IsProjectEdited = false;
         }
-        catch
+    }
+
+    [RelayCommand]
+    private async Task SaveProjectAsync()
+    {
+        if (ReportProject == null || _projectFilePath == null) return;
+
+        await _projectFileService.SaveProjectFileAsync(ReportProject, _projectFilePath);
+
+        IsProjectEdited = false;
+    }
+
+    public async Task LoadProjectFileAsync(IStorageFile file)
+    {
+        ReportProject = await _projectFileService.LoadProjectFileAsync(file);
+
+        if (ReportProject is null)
         {
-            return false;
+            await _dialogService.ShowInformationDialogAsync("Progetto non caricato", "Il file del progetto è danneggiato.", "Ok");
+        }
+        else
+        {
+            _projectFilePath = file.Path;
+            IsProjectEdited = false;
         }
     }
 }

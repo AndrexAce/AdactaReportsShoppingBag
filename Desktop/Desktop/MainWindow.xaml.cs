@@ -1,13 +1,11 @@
 using AdactaInternational.AdactaReportsShoppingBag.Desktop.ViewModels;
+using CommunityToolkit.Mvvm.DependencyInjection;
 using Microsoft.UI;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media.Imaging;
 using System;
-using System.Threading.Tasks;
 using Windows.Storage;
-using Windows.Storage.Pickers;
 using Windows.UI;
 using Windows.UI.ViewManagement;
 using WinRT.Interop;
@@ -16,12 +14,19 @@ namespace AdactaInternational.AdactaReportsShoppingBag.Desktop;
 
 internal sealed partial class MainWindow : Window
 {
-    public MainViewModel MainViewModel { get; } = new();
+    public MainViewModel ViewModel { get; private set; }
+    private readonly IStorageFile? _projectFile;
     private readonly UISettings _uiSettings = new();
 
-    public MainWindow()
+    private const string LogoDarkThemePath = "Assets/LogoDarkTheme.png";
+    private const string LogoLightThemePath = "Assets/LogoLightTheme.png";
+
+    public MainWindow(IStorageFile? storageFile)
     {
         InitializeComponent();
+
+        ViewModel = Ioc.Default.GetRequiredService<MainViewModel>();
+        _projectFile = storageFile;
 
         InitializeAppWindowAndSize(640, 480);
     }
@@ -58,13 +63,10 @@ internal sealed partial class MainWindow : Window
 
     private void ShowIconBasedOnSystemTheme()
     {
-        // Apply initial icon according to current UI foreground color
         var foreground = _uiSettings.GetColorValue(UIColorType.Foreground);
         var isDarkMode = IsColorLight(foreground);
 
-        var uri = new Uri(isDarkMode
-                ? "ms-appx:///Assets/LogoDarkTheme.png"
-                : "ms-appx:///Assets/LogoLightTheme.png");
+        var uri = new Uri($"ms-appx:///{(isDarkMode ? LogoDarkThemePath : LogoLightThemePath)}");
         TitleBarIcon.Source = new BitmapImage(uri);
 
         // Listen for theme/color changes and update the icon on the UI thread
@@ -78,9 +80,7 @@ internal sealed partial class MainWindow : Window
             var foreground = sender.GetColorValue(UIColorType.Foreground);
             var isDarkMode = IsColorLight(foreground);
 
-            var uri = new Uri(isDarkMode
-                ? "ms-appx:///Assets/LogoDarkTheme.png"
-                : "ms-appx:///Assets/LogoLightTheme.png");
+            var uri = new Uri($"ms-appx:///{(isDarkMode ? LogoDarkThemePath : LogoLightThemePath)}");
             TitleBarIcon.Source = new BitmapImage(uri);
         });
     }
@@ -91,67 +91,11 @@ internal sealed partial class MainWindow : Window
         return brightness > 128;
     }
 
-    private async Task ShowInvalidProjectDialogAsync()
+    public async void RootFrame_Loaded(object sender, RoutedEventArgs e)
     {
-        var dialog = new ContentDialog
+        if (_projectFile != null)
         {
-            Title = "File progetto non valido",
-            Content = "Si è verificato un errore cercando di leggere il file del progetto. Potrebbe essere danneggiato.",
-            CloseButtonText = "Ok",
-            XamlRoot = Content.XamlRoot
-        };
-
-        await dialog.ShowAsync();
-    }
-
-    private async void RootFrame_Loaded(object sender, RoutedEventArgs args)
-    {
-        RootFrame.Loaded -= RootFrame_Loaded;
-
-        if (MainViewModel.IsLoaded == false)
-        {
-            await ShowInvalidProjectDialogAsync();
+            await ViewModel.LoadProjectFileAsync(_projectFile);
         }
-    }
-
-    private async void OpenProjectButton_Click(object sender, RoutedEventArgs e)
-    {
-        FileOpenPicker openPicker = new()
-        {
-            ViewMode = PickerViewMode.Thumbnail,
-            SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
-            FileTypeFilter = { ".reportprj" },
-            SettingsIdentifier = "AdactaReportsShoppingBagOpenProjectPicker"
-        };
-
-        var hwnd = WindowNative.GetWindowHandle(this);
-        InitializeWithWindow.Initialize(openPicker, hwnd);
-
-        StorageFile file = await openPicker.PickSingleFileAsync();
-
-        if (file != null)
-        {
-            MainViewModel.LoadProjectFile(file);
-
-            if (MainViewModel.IsLoaded == false)
-            {
-                await ShowInvalidProjectDialogAsync();
-            }
-        }
-    }
-
-    private async void NewProjectButton_Click(object sender, RoutedEventArgs e)
-    {
-        // TODO
-    }
-
-    private async void SaveProjectButton_Click(object sender, RoutedEventArgs e)
-    {
-        // TODO
-    }
-
-    private async void HelpButton_Click(object sender, RoutedEventArgs e)
-    {
-        // TODO
     }
 }

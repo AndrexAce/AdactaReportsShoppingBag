@@ -25,32 +25,26 @@
                Width="18" Height="18"
                Margin="8,0,0,0"/>
 
-            <TextBlock x:Name="TitleTextBlock" FontSize="12" Text="{x:Bind MainViewModel.ReportPrj.ProjectCode}"/>
+            <TextBlock x:Name="TitleTextBlock" FontSize="12">
+                <Run Text="{x:Bind ViewModel.ReportProject.ProjectCode, Mode=OneWay}"/> <Run Text="{x:Bind ViewModel.ReportProject.ProjectName, Mode=OneWay}"/> <Run Text="{x:Bind ViewModel.SaveStateText, Mode=OneWay}"/>
+            </TextBlock>
         </StackPanel>
 
         <muxc:MenuBar Grid.Row="1">
             <muxc:MenuBarItem Title="Progetto">
-                <MenuFlyoutItem Text="Nuovo" Icon="Add" Click="NewProjectButton_Click">
+                <MenuFlyoutItem Text="Nuovo" Icon="Add" Command="{x:Bind ViewModel.NewProjectCommand}">
                     <MenuFlyoutItem.KeyboardAccelerators>
                         <KeyboardAccelerator Key="N" Modifiers="Control"/>
                     </MenuFlyoutItem.KeyboardAccelerators>
                 </MenuFlyoutItem>
-                <MenuFlyoutItem Text="Apri" Icon="Import" Click="OpenProjectButton_Click">
+                <MenuFlyoutItem Text="Apri" Icon="Import" Command="{x:Bind ViewModel.OpenProjectCommand}">
                     <MenuFlyoutItem.KeyboardAccelerators>
                         <KeyboardAccelerator Key="A" Modifiers="Control"/>
                     </MenuFlyoutItem.KeyboardAccelerators>
                 </MenuFlyoutItem>
-                <MenuFlyoutItem x:Name="SaveProjectMenuFlyoutItem" Text="Salva" Icon="Save" Click="SaveProjectButton_Click" Visibility="Collapsed">
+                <MenuFlyoutItem x:Name="SaveProjectMenuFlyoutItem" Text="Salva" Icon="Save" Command="{x:Bind ViewModel.SaveProjectCommand}" Visibility="{x:Bind ViewModel.SaveButtonVisibility, Mode=OneWay}">
                     <MenuFlyoutItem.KeyboardAccelerators>
                         <KeyboardAccelerator Key="S" Modifiers="Control"/>
-                    </MenuFlyoutItem.KeyboardAccelerators>
-                </MenuFlyoutItem>
-            </muxc:MenuBarItem>
-
-            <muxc:MenuBarItem Title="Aiuto">
-                <MenuFlyoutItem Text="Informazioni" Icon="Help" Click="HelpButton_Click">
-                    <MenuFlyoutItem.KeyboardAccelerators>
-                        <KeyboardAccelerator Key="I" Modifiers="Control"/>
                     </MenuFlyoutItem.KeyboardAccelerators>
                 </MenuFlyoutItem>
             </muxc:MenuBarItem>
