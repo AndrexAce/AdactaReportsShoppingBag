@@ -1,5 +1,5 @@
 ﻿using AdactaInternational.AdactaReportsShoppingBag.Desktop.Services;
-using AdactaInternational.AdactaReportsShoppingBag.Model.Project;
+using AdactaInternational.AdactaReportsShoppingBag.Model;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.UI.Xaml;

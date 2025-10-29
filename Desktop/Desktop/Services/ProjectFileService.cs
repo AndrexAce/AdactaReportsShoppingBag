@@ -1,4 +1,4 @@
-﻿using AdactaInternational.AdactaReportsShoppingBag.Model.Project;
+﻿using AdactaInternational.AdactaReportsShoppingBag.Model;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Schema;
 using System.IO;

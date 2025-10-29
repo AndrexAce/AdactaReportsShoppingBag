@@ -1,4 +1,4 @@
-﻿namespace AdactaInternational.AdactaReportsShoppingBag.Model.Project
+﻿namespace AdactaInternational.AdactaReportsShoppingBag.Model
 
 open System.ComponentModel
 open System.ComponentModel.DataAnnotations

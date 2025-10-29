@@ -1,4 +1,4 @@
-﻿using AdactaInternational.AdactaReportsShoppingBag.Model.Project;
+﻿using AdactaInternational.AdactaReportsShoppingBag.Model;
 using System.Threading.Tasks;
 using Windows.Storage;
 
