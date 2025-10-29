@@ -2,7 +2,6 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.Pickers;
@@ -70,21 +69,19 @@ internal sealed class DialogService : IDialogService
         return await openPicker.PickSingleFileAsync();
     }
 
-    public async Task<StorageFile?> ShowFileSavePickerAsync(string projectCode)
+    public async Task<StorageFolder?> ShowFolderPicker()
     {
-        FileSavePicker savePicker = new()
+        FolderPicker folderPicker = new()
         {
+            ViewMode = PickerViewMode.Thumbnail,
             SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
-            SuggestedFileName = projectCode,
-            CommitButtonText = "Salva",
-            DefaultFileExtension = ".reportprj",
+            FileTypeFilter = { ".reportprj" },
             SettingsIdentifier = "AdactaReportsShoppingBagCreateProjectPicker"
         };
-        savePicker.FileTypeChoices.Add("Report Project", new List<string> { ".reportprj" });
 
         var hwnd = WindowNative.GetWindowHandle(_window);
-        InitializeWithWindow.Initialize(savePicker, hwnd);
+        InitializeWithWindow.Initialize(folderPicker, hwnd);
 
-        return await savePicker.PickSaveFileAsync();
+        return await folderPicker.PickSingleFolderAsync();
     }
 }

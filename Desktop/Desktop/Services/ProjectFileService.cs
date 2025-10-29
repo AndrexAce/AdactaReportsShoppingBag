@@ -55,4 +55,24 @@ internal sealed class ProjectFileService : IProjectFileService
         var projectJson = JObject.FromObject(project).ToString();
         return File.WriteAllTextAsync(projectFilePath, projectJson);
     }
+
+    public string? CreateProjectFolder(ReportPrj project, string folderPath)
+    {
+        try
+        {
+            var projectFolderPath = Path.Combine(folderPath, $"ShoppingBag{project.ProjectCode}");
+
+            Directory.CreateDirectory(projectFolderPath);
+
+            var projectFilePath = Path.Combine(projectFolderPath, $"{project.ProjectCode}.reportprj");
+
+            SaveProjectFileAsync(project, projectFilePath);
+
+            return projectFilePath;
+        }
+        catch
+        {
+            return null;
+        }
+    }
 }

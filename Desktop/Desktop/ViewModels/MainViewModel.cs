@@ -41,20 +41,22 @@ internal sealed partial class MainViewModel(IProjectFileService projectFileServi
 
         if (choice is not ContentDialogResult.Primary || projectCode is null || projectName is null) return;
 
-        var file = await dialogService.ShowFileSavePickerAsync(projectCode);
+        var userChosenFolder = await dialogService.ShowFolderPicker();
 
-        if (file == null) return;
+        if (userChosenFolder is null) return;
 
-        ReportProject = new ReportPrj
+        var project = new ReportPrj
         {
             ProjectCode = projectCode,
             ProjectName = projectName,
             Version = Assembly.GetExecutingAssembly().GetName().Version?.ToString()
         };
 
-        await projectFileService.SaveProjectFileAsync(ReportProject, file.Path);
+        _projectFilePath = projectFileService.CreateProjectFolder(project, userChosenFolder.Path);
 
-        _projectFilePath = file.Path;
+        if (_projectFilePath is null) return;
+
+        ReportProject = project;
         IsProjectEdited = false;
     }
 
