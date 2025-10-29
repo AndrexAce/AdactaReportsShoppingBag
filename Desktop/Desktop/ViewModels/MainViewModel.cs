@@ -3,6 +3,8 @@ using AdactaInternational.AdactaReportsShoppingBag.Model;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using System.Reflection;
 using System.Threading.Tasks;
 using Windows.Storage;
 
@@ -34,13 +36,32 @@ internal sealed partial class MainViewModel(IProjectFileService projectFileServi
     [RelayCommand]
     private async Task NewProjectAsync()
     {
-        // TODO
+        var (choice, projectCode, projectName) = await dialogService.ShowDoubleTextboxDialogAsync("Crea nuovo progetto",
+                "Crea", "Annulla", "Codice", "Nome (visualizzato su PowerPoint)");
+
+        if (choice is not ContentDialogResult.Primary || projectCode is null || projectName is null) return;
+
+        var file = await dialogService.ShowFileSavePickerAsync(projectCode);
+
+        if (file == null) return;
+
+        ReportProject = new ReportPrj
+        {
+            ProjectCode = projectCode,
+            ProjectName = projectName,
+            Version = Assembly.GetExecutingAssembly().GetName().Version?.ToString()
+        };
+
+        await projectFileService.SaveProjectFileAsync(ReportProject, file.Path);
+
+        _projectFilePath = file.Path;
+        IsProjectEdited = false;
     }
 
     [RelayCommand]
     private async Task OpenProjectAsync()
     {
-        var file = await dialogService.ShowFilePickerAsync();
+        var file = await dialogService.ShowFileOpenPickerAsync();
 
         if (file == null) return;
 

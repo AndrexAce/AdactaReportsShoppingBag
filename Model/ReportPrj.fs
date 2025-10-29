@@ -20,8 +20,8 @@ type ReportPrj() =
     
     // Version property with validation attributes
     [<Required>]
-    [<RegularExpression(@"^\d{1,2}\.\d{1,2}\.\d{1,2}$")>]
-    [<StringLength(8, MinimumLength = 5)>]
+    [<RegularExpression(@"^\d{1,2}\.\d{1,2}\.\d{1,2}\.\d{1,2}$")>]
+    [<StringLength(11, MinimumLength = 7)>]
     member this.Version
         with get() = version
         and set(value) =

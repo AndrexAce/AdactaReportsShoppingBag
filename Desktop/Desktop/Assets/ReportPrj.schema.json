@@ -6,9 +6,9 @@
   "properties": {
     "version": {
       "format": "regex",
-      "minLength": 5,
-      "maxLength": 8,
-      "pattern": "^\\d{1,2}\\.\\d{1,2}\\.\\d{1,2}$",
+      "minLength": 7,
+      "maxLength": 11,
+      "pattern": "^\\d{1,2}\\.\\d{1,2}\\.\\d{1,2}\\.\\d{1,2}$",
       "type": "string"
     },
     "projectName": {
