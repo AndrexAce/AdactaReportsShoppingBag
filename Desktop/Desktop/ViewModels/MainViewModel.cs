@@ -94,7 +94,7 @@ internal sealed partial class MainViewModel(IProjectFileService projectFileServi
     [RelayCommand]
     private async Task OpenInfoAsync()
     {
-        // TODO
+        await dialogService.ShowCreditsDialogAsync();
     }
 
     public async Task LoadProjectFileAsync(IStorageFile file)

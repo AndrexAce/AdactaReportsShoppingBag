@@ -84,4 +84,17 @@ internal sealed class DialogService : IDialogService
 
         return await folderPicker.PickSingleFolderAsync();
     }
+
+    public async Task ShowCreditsDialogAsync()
+    {
+        var dialog = new ContentDialog
+        {
+            Title = "Adacta Reports Shopping Bag",
+            CloseButtonText = "Chiudi",
+            Content = new CreditsControl(),
+            XamlRoot = _window?.Content.XamlRoot
+        };
+
+        await dialog.ShowAsync();
+    }
 }

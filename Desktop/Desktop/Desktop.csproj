@@ -38,6 +38,12 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Page Update="Controls\CreditsControl.xaml">
+        <Generator>MSBuild:Compile</Generator>
+      </Page>
+    </ItemGroup>
+
+    <ItemGroup>
       <Page Update="Controls\DoubleTextboxControl.xaml">
         <Generator>MSBuild:Compile</Generator>
       </Page>

@@ -16,4 +16,6 @@ internal interface IDialogService
     public Task<StorageFile?> ShowFileOpenPickerAsync();
 
     public Task<StorageFolder?> ShowFolderPicker();
+
+    public Task ShowCreditsDialogAsync();
 }

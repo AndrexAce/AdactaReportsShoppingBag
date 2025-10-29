@@ -4,19 +4,19 @@
   "description": "Adacta Reports Shopping Bag project file.",
   "type": "object",
   "properties": {
-    "version": {
+    "Version": {
       "format": "regex",
       "minLength": 7,
       "maxLength": 11,
       "pattern": "^\\d{1,2}\\.\\d{1,2}\\.\\d{1,2}\\.\\d{1,2}$",
       "type": "string"
     },
-    "projectName": {
+    "ProjectName": {
       "type": "string",
       "minLength": 1,
       "maxLength": 100
     },
-    "projectCode": {
+    "ProjectCode": {
       "format": "regex",
       "minLength": 6,
       "maxLength": 7,
@@ -25,9 +25,9 @@
     }
   },
   "required": [
-    "version",
-    "projectName",
-    "projectCode"
+    "Version",
+    "ProjectName",
+    "ProjectCode"
   ],
   "additionalProperties": false
 }

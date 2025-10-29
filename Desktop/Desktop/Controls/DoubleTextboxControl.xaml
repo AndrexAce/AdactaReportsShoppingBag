@@ -9,11 +9,11 @@
 
     <StackPanel Orientation="Vertical" Spacing="12">
         <TextBox x:Name="FirstTextBox"
-             Header="{x:Bind FirstLabel, Mode=OneWay}"
+             Header="{x:Bind FirstLabel, Mode=OneTime}"
              Text="{x:Bind FirstValue, Mode=TwoWay}" />
 
         <TextBox x:Name="SecondTextBox"
-             Header="{x:Bind SecondLabel, Mode=OneWay}"
+             Header="{x:Bind SecondLabel, Mode=OneTime}"
              Text="{x:Bind SecondValue, Mode=TwoWay}" />
     </StackPanel>
 </UserControl>
