@@ -9,7 +9,7 @@
 
 ## What is Adacta Reports Shopping Bag ❓
 
-Adacta Reports Shopping Bag is a Windows native application meant to be used by Adacta S.R.L. to process survey data fetched via Excel and presented them via PowerPoint presentations in a easy and swift way.
+Adacta Reports Shopping Bag is a Windows native application meant to be used by Adacta S.R.L. to process survey data fetched via Excel and presente them via PowerPoint presentations in a easy and swift way.
 
 It is based on .NET and WinUI 3.
 
