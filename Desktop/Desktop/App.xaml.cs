@@ -1,4 +1,5 @@
-﻿using AdactaInternational.AdactaReportsShoppingBag.Desktop.Services;
+﻿using AdactaInternational.AdactaReportsShoppingBag.Desktop.Repositories;
+using AdactaInternational.AdactaReportsShoppingBag.Desktop.Services;
 using AdactaInternational.AdactaReportsShoppingBag.Desktop.ViewModels;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,6 +16,8 @@ public sealed partial class App
         InitializeComponent();
 
         ConfigureDependencyInjection();
+
+        CreateDataStorage();
     }
 
     private static void ConfigureDependencyInjection()
@@ -24,7 +27,18 @@ public sealed partial class App
                 .AddSingleton<MainViewModel>()
                 .AddSingleton<IProjectFileService, ProjectFileService>()
                 .AddSingleton<IDialogService, DialogService>()
+                .AddSingleton<IStorageService, StorageService>()
+                .AddSingleton<IProductsRepository, ProductRepository>()
+                .AddSingleton<IPenelopeClient, PenelopeClient>()
                 .BuildServiceProvider());
+    }
+
+    private static void CreateDataStorage()
+    {
+        var storageService = Ioc.Default.GetRequiredService<IStorageService>();
+
+        if (!storageService.DoesContainerExist("Credentials"))
+            storageService.CreateContainer("Credentials");
     }
 
     protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
