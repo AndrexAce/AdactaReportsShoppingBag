@@ -60,13 +60,13 @@
             <Extensions>
                 <uap:Extension Category="windows.fileTypeAssociation">
                     <uap:FileTypeAssociation Name="reportprj">
-						<uap:Logo>Images\Square44x44Logo.png</uap:Logo>
+                        <uap:Logo>Images\Square44x44Logo.png</uap:Logo>
                         <uap:SupportedFileTypes>
-							<uap:FileType ContentType="application/json">.reportprj</uap:FileType>
+                            <uap:FileType ContentType="application/json">.reportprj</uap:FileType>
                         </uap:SupportedFileTypes>
                         <uap:DisplayName>Progetto Adacta Reports Shopping Bag</uap:DisplayName>
                         <uap:EditFlags OpenIsSafe="true"/>
-						<uap:InfoTip>Apre il progetto in Adacta Reports Shopping Bag.</uap:InfoTip>
+                        <uap:InfoTip>Apre il progetto in Adacta Reports Shopping Bag.</uap:InfoTip>
                     </uap:FileTypeAssociation>
                 </uap:Extension>
             </Extensions>

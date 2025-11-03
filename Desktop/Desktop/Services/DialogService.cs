@@ -2,6 +2,7 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.Pickers;
@@ -32,7 +33,9 @@ internal sealed class DialogService : IDialogService
         return await dialog.ShowAsync();
     }
 
-    public async Task<(ContentDialogResult, string, string)> ShowNewProjectDialogAsync(string title, string confirmButtonText,
+    [RequiresUnreferencedCode("Uses functionality that may break with trimming.")]
+    public async Task<(ContentDialogResult, string, string)> ShowNewProjectDialogAsync(string title,
+        string confirmButtonText,
         string cancelButtonText)
     {
         var control = new NewProjectControl();
@@ -47,7 +50,7 @@ internal sealed class DialogService : IDialogService
             XamlRoot = _window?.Content.XamlRoot
         };
 
-        control.IsConfirmButtonEnabledChanged += (sender, args) =>
+        control.IsConfirmButtonEnabledChanged += (_, _) =>
         {
             dialog.IsPrimaryButtonEnabled = control.IsConfirmButtonEnabled;
         };

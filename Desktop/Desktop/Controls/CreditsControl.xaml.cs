@@ -1,11 +1,10 @@
 using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Reflection;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.Controls;
 
-internal sealed partial class CreditsControl : UserControl
+internal sealed partial class CreditsControl
 {
     public static readonly DependencyProperty VersionProperty =
         DependencyProperty.Register(

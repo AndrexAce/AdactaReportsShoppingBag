@@ -1,5 +1,6 @@
 ﻿using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using Windows.Storage;
 
@@ -11,7 +12,9 @@ internal interface IDialogService
 
     public Task<ContentDialogResult> ShowInformationDialogAsync(string title, string content, string closeButtonText);
 
-    public Task<(ContentDialogResult, string, string)> ShowNewProjectDialogAsync(string title, string confirmButtonText, string cancelButtonText);
+    [RequiresUnreferencedCode("Uses functionality that may break with trimming.")]
+    public Task<(ContentDialogResult, string, string)> ShowNewProjectDialogAsync(string title, string confirmButtonText,
+        string cancelButtonText);
 
     public Task<StorageFile?> ShowFileOpenPickerAsync();
 

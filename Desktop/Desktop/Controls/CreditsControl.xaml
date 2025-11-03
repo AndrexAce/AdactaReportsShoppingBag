@@ -2,23 +2,23 @@
     x:Class="AdactaInternational.AdactaReportsShoppingBag.Desktop.Controls.CreditsControl"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:AdactaInternational.AdactaReportsShoppingBag.Desktop.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
     <StackPanel Orientation="Vertical" Spacing="12">
         <TextBlock>
-            <Run FontWeight="Bold" Text="Versione:"/> <Run Text="{x:Bind Version, Mode=OneTime}"/>
+            <Run FontWeight="Bold" Text="Versione:" /> <Run Text="{x:Bind Version}" />
         </TextBlock>
         <TextBlock>
-            <Run FontWeight="Bold" Text="Realizzato da:"/> <Run Text="Andrea Lucchese"/>
+            <Run FontWeight="Bold" Text="Realizzato da:" /> <Run Text="Andrea Lucchese" />
         </TextBlock>
         <TextBlock>
-            <Run FontWeight="Bold" Text="Ringraziamenti:"/> <Run Text="Federica Russo"/>
+            <Run FontWeight="Bold" Text="Ringraziamenti:" /> <Run Text="Federica Russo" />
         </TextBlock>
         <TextBlock>
-            <Run FontWeight="Bold" Text="Copyright ©"/> <Run FontWeight="Bold" Text="{x:Bind Year, Mode=OneTime}"/> <Run FontWeight="Bold" Text="Andrea Lucchese"/>
+            <Run FontWeight="Bold" Text="Copyright ©" /> <Run FontWeight="Bold" Text="{x:Bind Year}" />
+            <Run FontWeight="Bold" Text="Andrea Lucchese" />
         </TextBlock>
     </StackPanel>
 </UserControl>

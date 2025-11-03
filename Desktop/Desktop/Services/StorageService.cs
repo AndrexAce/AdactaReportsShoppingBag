@@ -18,8 +18,9 @@ internal sealed class StorageService : IStorageService
     {
         if (!DoesContainerExist(containerName)) return default;
 
-        return ApplicationData.Current.LocalSettings.Containers[containerName].Values.TryGetValue(key, out object? value) ?
-            (TData)value : default;
+        return ApplicationData.Current.LocalSettings.Containers[containerName].Values.TryGetValue(key, out var value)
+            ? (TData)value
+            : default;
     }
 
     public void SaveData(string containerName, string key, object data)

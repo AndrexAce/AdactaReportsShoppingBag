@@ -1,12 +1,13 @@
 using AdactaInternational.AdactaReportsShoppingBag.Desktop.ViewModels;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.Controls;
 
-internal sealed partial class NewProjectControl : UserControl
+[RequiresUnreferencedCode("Uses functionality that may break with trimming.")]
+internal sealed partial class NewProjectControl
 {
     private readonly NewProjectControlViewModel _viewModel;
 
@@ -26,13 +27,13 @@ internal sealed partial class NewProjectControl : UserControl
 
     public string ProjectCode
     {
-        get => _viewModel.ProjectCode;
+        get => _viewModel.ProjectCode ?? "";
         private set => _viewModel.ProjectCode = value;
     }
 
     public string ProjectName
     {
-        get => _viewModel.ProjectName;
+        get => _viewModel.ProjectName ?? "";
         private set => _viewModel.ProjectName = value;
     }
 
@@ -57,8 +58,6 @@ internal sealed partial class NewProjectControl : UserControl
     private void ConfirmButtonEnabled_Changed(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(_viewModel.IsConfirmButtonEnabled))
-        {
             IsConfirmButtonEnabledChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsConfirmButtonEnabled)));
-        }
     }
 }

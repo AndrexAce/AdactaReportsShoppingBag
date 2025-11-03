@@ -3,12 +3,9 @@
 open System.Xml.Serialization
 
 [<XmlType("FotoProdotto")>]
-type ProductPhoto = {
-    [<XmlElement("tipo")>]
-    Type: string
-    
-    [<XmlElement("urlFoto")>]
-    PhotoUrl: string
-}
+type ProductPhoto =
+    { [<XmlElement("tipo")>]
+      Type: string
 
-
+      [<XmlElement("urlFoto")>]
+      PhotoUrl: string }

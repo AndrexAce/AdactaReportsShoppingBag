@@ -1,19 +1,19 @@
 <Solution>
     <Configurations>
-        <Platform Name="Any CPU" />
-        <Platform Name="ARM64" />
-        <Platform Name="x64" />
-        <Platform Name="x86" />
+        <Platform Name="Any CPU"/>
+        <Platform Name="ARM64"/>
+        <Platform Name="x64"/>
+        <Platform Name="x86"/>
     </Configurations>
     <Project Path="Desktop/Desktop (Package)/Desktop (Package).wapproj" Type="c7167f0d-bc9f-4e6e-afe1-012c56b48db5">
-        <Platform Solution="*|Any CPU" Project="x64" />
-        <Deploy />
+        <Platform Solution="*|Any CPU" Project="x64"/>
+        <Deploy/>
     </Project>
     <Project Path="Desktop/Desktop/Desktop.csproj">
-        <Platform Solution="*|Any CPU" Project="x64" />
-        <Platform Solution="*|ARM64" Project="ARM64" />
-        <Platform Solution="*|x64" Project="x64" />
-        <Platform Solution="*|x86" Project="x86" />
+        <Platform Solution="*|Any CPU" Project="x64"/>
+        <Platform Solution="*|ARM64" Project="ARM64"/>
+        <Platform Solution="*|x64" Project="x64"/>
+        <Platform Solution="*|x86" Project="x86"/>
     </Project>
-    <Project Path="Model/Model.fsproj" Id="98850736-0fdc-41d4-9834-3a4c7115ee0c" />
+    <Project Path="Model/Model.fsproj" Id="98850736-0fdc-41d4-9834-3a4c7115ee0c"/>
 </Solution>

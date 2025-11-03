@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Threading.Tasks;
 using Windows.Storage;
@@ -34,11 +35,13 @@ internal sealed partial class MainViewModel(IProjectFileService projectFileServi
     private string? _projectFilePath;
 
     [RelayCommand]
+    [RequiresUnreferencedCode("Uses functionality that may break with trimming.")]
     private async Task NewProjectAsync()
     {
-        var (choice, projectCode, projectName) = await dialogService.ShowNewProjectDialogAsync("Crea nuovo progetto", "Crea", "Annulla");
+        var (choice, projectCode, projectName) =
+            await dialogService.ShowNewProjectDialogAsync("Crea nuovo progetto", "Crea", "Annulla");
 
-        if (choice is not ContentDialogResult.Primary || projectCode is null || projectName is null) return;
+        if (choice is not ContentDialogResult.Primary) return;
 
         var userChosenFolder = await dialogService.ShowFolderPicker();
 
@@ -91,9 +94,9 @@ internal sealed partial class MainViewModel(IProjectFileService projectFileServi
     }
 
     [RelayCommand]
-    private async Task OpenInfoAsync()
+    private Task OpenInfoAsync()
     {
-        await dialogService.ShowCreditsDialogAsync();
+        return dialogService.ShowCreditsDialogAsync();
     }
 
     public async Task LoadProjectFileAsync(IStorageFile file)

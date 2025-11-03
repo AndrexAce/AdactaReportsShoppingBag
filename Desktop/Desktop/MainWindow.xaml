@@ -56,7 +56,7 @@
             <muxc:MenuBarItem Title="Aiuto">
                 <MenuFlyoutItem Text="Informazioni" Icon="Help" Command="{x:Bind ViewModel.OpenInfoCommand}">
                     <MenuFlyoutItem.KeyboardAccelerators>
-                        <KeyboardAccelerator Key="I" Modifiers="Control"/>
+                        <KeyboardAccelerator Key="I" Modifiers="Control" />
                     </MenuFlyoutItem.KeyboardAccelerators>
                 </MenuFlyoutItem>
             </muxc:MenuBarItem>

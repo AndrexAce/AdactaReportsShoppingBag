@@ -50,9 +50,7 @@ public sealed partial class App
         if (activationArgs is { Kind: ExtendedActivationKind.File, Data: IFileActivatedEventArgs fileArgs } &&
             fileArgs.Files.Count > 0 &&
             fileArgs.Files[0] is IStorageFile file)
-        {
             projectFile = file;
-        }
 
         var mainWindow = new MainWindow(projectFile);
 
