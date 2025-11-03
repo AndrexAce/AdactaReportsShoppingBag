@@ -44,7 +44,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Page Update="Controls\DoubleTextboxControl.xaml">
+      <Page Update="Controls\NewProjectControl.xaml">
         <Generator>MSBuild:Compile</Generator>
       </Page>
     </ItemGroup>

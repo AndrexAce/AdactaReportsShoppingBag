@@ -36,8 +36,7 @@ internal sealed partial class MainViewModel(IProjectFileService projectFileServi
     [RelayCommand]
     private async Task NewProjectAsync()
     {
-        var (choice, projectCode, projectName) = await dialogService.ShowDoubleTextboxDialogAsync("Crea nuovo progetto",
-                "Crea", "Annulla", "Codice", "Nome (visualizzato su PowerPoint)");
+        var (choice, projectCode, projectName) = await dialogService.ShowNewProjectDialogAsync("Crea nuovo progetto", "Crea", "Annulla");
 
         if (choice is not ContentDialogResult.Primary || projectCode is null || projectName is null) return;
 

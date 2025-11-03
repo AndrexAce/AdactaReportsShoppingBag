@@ -11,7 +11,7 @@ internal interface IDialogService
 
     public Task<ContentDialogResult> ShowInformationDialogAsync(string title, string content, string closeButtonText);
 
-    public Task<(ContentDialogResult, string, string)> ShowDoubleTextboxDialogAsync(string title, string confirmButtonText, string cancelButtonText, string firstLabel, string secondLabel);
+    public Task<(ContentDialogResult, string, string)> ShowNewProjectDialogAsync(string title, string confirmButtonText, string cancelButtonText);
 
     public Task<StorageFile?> ShowFileOpenPickerAsync();
 

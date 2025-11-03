@@ -32,25 +32,27 @@ internal sealed class DialogService : IDialogService
         return await dialog.ShowAsync();
     }
 
-    public async Task<(ContentDialogResult, string, string)> ShowDoubleTextboxDialogAsync(string title, string confirmButtonText,
-        string cancelButtonText, string firstLabel, string secondLabel)
+    public async Task<(ContentDialogResult, string, string)> ShowNewProjectDialogAsync(string title, string confirmButtonText,
+        string cancelButtonText)
     {
-        var control = new DoubleTextboxControl
-        {
-            FirstLabel = firstLabel,
-            SecondLabel = secondLabel,
-        };
+        var control = new NewProjectControl();
 
         var dialog = new ContentDialog
         {
             Title = title,
             PrimaryButtonText = confirmButtonText,
+            IsPrimaryButtonEnabled = control.IsConfirmButtonEnabled,
             SecondaryButtonText = cancelButtonText,
             Content = control,
             XamlRoot = _window?.Content.XamlRoot
         };
 
-        return (await dialog.ShowAsync(), control.FirstValue, control.SecondValue);
+        control.IsConfirmButtonEnabledChanged += (sender, args) =>
+        {
+            dialog.IsPrimaryButtonEnabled = control.IsConfirmButtonEnabled;
+        };
+
+        return (await dialog.ShowAsync(), control.ProjectCode, control.ProjectName);
     }
 
     public async Task<StorageFile?> ShowFileOpenPickerAsync()

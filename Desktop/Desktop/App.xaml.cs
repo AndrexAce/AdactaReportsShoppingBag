@@ -25,6 +25,7 @@ public sealed partial class App
         Ioc.Default.ConfigureServices(
             new ServiceCollection()
                 .AddSingleton<MainViewModel>()
+                .AddSingleton<NewProjectControlViewModel>()
                 .AddSingleton<IProjectFileService, ProjectFileService>()
                 .AddSingleton<IDialogService, DialogService>()
                 .AddSingleton<IStorageService, StorageService>()
