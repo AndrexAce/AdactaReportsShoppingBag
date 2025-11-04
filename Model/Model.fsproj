@@ -22,8 +22,14 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Compile Include="ProductPhoto.fs"/>
-        <Compile Include="Product.fs"/>
+        <Compile Include="Soap\Request\GetJob.fs"/>
+        <Compile Include="Soap\Response\Error.fs"/>
+        <Compile Include="Soap\Response\ProductPhoto.fs"/>
+        <Compile Include="Soap\Response\Product.fs"/>
+        <Compile Include="Soap\Response\GetJobResult.fs"/>
+        <Compile Include="Soap\Response\GetJobResponse.fs"/>
+        <Compile Include="Soap\SoapBody.fs"/>
+        <Compile Include="Soap\SoapEnvelope.fs"/>
         <Compile Include="ReportPrj.fs"/>
     </ItemGroup>
 

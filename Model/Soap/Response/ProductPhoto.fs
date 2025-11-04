@@ -1,8 +1,8 @@
-﻿namespace AdactaInternational.AdactaReportsShoppingBag.Model
+﻿namespace AdactaInternational.AdactaReportsShoppingBag.Model.Soap.Response
 
 open System.Xml.Serialization
 
-[<XmlType("FotoProdotto")>]
+[<CLIMutable>]
 type ProductPhoto =
     { [<XmlElement("tipo")>]
       Type: string

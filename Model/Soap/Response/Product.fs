@@ -1,8 +1,8 @@
-﻿namespace AdactaInternational.AdactaReportsShoppingBag.Model
+﻿namespace AdactaInternational.AdactaReportsShoppingBag.Model.Soap.Response
 
 open System.Xml.Serialization
 
-[<XmlType("Prodotto")>]
+[<CLIMutable>]
 type Product =
     { [<XmlAttribute("sigla")>]
       Code: string
@@ -39,4 +39,4 @@ type Product =
 
       [<XmlArray("foto")>]
       [<XmlArrayItem("FotoProdotto")>]
-      ProductPhotos: ProductPhoto list }
+      ProductPhotos: ProductPhoto array }
