@@ -1,4 +1,5 @@
-﻿using AdactaInternational.AdactaReportsShoppingBag.Model.Soap;
+﻿using AdactaInternational.AdactaReportsShoppingBag.Desktop.Exceptions;
+using AdactaInternational.AdactaReportsShoppingBag.Model.Soap;
 using AdactaInternational.AdactaReportsShoppingBag.Model.Soap.Request;
 using AdactaInternational.AdactaReportsShoppingBag.Model.Soap.Response;
 using System;
@@ -109,12 +110,12 @@ internal sealed class PenelopeClient(IStorageService storageService) : IPenelope
     public async Task<IEnumerable<Product>> GetProductsAsync(string jobCode)
     {
         if (!storageService.DoesContainerExist("Credentials"))
-            throw new UnauthorizedAccessException("Credentials container does not exist.");
+            throw new PenelopeAuthenticationException("Credentials container does not exist.");
 
         var username = storageService.FetchData<string>("Credentials", "Username");
         var password = storageService.FetchData<string>("Credentials", "Password");
 
-        if (username is null || password is null) throw new UnauthorizedAccessException("Missing credentials.");
+        if (username is null || password is null) throw new PenelopeAuthenticationException("Missing credentials.");
 
         var xmlContent = await SerializeSoapEnvelopeAsync(new GetJob(jobCode, username, password));
 
@@ -134,8 +135,8 @@ internal sealed class PenelopeClient(IStorageService storageService) : IPenelope
 
         return deserializedResponse.GetJobResult.Error.Code switch
         {
-            -1 => throw new UnauthorizedAccessException("Invalid credentials."),
-            -2 => throw new InvalidOperationException("Job not found."),
+            -1 => throw new PenelopeAuthenticationException("Invalid credentials."),
+            -2 => throw new PenelopeNotFoundException("Job not found."),
             _ => throw new HttpRequestException("An unknown error occurred while fetching products.")
         };
     }
