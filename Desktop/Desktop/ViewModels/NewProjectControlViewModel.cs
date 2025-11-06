@@ -1,7 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.UI.Xaml;
-using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.ViewModels;
@@ -11,16 +11,14 @@ internal sealed partial class NewProjectControlViewModel : ObservableValidator
     [ObservableProperty]
     [Required(ErrorMessage = "Inserire un valore.")]
     [RegularExpression(@"^\d{2}\.\d{3}[a-zA-Z]?$", ErrorMessage = "Formato non valido.")]
-    [NotifyPropertyChangedFor(nameof(ProjectCodeError), nameof(ProjectCodeErrorVisibility),
-        nameof(IsConfirmButtonEnabled))]
+    [NotifyPropertyChangedFor(nameof(ProjectCodeError), nameof(ProjectCodeErrorVisibility))]
     [NotifyDataErrorInfo]
     public partial string? ProjectCode { get; set; }
 
     [ObservableProperty]
     [Required(ErrorMessage = "Inserire un valore.")]
     [StringLength(100, MinimumLength = 1, ErrorMessage = "Inserire meno di 100 caratteri.")]
-    [NotifyPropertyChangedFor(nameof(ProjectNameError), nameof(ProjectNameErrorVisibility),
-        nameof(IsConfirmButtonEnabled))]
+    [NotifyPropertyChangedFor(nameof(ProjectNameError), nameof(ProjectNameErrorVisibility))]
     [NotifyDataErrorInfo]
     public partial string? ProjectName { get; set; }
 
@@ -36,10 +34,22 @@ internal sealed partial class NewProjectControlViewModel : ObservableValidator
     public Visibility ProjectNameErrorVisibility =>
         GetErrors(nameof(ProjectName)).Any() ? Visibility.Visible : Visibility.Collapsed;
 
-    protected override void OnPropertyChanged(PropertyChangedEventArgs e)
+    [RequiresUnreferencedCode("Uses functionality that may break when trimming.")]
+    partial void OnProjectCodeChanged(string? value)
     {
-        base.OnPropertyChanged(e);
+        ValidateProperty(ProjectName, nameof(ProjectName));
+        UpdateConfirmButtonState();
+    }
 
-        if (e.PropertyName == nameof(HasErrors)) IsConfirmButtonEnabled = !HasErrors;
+    [RequiresUnreferencedCode("Uses functionality that may break when trimming.")]
+    partial void OnProjectNameChanged(string? value)
+    {
+        ValidateProperty(ProjectCode, nameof(ProjectCode));
+        UpdateConfirmButtonState();
+    }
+
+    private void UpdateConfirmButtonState()
+    {
+        IsConfirmButtonEnabled = !HasErrors;
     }
 }

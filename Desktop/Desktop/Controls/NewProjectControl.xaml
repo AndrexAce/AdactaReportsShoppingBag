@@ -20,7 +20,7 @@
         <TextBox Header="Nome progetto"
                  Text="{x:Bind _viewModel.ProjectName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
         <TextBlock Text="{x:Bind _viewModel.ProjectNameError, Mode=OneWay}"
-                   Visibility="{x:Bind _viewModel.ProjectCodeErrorVisibility, Mode=OneWay}"
+                   Visibility="{x:Bind _viewModel.ProjectNameErrorVisibility, Mode=OneWay}"
                    Foreground="Red" />
     </StackPanel>
 </UserControl>
