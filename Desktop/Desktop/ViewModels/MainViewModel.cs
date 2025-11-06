@@ -1,9 +1,13 @@
-﻿using AdactaInternational.AdactaReportsShoppingBag.Desktop.Services;
+﻿using AdactaInternational.AdactaReportsShoppingBag.Desktop.Exceptions;
+using AdactaInternational.AdactaReportsShoppingBag.Desktop.Repositories;
+using AdactaInternational.AdactaReportsShoppingBag.Desktop.Services;
 using AdactaInternational.AdactaReportsShoppingBag.Model;
+using AdactaInternational.AdactaReportsShoppingBag.Model.Soap.Response;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -11,7 +15,7 @@ using Windows.Storage;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.ViewModels;
 
-internal sealed partial class MainViewModel(IProjectFileService projectFileService, IDialogService dialogService)
+internal sealed partial class MainViewModel(IProjectFileService projectFileService, IDialogService dialogService, IStorageService storageService, IProductsRepository productsRepository)
     : ObservableObject
 {
     [ObservableProperty]
@@ -38,10 +42,36 @@ internal sealed partial class MainViewModel(IProjectFileService projectFileServi
     [RequiresUnreferencedCode("Uses functionality that may break with trimming.")]
     private async Task NewProjectAsync()
     {
-        var (choice, projectCode, projectName) =
+        var (newProjectChoice, projectCode, projectName) =
             await dialogService.ShowNewProjectDialogAsync("Crea nuovo progetto", "Crea", "Annulla");
 
-        if (choice is not ContentDialogResult.Primary) return;
+        if (newProjectChoice is ContentDialogResult.None) return;
+
+        IEnumerable<Product>? products = null;
+
+        while (products is null)
+        {
+            try
+            {
+                products = await productsRepository.GetProductsAsync(projectCode);
+            }
+            catch (PenelopeNotFoundException)
+            {
+                await dialogService.ShowInformationDialogAsync("Codice progetto non valido", "Il progetto inserito è errato o non esistente.", "Ok");
+
+                return;
+            }
+            catch (PenelopeAuthenticationException)
+            {
+                var (credentialsChoice, penelopeUsername, penelopePassword) =
+                    await dialogService.ShowPenelopeCredentialsDialogAsync("Account Penelope", "Conferma", "Annulla");
+
+                if (credentialsChoice is ContentDialogResult.None) return;
+
+                storageService.SaveData("Credentials", "Username", penelopeUsername);
+                storageService.SaveData("Credentials", "Password", penelopePassword);
+            }
+        }
 
         var userChosenFolder = await dialogService.ShowFolderPicker();
 
@@ -51,7 +81,8 @@ internal sealed partial class MainViewModel(IProjectFileService projectFileServi
         {
             ProjectCode = projectCode,
             ProjectName = projectName,
-            Version = Assembly.GetExecutingAssembly().GetName().Version?.ToString()
+            Version = Assembly.GetExecutingAssembly().GetName().Version?.ToString(),
+            Products = products
         };
 
         _projectFilePath = projectFileService.CreateProjectFolder(project, userChosenFolder.Path);

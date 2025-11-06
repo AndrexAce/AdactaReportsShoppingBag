@@ -16,6 +16,10 @@ internal interface IDialogService
     public Task<(ContentDialogResult, string, string)> ShowNewProjectDialogAsync(string title, string confirmButtonText,
         string cancelButtonText);
 
+    [RequiresUnreferencedCode("Uses functionality that may break with trimming.")]
+    public Task<(ContentDialogResult, string, string)> ShowPenelopeCredentialsDialogAsync(string title, string confirmButtonText,
+        string cancelButtonText);
+
     public Task<StorageFile?> ShowFileOpenPickerAsync();
 
     public Task<StorageFolder?> ShowFolderPicker();

@@ -45,7 +45,7 @@ internal sealed class DialogService : IDialogService
             Title = title,
             PrimaryButtonText = confirmButtonText,
             IsPrimaryButtonEnabled = control.IsConfirmButtonEnabled,
-            SecondaryButtonText = cancelButtonText,
+            CloseButtonText = cancelButtonText,
             Content = control,
             XamlRoot = _window?.Content.XamlRoot
         };
@@ -56,6 +56,31 @@ internal sealed class DialogService : IDialogService
         };
 
         return (await dialog.ShowAsync(), control.ProjectCode, control.ProjectName);
+    }
+
+    [RequiresUnreferencedCode("Uses functionality that may break with trimming.")]
+    public async Task<(ContentDialogResult, string, string)> ShowPenelopeCredentialsDialogAsync(string title,
+    string confirmButtonText,
+    string cancelButtonText)
+    {
+        var control = new PenelopeCredentialsControl();
+
+        var dialog = new ContentDialog
+        {
+            Title = title,
+            PrimaryButtonText = confirmButtonText,
+            IsPrimaryButtonEnabled = control.IsConfirmButtonEnabled,
+            CloseButtonText = cancelButtonText,
+            Content = control,
+            XamlRoot = _window?.Content.XamlRoot
+        };
+
+        control.IsConfirmButtonEnabledChanged += (_, _) =>
+        {
+            dialog.IsPrimaryButtonEnabled = control.IsConfirmButtonEnabled;
+        };
+
+        return (await dialog.ShowAsync(), control.Username, control.Password);
     }
 
     public async Task<StorageFile?> ShowFileOpenPickerAsync()

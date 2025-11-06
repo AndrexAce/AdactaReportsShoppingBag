@@ -1,26 +1,25 @@
 ﻿namespace AdactaInternational.AdactaReportsShoppingBag.Model
 
+open AdactaInternational.AdactaReportsShoppingBag.Model.Soap.Response
 open System.ComponentModel
 open System.ComponentModel.DataAnnotations
 open System.Runtime.CompilerServices
+open System.Collections.Generic
 
 type ReportPrj() =
-    // Define the PropertyChanged event
     let propertyChanged = Event<PropertyChangedEventHandler, PropertyChangedEventArgs>()
 
-    // Backing fields for properties
     let mutable version = ""
     let mutable projectName = ""
     let mutable projectCode = ""
+    let mutable products: IEnumerable<Product> = []
 
-    // Helper method to raise property changed
     member private this.OnPropertyChanged([<CallerMemberName>] ?propertyName: string) =
         let name = defaultArg propertyName ""
         propertyChanged.Trigger(this, PropertyChangedEventArgs(name))
 
-    // Version property with validation attributes
     [<Required>]
-    [<RegularExpression(@"^\d{1,2}\.\d{1,2}\.\d{1,2}\.\d{1,2}$")>]
+    [<RegularExpression(@"^[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}$")>]
     [<StringLength(11, MinimumLength = 7)>]
     member this.Version
         with get () = version
@@ -29,7 +28,6 @@ type ReportPrj() =
                 version <- value
                 this.OnPropertyChanged()
 
-    // ProjectName property with validation attributes
     [<Required>]
     [<StringLength(100, MinimumLength = 1)>]
     member this.ProjectName
@@ -39,9 +37,8 @@ type ReportPrj() =
                 projectName <- value
                 this.OnPropertyChanged()
 
-    // ProjectCode property with validation attributes
     [<Required>]
-    [<RegularExpression(@"^\d{2}\.\d{3}[a-zA-Z]?$")>]
+    [<RegularExpression(@"^[0-9]{2}\.[0-9]{3}[A-Z]?$")>]
     [<StringLength(7, MinimumLength = 6)>]
     member this.ProjectCode
         with get () = projectCode
@@ -50,11 +47,18 @@ type ReportPrj() =
                 projectCode <- value
                 this.OnPropertyChanged()
 
-    // Expose the PropertyChanged event as a CLI event
+    [<Required>]
+    [<MinLength(1)>]
+    member this.Products
+        with get () = products
+        and set (value) =
+            if products <> value then
+                products <- value
+                this.OnPropertyChanged()
+
     [<CLIEvent>]
     member this.PropertyChanged = propertyChanged.Publish
 
-    // Implement INotifyPropertyChanged interface
     interface INotifyPropertyChanged with
         member this.add_PropertyChanged(handler) =
             this.PropertyChanged.AddHandler(handler)

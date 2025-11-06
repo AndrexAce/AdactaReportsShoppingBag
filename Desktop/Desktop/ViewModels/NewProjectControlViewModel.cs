@@ -10,7 +10,7 @@ internal sealed partial class NewProjectControlViewModel : ObservableValidator
 {
     [ObservableProperty]
     [Required(ErrorMessage = "Inserire un valore.")]
-    [RegularExpression(@"^\d{2}\.\d{3}[a-zA-Z]?$", ErrorMessage = "Formato non valido.")]
+    [RegularExpression(@"^[0-9]{2}\.[0-9]{3}[A-Z]?$", ErrorMessage = "Formato non valido.")]
     [NotifyPropertyChangedFor(nameof(ProjectCodeError), nameof(ProjectCodeErrorVisibility))]
     [NotifyDataErrorInfo]
     public partial string? ProjectCode { get; set; }
