@@ -69,7 +69,8 @@
                         IsSettingsVisible="False"
                         PaneTitle="Prodotti"
                         Loaded="NavigationView_Loaded"
-                        MenuItemsSource="{x:Bind ViewModel.NavigationViewMenuItems, Mode=OneWay}">
+                        MenuItemsSource="{x:Bind ViewModel.NavigationViewMenuItems, Mode=OneWay}"
+                        SelectionChanged="NavigationView_SelectionChanged">
             <NavigationView.MenuItemTemplate>
                 <DataTemplate x:DataType="model:Product">
                     <NavigationViewItem Content="{x:Bind DisplayName, Mode=OneTime}">
@@ -81,7 +82,7 @@
             </NavigationView.MenuItemTemplate>
             <Grid>
                 <Image Source="/Assets/LogoDarkTheme.png" Stretch="Uniform" Opacity="0.02" />
-                <Frame />
+                <Frame x:Name="RootFrame" />
             </Grid>
         </NavigationView>
     </Grid>

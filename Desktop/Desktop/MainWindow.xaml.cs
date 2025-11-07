@@ -1,8 +1,11 @@
+using AdactaInternational.AdactaReportsShoppingBag.Desktop.Pages;
 using AdactaInternational.AdactaReportsShoppingBag.Desktop.ViewModels;
+using AdactaInternational.AdactaReportsShoppingBag.Model.Soap.Response;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using Microsoft.UI;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media.Imaging;
 using System;
 using Windows.Storage;
@@ -100,5 +103,13 @@ internal sealed partial class MainWindow
     {
         // Unsubscribe from the ColorValuesChanged event to prevent memory leaks
         _uiSettings.ColorValuesChanged -= UiSettings_ColorValuesChanged;
+    }
+
+    private void NavigationView_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
+    {
+        if (args.SelectedItem is Product product)
+        {
+            RootFrame.Navigate(typeof(ProductPage), product);
+        }
     }
 }

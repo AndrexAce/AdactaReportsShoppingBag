@@ -9,7 +9,9 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Windows.Storage;
@@ -80,13 +82,7 @@ internal sealed partial class MainViewModel(IProjectFileService projectFileServi
 
         if (userChosenFolder is null) return;
 
-        var project = new ReportPrj
-        {
-            ProjectCode = projectCode,
-            ProjectName = projectName,
-            Version = Assembly.GetExecutingAssembly().GetName().Version?.ToString(),
-            Products = products
-        };
+        var project = new ReportPrj(projectCode, projectName, Assembly.GetExecutingAssembly().GetName().Version?.ToString(), products);
 
         _projectFilePath = projectFileService.CreateProjectFolder(project, userChosenFolder.Path);
 
@@ -146,6 +142,45 @@ internal sealed partial class MainViewModel(IProjectFileService projectFileServi
         {
             _projectFilePath = file.Path;
             IsProjectEdited = false;
+        }
+    }
+
+    partial void OnReportProjectChanged(ReportPrj? oldValue, ReportPrj? newValue)
+    {
+        // Unsubscribe from old products
+        if (oldValue?.Products is not null)
+        {
+            foreach (var product in oldValue.Products.OfType<INotifyPropertyChanged>())
+            {
+                product.PropertyChanged -= Product_PropertyChanged;
+            }
+        }
+
+        // Subscribe to new products
+        if (newValue?.Products is not null)
+        {
+            foreach (var product in newValue.Products.OfType<INotifyPropertyChanged>())
+            {
+                product.PropertyChanged += Product_PropertyChanged;
+            }
+        }
+    }
+
+    private void Product_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        // Mark project as edited when any product property changes
+        IsProjectEdited = true;
+    }
+
+    ~MainViewModel()
+    {
+        // Unsubscribe property changed from products
+        if (ReportProject?.Products is not null)
+        {
+            foreach (var product in ReportProject.Products.OfType<INotifyPropertyChanged>())
+            {
+                product.PropertyChanged -= Product_PropertyChanged;
+            }
         }
     }
 }
