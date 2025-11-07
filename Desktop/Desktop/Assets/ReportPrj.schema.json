@@ -85,6 +85,9 @@
           "items": {
             "$ref": "#/$defs/ProductPhoto"
           }
+        },
+        "Classification": {
+          "$ref": "#/$defs/ProductClassification"
         }
       },
       "required": [
@@ -99,7 +102,8 @@
         "ExpiryDate",
         "ProductionFacility",
         "Ingredients",
-        "ProductPhotos"
+        "ProductPhotos",
+        "Classification"
       ],
       "additionalProperties": false
     },
@@ -118,6 +122,14 @@
         "PhotoUrl"
       ],
       "additionalProperties": false
+    },
+    "ProductClassification": {
+      "type": "integer",
+      "enum": [
+        0,
+        1,
+        2
+      ]
     }
   }
 }

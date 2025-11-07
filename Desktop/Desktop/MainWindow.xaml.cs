@@ -91,7 +91,7 @@ internal sealed partial class MainWindow
         return brightness > 128;
     }
 
-    private async void RootFrame_Loaded(object sender, RoutedEventArgs e)
+    private async void NavigationView_Loaded(object sender, RoutedEventArgs e)
     {
         if (_projectFile != null) await ViewModel.LoadProjectFileAsync(_projectFile);
     }

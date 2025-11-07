@@ -8,6 +8,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -23,7 +24,7 @@ internal sealed partial class MainViewModel(IProjectFileService projectFileServi
     public partial bool? IsProjectEdited { get; private set; } = null;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsProjectEdited))]
+    [NotifyPropertyChangedFor(nameof(IsProjectEdited), nameof(NavigationViewMenuItems))]
     public partial ReportPrj? ReportProject { get; private set; } = null;
 
     public string SaveStateText => IsProjectEdited switch
@@ -35,6 +36,8 @@ internal sealed partial class MainViewModel(IProjectFileService projectFileServi
 
     public Visibility SaveButtonVisibility =>
         IsProjectEdited is null or false ? Visibility.Collapsed : Visibility.Visible;
+
+    public ObservableCollection<Product>? NavigationViewMenuItems => new(ReportProject?.Products ?? []);
 
     private string? _projectFilePath;
 

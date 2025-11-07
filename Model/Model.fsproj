@@ -22,15 +22,20 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Compile Include="Soap\Request\GetJob.fs"/>
-        <Compile Include="Soap\Response\Error.fs"/>
-        <Compile Include="Soap\Response\ProductPhoto.fs"/>
-        <Compile Include="Soap\Response\Product.fs"/>
-        <Compile Include="Soap\Response\GetJobResult.fs"/>
-        <Compile Include="Soap\Response\GetJobResponse.fs"/>
-        <Compile Include="Soap\SoapBody.fs"/>
-        <Compile Include="Soap\SoapEnvelope.fs"/>
-        <Compile Include="ReportPrj.fs"/>
+        <Compile Include="ProductClassification.fs" />
+        <Compile Include="Soap\Request\GetJob.fs" />
+        <Compile Include="Soap\Response\Error.fs" />
+        <Compile Include="Soap\Response\ProductPhoto.fs" />
+        <Compile Include="Soap\Response\Product.fs" />
+        <Compile Include="Soap\Response\GetJobResult.fs" />
+        <Compile Include="Soap\Response\GetJobResponse.fs" />
+        <Compile Include="Soap\SoapBody.fs" />
+        <Compile Include="Soap\SoapEnvelope.fs" />
+        <Compile Include="ReportPrj.fs" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     </ItemGroup>
 
 </Project>

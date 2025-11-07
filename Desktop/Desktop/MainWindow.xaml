@@ -5,6 +5,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+    xmlns:model="using:AdactaInternational.AdactaReportsShoppingBag.Model.Soap.Response"
     mc:Ignorable="d"
     Title="AdactaReports Shopping Bag"
     Closed="MainWindow_Closed">
@@ -62,14 +63,26 @@
             </muxc:MenuBarItem>
         </muxc:MenuBar>
 
-        <Border Grid.Row="2" CornerRadius="8,8,0,0" VerticalAlignment="Stretch" Background="Transparent">
+        <NavigationView Grid.Row="2"
+                        CompactModeThresholdWidth="0"
+                        IsBackButtonVisible="Collapsed"
+                        IsSettingsVisible="False"
+                        PaneTitle="Prodotti"
+                        Loaded="NavigationView_Loaded"
+                        MenuItemsSource="{x:Bind ViewModel.NavigationViewMenuItems, Mode=OneWay}">
+            <NavigationView.MenuItemTemplate>
+                <DataTemplate x:DataType="model:Product">
+                    <NavigationViewItem Content="{x:Bind DisplayName, Mode=OneWay}">
+                        <NavigationViewItem.Icon>
+                            <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="{x:Bind NavigationMenuItemIcon, Mode=OneWay}"/>
+                        </NavigationViewItem.Icon>
+                    </NavigationViewItem>
+                </DataTemplate>
+            </NavigationView.MenuItemTemplate>
             <Grid>
-                <Rectangle Fill="{StaticResource LayerFillColorDefaultBrush}" />
-
                 <Image Source="/Assets/LogoDarkTheme.png" Stretch="Uniform" Opacity="0.02" />
-
-                <Frame Background="Transparent" Loaded="RootFrame_Loaded" />
+                <Frame />
             </Grid>
-        </Border>
+        </NavigationView>
     </Grid>
 </Window>
