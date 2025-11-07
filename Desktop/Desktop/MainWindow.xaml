@@ -72,7 +72,7 @@
                         MenuItemsSource="{x:Bind ViewModel.NavigationViewMenuItems, Mode=OneWay}">
             <NavigationView.MenuItemTemplate>
                 <DataTemplate x:DataType="model:Product">
-                    <NavigationViewItem Content="{x:Bind DisplayName, Mode=OneWay}">
+                    <NavigationViewItem Content="{x:Bind DisplayName, Mode=OneTime}">
                         <NavigationViewItem.Icon>
                             <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="{x:Bind NavigationMenuItemIcon, Mode=OneWay}"/>
                         </NavigationViewItem.Icon>

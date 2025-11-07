@@ -55,9 +55,9 @@ internal sealed partial class PenelopeCredentialsControl
         _viewModel.PropertyChanged -= ConfirmButtonEnabled_Changed;
     }
 
-    private void ConfirmButtonEnabled_Changed(object? sender, PropertyChangedEventArgs e)
+    private void ConfirmButtonEnabled_Changed(object? sender, PropertyChangedEventArgs args)
     {
-        if (e.PropertyName == nameof(_viewModel.IsConfirmButtonEnabled))
+        if (args.PropertyName == nameof(_viewModel.IsConfirmButtonEnabled))
             IsConfirmButtonEnabledChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsConfirmButtonEnabled)));
     }
 }

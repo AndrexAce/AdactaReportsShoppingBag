@@ -91,12 +91,12 @@ internal sealed partial class MainWindow
         return brightness > 128;
     }
 
-    private async void NavigationView_Loaded(object sender, RoutedEventArgs e)
+    private async void NavigationView_Loaded(object sender, RoutedEventArgs args)
     {
         if (_projectFile != null) await ViewModel.LoadProjectFileAsync(_projectFile);
     }
 
-    private void MainWindow_Closed(object sender, WindowEventArgs e)
+    private void MainWindow_Closed(object sender, WindowEventArgs args)
     {
         // Unsubscribe from the ColorValuesChanged event to prevent memory leaks
         _uiSettings.ColorValuesChanged -= UiSettings_ColorValuesChanged;
