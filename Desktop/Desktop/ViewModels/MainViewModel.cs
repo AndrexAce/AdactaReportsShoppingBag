@@ -153,6 +153,15 @@ internal sealed partial class MainViewModel(IProjectFileService projectFileServi
             foreach (var product in oldValue.Products.OfType<INotifyPropertyChanged>())
             {
                 product.PropertyChanged -= Product_PropertyChanged;
+                
+                // Unsubscribe from product photos
+                if (product is Product p)
+                {
+                    foreach (var photo in p.ProductPhotos.OfType<INotifyPropertyChanged>())
+                    {
+                        photo.PropertyChanged -= ProductPhoto_PropertyChanged;
+                    }
+                }
             }
         }
 
@@ -162,13 +171,26 @@ internal sealed partial class MainViewModel(IProjectFileService projectFileServi
             foreach (var product in newValue.Products.OfType<INotifyPropertyChanged>())
             {
                 product.PropertyChanged += Product_PropertyChanged;
+                
+                // Subscribe to product photos
+                if (product is Product p)
+                {
+                    foreach (var photo in p.ProductPhotos.OfType<INotifyPropertyChanged>())
+                    {
+                        photo.PropertyChanged += ProductPhoto_PropertyChanged;
+                    }
+                }
             }
         }
     }
 
     private void Product_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        // Mark project as edited when any product property changes
+        IsProjectEdited = true;
+    }
+
+    private void ProductPhoto_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
         IsProjectEdited = true;
     }
 
@@ -180,6 +202,15 @@ internal sealed partial class MainViewModel(IProjectFileService projectFileServi
             foreach (var product in ReportProject.Products.OfType<INotifyPropertyChanged>())
             {
                 product.PropertyChanged -= Product_PropertyChanged;
+                
+                // Unsubscribe from product photos
+                if (product is Product p)
+                {
+                    foreach (var photo in p.ProductPhotos.OfType<INotifyPropertyChanged>())
+                    {
+                        photo.PropertyChanged -= ProductPhoto_PropertyChanged;
+                    }
+                }
             }
         }
     }

@@ -1,76 +1,117 @@
 ﻿namespace AdactaInternational.AdactaReportsShoppingBag.Model.Soap.Response
 
 open System.Xml.Serialization
-open System.ComponentModel
 open System.ComponentModel.DataAnnotations
 open AdactaInternational.AdactaReportsShoppingBag.Model
 open Newtonsoft.Json
+open CommunityToolkit.Mvvm.ComponentModel
 
 type Product() =
-    let propertyChanged = Event<PropertyChangedEventHandler, PropertyChangedEventArgs>()
+    inherit ObservableObject()
+    
+    let mutable _code = ""
+    let mutable _name = ""
+    let mutable _category = ""
+    let mutable _manufacturer = ""
+    let mutable _format = ""
+    let mutable _ean = ""
+    let mutable _batch = ""
+    let mutable _productionDate = ""
+    let mutable _expiryDate = ""
+    let mutable _productionFacility = ""
+    let mutable _ingredients = ""
+    let mutable _productPhotos: ProductPhoto array = [||]
+    let mutable _classification = ProductClassification.Unknown
     
     [<XmlAttribute("sigla")>]
     [<Required>]
     [<RegularExpression(@"^[A-Z0-9]{3}$")>]
-    member val Code = "" with get, set
+    member this.Code
+        with get() = _code
+        and set(value) =
+            if this.SetProperty(&_code, value) then
+                this.OnPropertyChanged("DisplayName")
 
     [<XmlAttribute("nome")>]
     [<Required>]
     [<StringLength(100, MinimumLength = 1)>]
-    member val Name = "" with get, set
+    member this.Name
+        with get() = _name
+        and set(value) =
+            if this.SetProperty(&_name, value) then
+                this.OnPropertyChanged("DisplayName")
+                this.OnPropertyChanged("ProductName")
+                this.OnPropertyChanged("Brand")
+                this.OnPropertyChanged("SubBrand")
 
     [<XmlAttribute("categoria")>]
     [<Required>]
-    member val Category = "" with get, set
+    member this.Category
+        with get() = _category
+        and set(value) = this.SetProperty(&_category, value) |> ignore
 
     [<XmlAttribute("produttore")>]
     [<Required>]
-    member val Manufacturer = "" with get, set
+    member this.Manufacturer
+        with get() = _manufacturer
+        and set(value) = this.SetProperty(&_manufacturer, value) |> ignore
 
     [<XmlAttribute("formato")>]
     [<Required>]
-    member val Format = "" with get, set
+    member this.Format
+        with get() = _format
+        and set(value) = this.SetProperty(&_format, value) |> ignore
 
     [<XmlAttribute("EAN")>]
     [<Required>]
-    member val EAN = "" with get, set
+    member this.EAN
+        with get() = _ean
+        and set(value) = this.SetProperty(&_ean, value) |> ignore
 
     [<XmlAttribute("lotto")>]
     [<Required>]
-    member val Batch = "" with get, set
+    member this.Batch
+        with get() = _batch
+        and set(value) = this.SetProperty(&_batch, value) |> ignore
 
     [<XmlAttribute("dataDiProduzione")>]
     [<Required>]
-    member val ProductionDate = "" with get, set
+    member this.ProductionDate
+        with get() = _productionDate
+        and set(value) = this.SetProperty(&_productionDate, value) |> ignore
 
     [<XmlAttribute("dataDiScadenza")>]
     [<Required>]
-    member val ExpiryDate = "" with get, set
+    member this.ExpiryDate
+        with get() = _expiryDate
+        and set(value) = this.SetProperty(&_expiryDate, value) |> ignore
 
     [<XmlAttribute("stabilimentoDiProduzione")>]
     [<Required>]
-    member val ProductionFacility = "" with get, set
+    member this.ProductionFacility
+        with get() = _productionFacility
+        and set(value) = this.SetProperty(&_productionFacility, value) |> ignore
 
     [<XmlElement("ingredienti")>]
     [<Required>]
-    member val Ingredients = "" with get, set
+    member this.Ingredients
+        with get() = _ingredients
+        and set(value) = this.SetProperty(&_ingredients, value) |> ignore
 
     [<XmlArray("foto")>]
     [<XmlArrayItem("FotoProdotto")>]
     [<Required>]
     [<Length(1, 5)>]
-    member val ProductPhotos: ProductPhoto array = [||] with get, set
-
-    member val private _classification = ProductClassification.Unknown with get, set
+    member this.ProductPhotos
+        with get() = _productPhotos
+        and set(value) = this.SetProperty(&_productPhotos, value) |> ignore
 
     [<XmlIgnore>]
     member this.Classification 
-        with get() = this._classification
+        with get() = _classification
         and set(value) = 
-            if this._classification <> value then
-                this._classification <- value
-                propertyChanged.Trigger(this, PropertyChangedEventArgs("Classification"))
-                propertyChanged.Trigger(this, PropertyChangedEventArgs("NavigationMenuItemIcon"))
+            if this.SetProperty(&_classification, value) then
+                this.OnPropertyChanged("NavigationMenuItemIcon")
 
     [<XmlIgnore>]
     [<JsonIgnore>]
@@ -102,7 +143,3 @@ type Product() =
         | ProductClassification.Food -> "\ued56"
         | ProductClassification.NonFood -> "\ue80f"
         | _ -> "\ue897"
-
-    interface INotifyPropertyChanged with
-        [<CLIEvent>]
-        member _.PropertyChanged = propertyChanged.Publish
