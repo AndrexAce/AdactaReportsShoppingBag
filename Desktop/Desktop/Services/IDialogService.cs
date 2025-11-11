@@ -25,4 +25,6 @@ internal interface IDialogService
     public Task<StorageFolder?> ShowFolderPicker();
 
     public Task ShowCreditsDialogAsync();
+
+    public Task ShowImageDialogAsync(string imageUrl);
 }

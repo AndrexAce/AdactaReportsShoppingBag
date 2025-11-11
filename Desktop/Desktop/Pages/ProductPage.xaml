@@ -8,92 +8,100 @@
     mc:Ignorable="d">
 
     <ScrollViewer>
-        <StackPanel Orientation="Horizontal" Padding="24" Spacing="16">
-            <StackPanel Orientation="Vertical" Spacing="16" HorizontalAlignment="Stretch">
-                <TextBlock Text="Informazioni prodotto" Style="{StaticResource TitleTextBlockStyle}" />
+        <StackPanel Grid.Column="0" Orientation="Vertical" Spacing="16" Padding="24" HorizontalAlignment="Stretch">
+            <TextBlock Text="Informazioni prodotto" Style="{StaticResource TitleTextBlockStyle}" />
 
-                <TextBox Header="Codice prodotto" 
+            <TextBox Header="Codice prodotto" 
                          Text="{x:Bind CurrentProduct.Code, Mode=OneTime}"
                          IsReadOnly="True" />
 
-                <TextBox Header="Nome prodotto" 
+            <TextBox Header="Nome prodotto" 
                          Text="{x:Bind CurrentProduct.Name, Mode=TwoWay}"
                          PlaceholderText="Nome completo del prodotto"
                          MaxLength="100" />
 
-                <TextBox Header="Categoria" 
+            <TextBox Header="Categoria" 
                          Text="{x:Bind CurrentProduct.Category, Mode=TwoWay}"
                          PlaceholderText="Categoria del prodotto" />
 
-                <TextBox Header="Produttore" 
+            <TextBox Header="Produttore" 
                          Text="{x:Bind CurrentProduct.Manufacturer, Mode=TwoWay}"
                          PlaceholderText="Nome del produttore" />
 
-                <TextBox Header="Formato" 
+            <TextBox Header="Formato" 
                          Text="{x:Bind CurrentProduct.Format, Mode=TwoWay}"
                          PlaceholderText="Formato del prodotto" />
 
-                <TextBox Header="EAN" 
+            <TextBox Header="EAN" 
                          Text="{x:Bind CurrentProduct.EAN, Mode=TwoWay}"
                          PlaceholderText="Codice a barre EAN del prodotto" />
 
-                <TextBox Header="Lotto" 
+            <TextBox Header="Lotto" 
                          Text="{x:Bind CurrentProduct.Batch, Mode=TwoWay}"
                          PlaceholderText="Numero di lotto del prodotto" />
 
-                <TextBox Header="Data di produzione" 
+            <TextBox Header="Data di produzione" 
                          Text="{x:Bind CurrentProduct.ProductionDate, Mode=TwoWay}"
                          PlaceholderText="Data di produzione del prodotto" />
 
-                <TextBox Header="Data di scadenza" 
+            <TextBox Header="Data di scadenza" 
                          Text="{x:Bind CurrentProduct.ExpiryDate, Mode=TwoWay}"
                          PlaceholderText="Data di scadenza del prodotto" />
 
-                <TextBox Header="Stabilimento di produzione" 
+            <TextBox Header="Stabilimento di produzione" 
                          Text="{x:Bind CurrentProduct.ProductionFacility, Mode=TwoWay}"
                          PlaceholderText="Luogo di produzione del prodotto" />
 
-                <TextBox Header="Ingredienti" 
+            <TextBox Header="Ingredienti" 
                          Text="{x:Bind CurrentProduct.Ingredients, Mode=TwoWay}"
                          TextWrapping="Wrap"
                          AcceptsReturn="True"
                          MinHeight="100"
                          PlaceholderText="Elenco ingredienti del prodotto" />
 
-                <StackPanel Spacing="8">
-                    <TextBlock Text="Classificazione" Style="{StaticResource BodyStrongTextBlockStyle}" />
+            <StackPanel Spacing="8">
+                <TextBlock Text="Classificazione" />
                     <ComboBox SelectedIndex="{x:Bind CurrentProduct.Classification, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}"
                               HorizontalAlignment="Stretch">
-                        <ComboBoxItem Content="Sconosciuto" />
-                        <ComboBoxItem Content="Alimentare" />
-                        <ComboBoxItem Content="Non alimentare" />
-                    </ComboBox>
-                </StackPanel>
+                    <ComboBoxItem Content="Sconosciuto" />
+                    <ComboBoxItem Content="Alimentare" />
+                    <ComboBoxItem Content="Non alimentare" />
+                </ComboBox>
+            </StackPanel>
 
-                <TextBlock Text="Foto prodotto" Style="{StaticResource TitleTextBlockStyle}" />
+            <TextBlock Text="Foto prodotto" Style="{StaticResource TitleTextBlockStyle}" />
 
                 <ListView ItemsSource="{x:Bind CurrentProduct.ProductPhotos, Mode=OneWay}"
                           SelectionMode="None">
-                    <ListView.ItemTemplate>
-                        <DataTemplate x:DataType="local:ProductPhoto">
-                            <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,12,0,0">
-                                <TextBox Header="Tipo" 
-                                         Text="{x:Bind Type, Mode=TwoWay}"
-                                         Width="150" />
-                                <TextBox Header="URL Foto" 
-                                         Text="{x:Bind PhotoUrl, Mode=TwoWay}"
-                                         Width="400" />
-                                <Button>
-                                    <StackPanel Orientation="Horizontal" Spacing="12">
-                                        <FontIcon Glyph="&#xe72d;" />
-                                        <TextBlock Text="Apri" />
-                                    </StackPanel>
-                                </Button>
-                            </StackPanel>
-                        </DataTemplate>
-                    </ListView.ItemTemplate>
-                </ListView>
-            </StackPanel>
+                <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="local:ProductPhoto">
+                        <Grid Margin="0,12,0,0" ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="150" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBox Grid.Column="0"
+                                     Header="Tipo" 
+                                     Text="{x:Bind Type, Mode=TwoWay}" />
+
+                            <TextBox Grid.Column="1"
+                                     Header="URL Foto"
+                                     Text="{x:Bind PhotoUrl, Mode=TwoWay}" />
+
+                            <Button Grid.Column="2"
+                                    Click="Button_Click"
+                                    Tag="{x:Bind PhotoUrl, Mode=TwoWay}">
+                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                    <FontIcon Glyph="&#xe72d;" />
+                                    <TextBlock Text="Apri" />
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
         </StackPanel>
     </ScrollViewer>
 </Page>

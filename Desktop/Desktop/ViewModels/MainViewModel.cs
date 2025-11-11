@@ -45,6 +45,7 @@ internal sealed partial class MainViewModel(IProjectFileService projectFileServi
 
     [RelayCommand]
     [RequiresUnreferencedCode("Uses functionality that may break with trimming.")]
+    [RequiresDynamicCode("Uses functionality that may break with AOT.")]
     private async Task NewProjectAsync()
     {
         var (newProjectChoice, projectCode, projectName) =
@@ -82,7 +83,7 @@ internal sealed partial class MainViewModel(IProjectFileService projectFileServi
 
         if (userChosenFolder is null) return;
 
-        var project = new ReportPrj(projectCode, projectName, Assembly.GetExecutingAssembly().GetName().Version?.ToString(), products);
+        var project = new ReportPrj(Assembly.GetExecutingAssembly().GetName().Version?.ToString(), projectName, projectCode, products);
 
         _projectFilePath = projectFileService.CreateProjectFolder(project, userChosenFolder.Path);
 
@@ -93,6 +94,8 @@ internal sealed partial class MainViewModel(IProjectFileService projectFileServi
     }
 
     [RelayCommand]
+    [RequiresUnreferencedCode("Uses functionality that may break with trimming.")]
+    [RequiresDynamicCode("Uses functionality that may break with AOT.")]
     private async Task OpenProjectAsync()
     {
         var file = await dialogService.ShowFileOpenPickerAsync();
@@ -114,6 +117,8 @@ internal sealed partial class MainViewModel(IProjectFileService projectFileServi
     }
 
     [RelayCommand]
+    [RequiresUnreferencedCode("Uses functionality that may break with trimming.")]
+    [RequiresDynamicCode("Uses functionality that may break with AOT.")]
     private async Task SaveProjectAsync()
     {
         if (ReportProject == null || _projectFilePath == null) return;
@@ -129,6 +134,8 @@ internal sealed partial class MainViewModel(IProjectFileService projectFileServi
         return dialogService.ShowCreditsDialogAsync();
     }
 
+    [RequiresUnreferencedCode("Uses functionality that may break with trimming.")]
+    [RequiresDynamicCode("Uses functionality that may break with AOT.")]
     public async Task LoadProjectFileAsync(IStorageFile file)
     {
         ReportProject = await projectFileService.LoadProjectFileAsync(file);
@@ -153,7 +160,7 @@ internal sealed partial class MainViewModel(IProjectFileService projectFileServi
             foreach (var product in oldValue.Products.OfType<INotifyPropertyChanged>())
             {
                 product.PropertyChanged -= Product_PropertyChanged;
-                
+
                 // Unsubscribe from product photos
                 if (product is Product p)
                 {
@@ -171,7 +178,7 @@ internal sealed partial class MainViewModel(IProjectFileService projectFileServi
             foreach (var product in newValue.Products.OfType<INotifyPropertyChanged>())
             {
                 product.PropertyChanged += Product_PropertyChanged;
-                
+
                 // Subscribe to product photos
                 if (product is Product p)
                 {
@@ -202,7 +209,7 @@ internal sealed partial class MainViewModel(IProjectFileService projectFileServi
             foreach (var product in ReportProject.Products.OfType<INotifyPropertyChanged>())
             {
                 product.PropertyChanged -= Product_PropertyChanged;
-                
+
                 // Unsubscribe from product photos
                 if (product is Product p)
                 {

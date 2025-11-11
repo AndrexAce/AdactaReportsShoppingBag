@@ -1,11 +1,15 @@
 ﻿using AdactaInternational.AdactaReportsShoppingBag.Desktop.Controls;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media.Imaging;
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Net.Http;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.Pickers;
+using Windows.Storage.Streams;
 using WinRT.Interop;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.Services;
@@ -126,5 +130,42 @@ internal sealed class DialogService : IDialogService
         };
 
         await dialog.ShowAsync();
+    }
+
+    public async Task ShowImageDialogAsync(string imageUrl)
+    {
+        try
+        {
+            var imageBytes = await new HttpClient().GetByteArrayAsync(imageUrl);
+
+            using var stream = new InMemoryRandomAccessStream();
+            await stream.WriteAsync(imageBytes.AsBuffer());
+            stream.Seek(0);
+
+            var bitmapImage = new BitmapImage();
+            await bitmapImage.SetSourceAsync(stream);
+
+            var image = new Image
+            {
+                Source = bitmapImage,
+                Stretch = Microsoft.UI.Xaml.Media.Stretch.Uniform,
+                MaxHeight = 600,
+                MaxWidth = 800
+            };
+
+            var dialog = new ContentDialog
+            {
+                Title = "Anteprima immagine",
+                CloseButtonText = "Chiudi",
+                Content = image,
+                XamlRoot = _window?.Content.XamlRoot
+            };
+
+            await dialog.ShowAsync();
+        }
+        catch
+        {
+            await ShowInformationDialogAsync("Errore", "Impossibile caricare l'immagine.", "OK");
+        }
     }
 }

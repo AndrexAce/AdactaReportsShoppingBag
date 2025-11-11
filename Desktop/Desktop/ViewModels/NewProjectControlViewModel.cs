@@ -34,14 +34,14 @@ internal sealed partial class NewProjectControlViewModel : ObservableValidator
     public Visibility ProjectNameErrorVisibility =>
         GetErrors(nameof(ProjectName)).Any() ? Visibility.Visible : Visibility.Collapsed;
 
-    [RequiresUnreferencedCode("Uses functionality that may break when trimming.")]
+    [RequiresUnreferencedCode("Uses functionality that may break with trimming.")]
     partial void OnProjectCodeChanged(string? value)
     {
         ValidateProperty(ProjectName, nameof(ProjectName));
         UpdateConfirmButtonState();
     }
 
-    [RequiresUnreferencedCode("Uses functionality that may break when trimming.")]
+    [RequiresUnreferencedCode("Uses functionality that may break with trimming.")]
     partial void OnProjectNameChanged(string? value)
     {
         ValidateProperty(ProjectCode, nameof(ProjectCode));

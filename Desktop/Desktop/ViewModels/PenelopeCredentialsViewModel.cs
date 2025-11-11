@@ -32,14 +32,14 @@ internal sealed partial class PenelopeCredentialsViewModel : ObservableValidator
     public Visibility PasswordErrorVisibility =>
         GetErrors(nameof(Password)).Any() ? Visibility.Visible : Visibility.Collapsed;
 
-    [RequiresUnreferencedCode("Uses functionality that may break when trimming.")]
+    [RequiresUnreferencedCode("Uses functionality that may break with trimming.")]
     partial void OnUsernameChanged(string? value)
     {
         ValidateProperty(Password, nameof(Password));
         UpdateConfirmButtonState();
     }
 
-    [RequiresUnreferencedCode("Uses functionality that may break when trimming.")]
+    [RequiresUnreferencedCode("Uses functionality that may break with trimming.")]
     partial void OnPasswordChanged(string? value)
     {
         ValidateProperty(Username, nameof(Username));

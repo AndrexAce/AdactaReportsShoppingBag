@@ -24,7 +24,7 @@ internal sealed class PenelopeClient(IStorageService storageService) : IPenelope
         Timeout = TimeSpan.FromSeconds(10)
     };
 
-    [RequiresUnreferencedCode("Uses functionality that may break when trimming.")]
+    [RequiresUnreferencedCode("Uses functionality that may break with trimming.")]
     private static async Task<XmlElement?> SerializeToXmlNodeAsync<TRequest>(TRequest request)
     {
         // Create XmlDocument to hold the serialized object
@@ -53,7 +53,7 @@ internal sealed class PenelopeClient(IStorageService storageService) : IPenelope
         return xmlDocument.DocumentElement;
     }
 
-    [RequiresUnreferencedCode("Uses functionality that may break when trimming.")]
+    [RequiresUnreferencedCode("Uses functionality that may break with trimming.")]
     private static async Task<string> SerializeSoapEnvelopeAsync<TRequest>(TRequest request)
     {
         // Create the SOAP envelope
@@ -78,7 +78,7 @@ internal sealed class PenelopeClient(IStorageService storageService) : IPenelope
         return Encoding.UTF8.GetString(memoryStream.ToArray());
     }
 
-    [RequiresUnreferencedCode("Uses functionality that may break when trimming.")]
+    [RequiresUnreferencedCode("Uses functionality that may break with trimming.")]
     private static async Task<TResponse?> DeserializeSoapEnvelopeAsync<TResponse>(HttpResponseMessage response)
     {
         // Extract the response content
@@ -106,7 +106,7 @@ internal sealed class PenelopeClient(IStorageService storageService) : IPenelope
         return (TResponse?)actionSerializer.Deserialize(nodeReader);
     }
 
-    [RequiresUnreferencedCode("Uses functionality that may break when trimming.")]
+    [RequiresUnreferencedCode("Uses functionality that may break with trimming.")]
     public async Task<IEnumerable<Product>> GetProductsAsync(string jobCode)
     {
         if (!storageService.DoesContainerExist("Credentials"))

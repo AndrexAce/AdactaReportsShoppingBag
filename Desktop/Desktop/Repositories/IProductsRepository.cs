@@ -7,6 +7,6 @@ namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.Repositories;
 
 internal interface IProductsRepository
 {
-    [RequiresUnreferencedCode("Uses functionality that may break when trimming.")]
+    [RequiresUnreferencedCode("Uses functionality that may break with trimming.")]
     public Task<IEnumerable<Product>> GetProductsAsync(string jobCode);
 }

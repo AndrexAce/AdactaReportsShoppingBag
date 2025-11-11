@@ -8,7 +8,7 @@ namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.Repositories;
 
 internal sealed class ProductRepository(IPenelopeClient penelopeClient) : IProductsRepository
 {
-    [RequiresUnreferencedCode("Uses functionality that may break when trimming.")]
+    [RequiresUnreferencedCode("Uses functionality that may break with trimming.")]
     public Task<IEnumerable<Product>> GetProductsAsync(string jobCode)
     {
         return penelopeClient.GetProductsAsync(jobCode);
