@@ -2,7 +2,7 @@
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
         <LangVersion>preview</LangVersion>
-        <TargetFramework>net9.0-windows10.0.26100.0</TargetFramework>
+        <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
         <TargetPlatformMinVersion>10.0.22000.0</TargetPlatformMinVersion>
         <RootNamespace>AdactaInternational.AdactaReportsShoppingBag.Desktop</RootNamespace>
         <ApplicationManifest>AdactaReportsShoppingBag.manifest</ApplicationManifest>
@@ -20,7 +20,7 @@
 
     <ItemGroup>
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.10" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
         <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.6901" />
         <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.251003001" />
         <PackageReference Include="Newtonsoft.Json.Schema" Version="4.0.1" />
