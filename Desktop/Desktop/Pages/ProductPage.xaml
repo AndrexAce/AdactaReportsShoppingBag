@@ -59,16 +59,6 @@
                          MinHeight="100"
                          PlaceholderText="Elenco ingredienti del prodotto" />
 
-            <StackPanel Spacing="8">
-                <TextBlock Text="Classificazione" />
-                    <ComboBox SelectedIndex="{x:Bind CurrentProduct.Classification, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}"
-                              HorizontalAlignment="Stretch">
-                    <ComboBoxItem Content="Sconosciuto" />
-                    <ComboBoxItem Content="Alimentare" />
-                    <ComboBoxItem Content="Non alimentare" />
-                </ComboBox>
-            </StackPanel>
-
             <TextBlock Text="Foto prodotto" Style="{StaticResource TitleTextBlockStyle}" />
 
                 <ListView ItemsSource="{x:Bind CurrentProduct.ProductPhotos, Mode=OneWay}"

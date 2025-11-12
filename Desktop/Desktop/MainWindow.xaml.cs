@@ -1,5 +1,6 @@
 using AdactaInternational.AdactaReportsShoppingBag.Desktop.Pages;
 using AdactaInternational.AdactaReportsShoppingBag.Desktop.ViewModels;
+using AdactaInternational.AdactaReportsShoppingBag.Model;
 using AdactaInternational.AdactaReportsShoppingBag.Model.Soap.Response;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using Microsoft.UI;
@@ -52,8 +53,8 @@ internal sealed partial class MainWindow
 
         if (appWindow?.Presenter is OverlappedPresenter overlapped)
         {
-            overlapped.PreferredMinimumWidth = 640;
-            overlapped.PreferredMinimumHeight = 480;
+            overlapped.PreferredMinimumWidth = 1280;
+            overlapped.PreferredMinimumHeight = 720;
         }
 
         // Dissolve the system title bar
@@ -110,6 +111,15 @@ internal sealed partial class MainWindow
         if (args.SelectedItem is Product product)
         {
             RootFrame.Navigate(typeof(ProductPage), product);
+        }
+    }
+
+    private void Button_Click(object sender, RoutedEventArgs args)
+    {
+        if (sender is Button button && button.Tag is Product product)
+        {
+            product.Classification = product.Classification is ProductClassification.Unknown or ProductClassification.NonFood ?
+                ProductClassification.Food : ProductClassification.NonFood;
         }
     }
 }

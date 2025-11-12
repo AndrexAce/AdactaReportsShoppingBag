@@ -1,14 +1,12 @@
 <Application
     x:Class="AdactaInternational.AdactaReportsShoppingBag.Desktop.App"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:converters="using:AdactaInternational.AdactaReportsShoppingBag.Desktop.Converters">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
             </ResourceDictionary.MergedDictionaries>
-            <converters:EnumToIntConverter x:Key="EnumToIntConverter"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

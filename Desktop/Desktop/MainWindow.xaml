@@ -64,20 +64,22 @@
         </muxc:MenuBar>
 
         <NavigationView Grid.Row="2"
-                        CompactModeThresholdWidth="0"
+                        IsPaneToggleButtonVisible="False"
                         IsBackButtonVisible="Collapsed"
                         IsSettingsVisible="False"
+                        PaneDisplayMode="Left"
                         PaneTitle="Prodotti"
                         Loaded="NavigationView_Loaded"
                         MenuItemsSource="{x:Bind ViewModel.NavigationViewMenuItems, Mode=OneWay}"
                         SelectionChanged="NavigationView_SelectionChanged">
             <NavigationView.MenuItemTemplate>
                 <DataTemplate x:DataType="model:Product">
-                    <NavigationViewItem Content="{x:Bind DisplayName, Mode=OneTime}">
-                        <NavigationViewItem.Icon>
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <Button Click="Button_Click" Tag="{x:Bind Mode=OneWay}">
                             <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="{x:Bind NavigationMenuItemIcon, Mode=OneWay}"/>
-                        </NavigationViewItem.Icon>
-                    </NavigationViewItem>
+                        </Button>
+                        <TextBlock Text="{x:Bind DisplayName, Mode=OneWay}" VerticalAlignment="Center" />
+                    </StackPanel>
                 </DataTemplate>
             </NavigationView.MenuItemTemplate>
             <Grid>
