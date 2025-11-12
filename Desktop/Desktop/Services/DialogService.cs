@@ -3,7 +3,6 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media.Imaging;
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Net.Http;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
@@ -37,7 +36,6 @@ internal sealed class DialogService : IDialogService
         return await dialog.ShowAsync();
     }
 
-    [RequiresUnreferencedCode("Uses functionality that may break with trimming.")]
     public async Task<(ContentDialogResult, string, string)> ShowNewProjectDialogAsync(string title,
         string confirmButtonText,
         string cancelButtonText)
@@ -62,7 +60,6 @@ internal sealed class DialogService : IDialogService
         return (await dialog.ShowAsync(), control.ProjectCode, control.ProjectName);
     }
 
-    [RequiresUnreferencedCode("Uses functionality that may break with trimming.")]
     public async Task<(ContentDialogResult, string, string)> ShowPenelopeCredentialsDialogAsync(string title,
     string confirmButtonText,
     string cancelButtonText)

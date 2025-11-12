@@ -1,7 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.UI.Xaml;
 using System.ComponentModel.DataAnnotations;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.ViewModels;
@@ -32,14 +31,12 @@ internal sealed partial class PenelopeCredentialsViewModel : ObservableValidator
     public Visibility PasswordErrorVisibility =>
         GetErrors(nameof(Password)).Any() ? Visibility.Visible : Visibility.Collapsed;
 
-    [RequiresUnreferencedCode("Uses functionality that may break with trimming.")]
     partial void OnUsernameChanged(string? value)
     {
         ValidateProperty(Password, nameof(Password));
         UpdateConfirmButtonState();
     }
 
-    [RequiresUnreferencedCode("Uses functionality that may break with trimming.")]
     partial void OnPasswordChanged(string? value)
     {
         ValidateProperty(Username, nameof(Username));

@@ -1,7 +1,6 @@
 ﻿using AdactaInternational.AdactaReportsShoppingBag.Model;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Schema;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -11,8 +10,6 @@ namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.Services;
 
 internal sealed class ProjectFileService : IProjectFileService
 {
-    [RequiresUnreferencedCode("Uses functionality that may break with trimming.")]
-    [RequiresDynamicCode("Uses functionality that may break with AOT.")]
     public async Task<ReportPrj?> LoadProjectFileAsync(IStorageFile projectFile)
     {
         return await IsProjectFileValidAsync(projectFile) switch
@@ -23,8 +20,6 @@ internal sealed class ProjectFileService : IProjectFileService
         };
     }
 
-    [RequiresUnreferencedCode("Uses functionality that may break with trimming.")]
-    [RequiresDynamicCode("Uses functionality that may break with AOT.")]
     private static async Task<(bool, ReportPrj?)> IsProjectFileValidAsync(IStorageFile file)
     {
         // Validate the file type
@@ -55,16 +50,12 @@ internal sealed class ProjectFileService : IProjectFileService
         }
     }
 
-    [RequiresUnreferencedCode("Uses functionality that may break with trimming.")]
-    [RequiresDynamicCode("Uses functionality that may break with AOT.")]
     public Task SaveProjectFileAsync(ReportPrj project, string projectFilePath)
     {
         var projectJson = JObject.FromObject(project).ToString();
         return File.WriteAllTextAsync(projectFilePath, projectJson);
     }
 
-    [RequiresUnreferencedCode("Uses functionality that may break with trimming.")]
-    [RequiresDynamicCode("Uses functionality that may break with AOT.")]
     public string? CreateProjectFolder(ReportPrj project, string folderPath)
     {
         try

@@ -22,7 +22,7 @@
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
         <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.6901" />
-        <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.251003001" />
+        <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.251106002" />
         <PackageReference Include="Newtonsoft.Json.Schema" Version="4.0.1" />
     </ItemGroup>
 
@@ -57,12 +57,7 @@
 
     <!-- Publish Properties -->
     <PropertyGroup>
-        <PublishReadyToRun Condition="'$(Configuration)' == 'Debug'">False</PublishReadyToRun>
-        <PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>
-        <PublishTrimmed Condition="'$(Configuration)' == 'Debug'">True</PublishTrimmed>
-        <PublishTrimmed Condition="'$(Configuration)' != 'Debug'">True</PublishTrimmed>
         <SupportedOSPlatformVersion>10.0.22000.0</SupportedOSPlatformVersion>
-        <PublishAot>True</PublishAot>
         <AssemblyName>AdactaReportsShoppingBag</AssemblyName>
         <Company>Adacta International</Company>
         <Product>Adacta Reports Shopping Bag</Product>

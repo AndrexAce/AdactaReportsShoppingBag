@@ -8,7 +8,6 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media.Imaging;
 using System;
-using System.Diagnostics.CodeAnalysis;
 using Windows.Storage;
 using Windows.UI;
 using Windows.UI.ViewManagement;
@@ -95,8 +94,6 @@ internal sealed partial class MainWindow
         return brightness > 128;
     }
 
-    [RequiresUnreferencedCode("Uses functionality that may break with trimming.")]
-    [RequiresDynamicCode("Uses functionality that may break with AOT.")]
     private async void NavigationView_Loaded(object sender, RoutedEventArgs args)
     {
         if (_projectFile != null) await ViewModel.LoadProjectFileAsync(_projectFile);

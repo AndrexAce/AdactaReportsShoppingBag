@@ -1,7 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.UI.Xaml;
 using System.ComponentModel.DataAnnotations;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.ViewModels;
@@ -34,14 +33,12 @@ internal sealed partial class NewProjectControlViewModel : ObservableValidator
     public Visibility ProjectNameErrorVisibility =>
         GetErrors(nameof(ProjectName)).Any() ? Visibility.Visible : Visibility.Collapsed;
 
-    [RequiresUnreferencedCode("Uses functionality that may break with trimming.")]
     partial void OnProjectCodeChanged(string? value)
     {
         ValidateProperty(ProjectName, nameof(ProjectName));
         UpdateConfirmButtonState();
     }
 
-    [RequiresUnreferencedCode("Uses functionality that may break with trimming.")]
     partial void OnProjectNameChanged(string? value)
     {
         ValidateProperty(ProjectCode, nameof(ProjectCode));

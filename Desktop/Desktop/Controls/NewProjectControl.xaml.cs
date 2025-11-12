@@ -2,11 +2,9 @@ using AdactaInternational.AdactaReportsShoppingBag.Desktop.ViewModels;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using Microsoft.UI.Xaml;
 using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.Controls;
 
-[RequiresUnreferencedCode("Uses functionality that may break with trimming.")]
 internal sealed partial class NewProjectControl
 {
     private readonly NewProjectControlViewModel _viewModel;

@@ -10,7 +10,6 @@ using Microsoft.UI.Xaml.Controls;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -44,8 +43,6 @@ internal sealed partial class MainViewModel(IProjectFileService projectFileServi
     private string? _projectFilePath;
 
     [RelayCommand]
-    [RequiresUnreferencedCode("Uses functionality that may break with trimming.")]
-    [RequiresDynamicCode("Uses functionality that may break with AOT.")]
     private async Task NewProjectAsync()
     {
         var (newProjectChoice, projectCode, projectName) =
@@ -94,8 +91,6 @@ internal sealed partial class MainViewModel(IProjectFileService projectFileServi
     }
 
     [RelayCommand]
-    [RequiresUnreferencedCode("Uses functionality that may break with trimming.")]
-    [RequiresDynamicCode("Uses functionality that may break with AOT.")]
     private async Task OpenProjectAsync()
     {
         var file = await dialogService.ShowFileOpenPickerAsync();
@@ -117,8 +112,6 @@ internal sealed partial class MainViewModel(IProjectFileService projectFileServi
     }
 
     [RelayCommand]
-    [RequiresUnreferencedCode("Uses functionality that may break with trimming.")]
-    [RequiresDynamicCode("Uses functionality that may break with AOT.")]
     private async Task SaveProjectAsync()
     {
         if (ReportProject == null || _projectFilePath == null) return;
@@ -134,8 +127,6 @@ internal sealed partial class MainViewModel(IProjectFileService projectFileServi
         return dialogService.ShowCreditsDialogAsync();
     }
 
-    [RequiresUnreferencedCode("Uses functionality that may break with trimming.")]
-    [RequiresDynamicCode("Uses functionality that may break with AOT.")]
     public async Task LoadProjectFileAsync(IStorageFile file)
     {
         ReportProject = await projectFileService.LoadProjectFileAsync(file);
