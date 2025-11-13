@@ -41,15 +41,35 @@
                         <KeyboardAccelerator Key="N" Modifiers="Control" />
                     </MenuFlyoutItem.KeyboardAccelerators>
                 </MenuFlyoutItem>
-                <MenuFlyoutItem Text="Apri" Icon="Import" Command="{x:Bind ViewModel.OpenProjectCommand}">
+                <MenuFlyoutItem Text="Apri" Icon="OpenLocal" Command="{x:Bind ViewModel.OpenProjectCommand}">
                     <MenuFlyoutItem.KeyboardAccelerators>
                         <KeyboardAccelerator Key="A" Modifiers="Control" />
                     </MenuFlyoutItem.KeyboardAccelerators>
                 </MenuFlyoutItem>
+                <MenuFlyoutSeparator />
                 <MenuFlyoutItem Text="Salva" Icon="Save" Command="{x:Bind ViewModel.SaveProjectCommand}"
                                 Visibility="{x:Bind ViewModel.SaveButtonVisibility, Mode=OneWay}">
                     <MenuFlyoutItem.KeyboardAccelerators>
                         <KeyboardAccelerator Key="S" Modifiers="Control" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+            </muxc:MenuBarItem>
+
+            <muxc:MenuBarItem Title="Elaborazione" Visibility="{x:Bind ViewModel.SurveyMenuItemVisibility, Mode=OneWay}">
+                <MenuFlyoutItem Text="Importa file input" Icon="Import">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="I" Modifiers="Control" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem Text="Apri file classi domande" Icon="Document">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="C" Modifiers="Control" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutSeparator />
+                <MenuFlyoutItem Text="Elabora" Icon="SlideShow">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="E" Modifiers="Control" />
                     </MenuFlyoutItem.KeyboardAccelerators>
                 </MenuFlyoutItem>
             </muxc:MenuBarItem>
@@ -68,7 +88,6 @@
                         IsBackButtonVisible="Collapsed"
                         IsSettingsVisible="False"
                         PaneDisplayMode="Left"
-                        PaneTitle="Prodotti"
                         Loaded="NavigationView_Loaded"
                         MenuItemsSource="{x:Bind ViewModel.NavigationViewMenuItems, Mode=OneWay}"
                         SelectionChanged="NavigationView_SelectionChanged">

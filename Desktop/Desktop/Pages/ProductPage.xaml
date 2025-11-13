@@ -8,49 +8,74 @@
     mc:Ignorable="d">
 
     <ScrollViewer>
-        <StackPanel Grid.Column="0" Orientation="Vertical" Spacing="16" Padding="24" HorizontalAlignment="Stretch">
+        <StackPanel Orientation="Vertical" Spacing="16" Padding="24">
             <TextBlock Text="Informazioni prodotto" Style="{StaticResource TitleTextBlockStyle}" />
 
-            <TextBox Header="Codice prodotto" 
+            <Grid ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="150" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                
+                <TextBox Grid.Column="0" Header="Codice prodotto" 
                          Text="{x:Bind CurrentProduct.Code, Mode=OneTime}"
                          IsReadOnly="True" />
 
-            <TextBox Header="Nome prodotto" 
+                <TextBox Grid.Column="1" Header="Nome prodotto" 
                          Text="{x:Bind CurrentProduct.Name, Mode=TwoWay}"
                          PlaceholderText="Nome completo del prodotto"
                          MaxLength="100" />
 
-            <TextBox Header="Categoria" 
+                <TextBox Grid.Column="2" Header="Categoria" 
                          Text="{x:Bind CurrentProduct.Category, Mode=TwoWay}"
                          PlaceholderText="Categoria del prodotto" />
+            </Grid>
 
-            <TextBox Header="Produttore" 
+
+            <Grid ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <TextBox Grid.Column="0" Header="Produttore" 
                          Text="{x:Bind CurrentProduct.Manufacturer, Mode=TwoWay}"
                          PlaceholderText="Nome del produttore" />
 
-            <TextBox Header="Formato" 
+                <TextBox Grid.Column="1" Header="Formato" 
                          Text="{x:Bind CurrentProduct.Format, Mode=TwoWay}"
                          PlaceholderText="Formato del prodotto" />
 
-            <TextBox Header="EAN" 
+                <TextBox Grid.Column="2" Header="EAN" 
                          Text="{x:Bind CurrentProduct.EAN, Mode=TwoWay}"
                          PlaceholderText="Codice a barre EAN del prodotto" />
 
-            <TextBox Header="Lotto" 
+                <TextBox Grid.Column="3" Header="Lotto" 
                          Text="{x:Bind CurrentProduct.Batch, Mode=TwoWay}"
                          PlaceholderText="Numero di lotto del prodotto" />
+            </Grid>
 
-            <TextBox Header="Data di produzione" 
+            <Grid ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <TextBox Grid.Column="0" Header="Data di produzione" 
                          Text="{x:Bind CurrentProduct.ProductionDate, Mode=TwoWay}"
                          PlaceholderText="Data di produzione del prodotto" />
 
-            <TextBox Header="Data di scadenza" 
-                         Text="{x:Bind CurrentProduct.ExpiryDate, Mode=TwoWay}"
-                         PlaceholderText="Data di scadenza del prodotto" />
+                <TextBox Grid.Column="1" Header="Data di scadenza" 
+                         Text="{x:Bind CurrentProduct.ExpiryDate, Mode=TwoWay}" />
 
-            <TextBox Header="Stabilimento di produzione" 
+                <TextBox Grid.Column="2" Header="Stabilimento di produzione" 
                          Text="{x:Bind CurrentProduct.ProductionFacility, Mode=TwoWay}"
                          PlaceholderText="Luogo di produzione del prodotto" />
+            </Grid>
 
             <TextBox Header="Ingredienti" 
                          Text="{x:Bind CurrentProduct.Ingredients, Mode=TwoWay}"

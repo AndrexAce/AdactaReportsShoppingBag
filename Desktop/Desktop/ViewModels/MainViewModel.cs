@@ -25,7 +25,7 @@ internal sealed partial class MainViewModel(IProjectFileService projectFileServi
     public partial bool? IsProjectEdited { get; private set; } = null;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsProjectEdited), nameof(NavigationViewMenuItems))]
+    [NotifyPropertyChangedFor(nameof(IsProjectEdited), nameof(NavigationViewMenuItems), nameof(SurveyMenuItemVisibility))]
     public partial ReportPrj? ReportProject { get; private set; } = null;
 
     public string SaveStateText => IsProjectEdited switch
@@ -37,6 +37,8 @@ internal sealed partial class MainViewModel(IProjectFileService projectFileServi
 
     public Visibility SaveButtonVisibility =>
         IsProjectEdited is null or false ? Visibility.Collapsed : Visibility.Visible;
+
+    public Visibility SurveyMenuItemVisibility => ReportProject is null ? Visibility.Collapsed : Visibility.Visible;
 
     public ObservableCollection<Product>? NavigationViewMenuItems => new(ReportProject?.Products ?? []);
 
