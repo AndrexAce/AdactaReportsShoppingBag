@@ -46,7 +46,7 @@
                         <KeyboardAccelerator Key="A" Modifiers="Control" />
                     </MenuFlyoutItem.KeyboardAccelerators>
                 </MenuFlyoutItem>
-                <MenuFlyoutSeparator />
+                <MenuFlyoutSeparator Visibility="{x:Bind ViewModel.SaveButtonVisibility, Mode=OneWay}" />
                 <MenuFlyoutItem Text="Salva" Icon="Save" Command="{x:Bind ViewModel.SaveProjectCommand}"
                                 Visibility="{x:Bind ViewModel.SaveButtonVisibility, Mode=OneWay}">
                     <MenuFlyoutItem.KeyboardAccelerators>
