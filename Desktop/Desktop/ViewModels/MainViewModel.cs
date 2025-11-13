@@ -10,6 +10,8 @@ using Microsoft.UI.Xaml.Controls;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -17,7 +19,11 @@ using Windows.Storage;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.ViewModels;
 
-internal sealed partial class MainViewModel(IProjectFileService projectFileService, IDialogService dialogService, IStorageService storageService, IProductsRepository productsRepository)
+internal sealed partial class MainViewModel(
+    IProjectFileService projectFileService,
+    IDialogService dialogService,
+    IStorageService storageService,
+    IProductsRepository productsRepository)
     : ObservableObject
 {
     [ObservableProperty]
@@ -127,6 +133,33 @@ internal sealed partial class MainViewModel(IProjectFileService projectFileServi
     private Task OpenInfoAsync()
     {
         return dialogService.ShowCreditsDialogAsync();
+    }
+
+    [RelayCommand]
+    private async Task OpenClassesFileAsync()
+    {
+        if (ReportProject is null) return;
+
+        try
+        {
+            // Ottieni la cartella del progetto dal percorso del file .reportprj
+            var projectFolderPath = Path.GetDirectoryName(_projectFilePath) ?? throw new FileNotFoundException("The project folder path could not be reached.");
+
+            // Costruisci il percorso completo del file Excel
+            var excelFilePath = Path.Combine(projectFolderPath, $"Classi{ReportProject.ProjectCode}.xlsx");
+
+            // Apri il file con l'applicazione predefinita
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = excelFilePath,
+                UseShellExecute = true,
+                WindowStyle = ProcessWindowStyle.Maximized
+            });
+        }
+        catch
+        {
+            await dialogService.ShowInformationDialogAsync("Errore apertura file classi", "Il file non esiste, è danneggiato o non hai i permessi necessari.", "Ok");
+        }
     }
 
     public async Task LoadProjectFileAsync(IStorageFile file)

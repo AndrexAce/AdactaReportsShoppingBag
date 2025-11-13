@@ -61,7 +61,7 @@
                         <KeyboardAccelerator Key="I" Modifiers="Control" />
                     </MenuFlyoutItem.KeyboardAccelerators>
                 </MenuFlyoutItem>
-                <MenuFlyoutItem Text="Apri file classi domande" Icon="Document">
+                <MenuFlyoutItem Text="Apri file classi domande" Icon="Document" Command="{x:Bind ViewModel.OpenClassesFileCommand}">
                     <MenuFlyoutItem.KeyboardAccelerators>
                         <KeyboardAccelerator Key="C" Modifiers="Control" />
                     </MenuFlyoutItem.KeyboardAccelerators>
