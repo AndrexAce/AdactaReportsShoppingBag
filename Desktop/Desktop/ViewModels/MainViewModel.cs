@@ -142,13 +142,10 @@ internal sealed partial class MainViewModel(
 
         try
         {
-            // Ottieni la cartella del progetto dal percorso del file .reportprj
             var projectFolderPath = Path.GetDirectoryName(_projectFilePath) ?? throw new FileNotFoundException("The project folder path could not be reached.");
-
-            // Costruisci il percorso completo del file Excel
             var excelFilePath = Path.Combine(projectFolderPath, $"Classi{ReportProject.ProjectCode}.xlsx");
 
-            // Apri il file con l'applicazione predefinita
+            // Open the file with the default associated application
             Process.Start(new ProcessStartInfo
             {
                 FileName = excelFilePath,
