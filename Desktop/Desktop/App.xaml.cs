@@ -30,6 +30,7 @@ public sealed partial class App
                 .AddSingleton<IProjectFileService, ProjectFileService>()
                 .AddSingleton<IDialogService, DialogService>()
                 .AddSingleton<IStorageService, StorageService>()
+                .AddSingleton<IExcelService, ExcelService>()
                 .AddSingleton<IProductsRepository, ProductRepository>()
                 .AddSingleton<IPenelopeClient, PenelopeClient>()
                 .BuildServiceProvider());

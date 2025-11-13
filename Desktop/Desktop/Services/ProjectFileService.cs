@@ -8,7 +8,7 @@ using Windows.Storage;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.Services;
 
-internal sealed class ProjectFileService : IProjectFileService
+internal sealed class ProjectFileService(IExcelService excelService) : IProjectFileService
 {
     public async Task<ReportPrj?> LoadProjectFileAsync(IStorageFile projectFile)
     {
@@ -65,6 +65,8 @@ internal sealed class ProjectFileService : IProjectFileService
             Directory.CreateDirectory(projectFolderPath);
 
             var projectFilePath = Path.Combine(projectFolderPath, $"{project.ProjectCode}.reportprj");
+
+            excelService.CreateExcelClassesFile(project, projectFolderPath);
 
             SaveProjectFileAsync(project, projectFilePath);
 
