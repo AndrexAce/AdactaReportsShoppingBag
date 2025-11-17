@@ -17,7 +17,7 @@ internal interface IDialogService
     public Task<(ContentDialogResult, string, string)> ShowPenelopeCredentialsDialogAsync(string title, string confirmButtonText,
         string cancelButtonText);
 
-    public Task<StorageFile?> ShowFileOpenPickerAsync();
+    public Task<StorageFile?> ShowFileOpenPickerAsync(string fileExtension, string settingsIdentifier);
 
     public Task<StorageFolder?> ShowFolderPicker();
 

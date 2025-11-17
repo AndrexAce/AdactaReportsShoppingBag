@@ -1,96 +1,85 @@
 ﻿using AdactaInternational.AdactaReportsShoppingBag.Model;
 using Microsoft.Office.Interop.Excel;
 using System;
-using System.Collections.ObjectModel;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
+using System.Threading.Tasks;
+using Windows.Storage;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.Services;
 
-internal sealed class ExcelService : IExcelService
+internal sealed class ExcelService(INotificationService notificationService) : ExcelComHandler, IExcelService
 {
-    [SuppressMessage("Critical Code Smell", "S1215:\"GC.Collect\" should not be called", Justification = "COM objects lifetime should be manually managed.")]
-    public void CreateExcelClassesFile(ReportPrj project, string projectFolderPath)
+    public void CreateClassesFile(ReportPrj project, string projectFolderPath)
     {
-        // Keep references to COM objects to release them later
-        Application? excelApp = null;
-        Workbooks? workbooks = null;
-        Workbook? workbook = null;
-        Sheets? sheets = null;
-        Collection<Worksheet> worksheets = [];
+        ExecuteWithCleanup(() => CreateClassesFileInternal(project, projectFolderPath));
+    }
 
-        try
+    private void CreateClassesFileInternal(ReportPrj project, string projectFolderPath)
+    {
+        var excelFilePath = Path.Combine(projectFolderPath, $"Classi{project.ProjectCode}.xlsx");
+
+        // Create a silent Excel application
+        excelApp = new Application
         {
-            var excelFilePath = Path.Combine(projectFolderPath, $"Classi{project.ProjectCode}.xlsx");
+            Visible = false,
+            DisplayAlerts = false
+        };
+        workbooks = excelApp.Workbooks;
+        workbook = workbooks.Add();
+        sheets = workbook.Sheets;
 
-            // Create a silent Excel application
-            excelApp = new Application
-            {
-                Visible = false,
-                DisplayAlerts = false
-            };
-            workbooks = excelApp.Workbooks;
-            workbook = workbooks.Add();
-            sheets = workbook.Sheets;
-
-            for (int i = 0; i < project.Products.Count(); i++)
-            {
-                Worksheet worksheet;
-
-                if (i == 0)
-                {
-                    // Use the first default sheet
-                    worksheet = (Worksheet)sheets[1];
-                }
-                else
-                {
-                    // Add new sheet after the last one
-                    worksheet = (Worksheet)sheets.Add(After: worksheets[^1]);
-                }
-
-                // Rename the worksheet to match the product code
-                worksheet.Name = project.Products.ElementAt(i).Code;
-
-                // Add the worksheet to the collection
-                worksheets.Add(worksheet);
-            }
-
-            workbook.SaveAs(excelFilePath);
-        }
-        finally
+        for (int i = 0; i < project.Products.Count(); i++)
         {
-            // Release COM objects to prevent memory leaks
-            foreach (var element in worksheets)
-            {
-                Marshal.ReleaseComObject(element);
-            }
-            worksheets.Clear();
+            Worksheet worksheet;
 
-            if (sheets is not null)
+            if (i == 0)
             {
-                Marshal.ReleaseComObject(sheets);
+                // Use the first default sheet
+                worksheet = (Worksheet)sheets[1];
             }
-            if (workbook is not null)
+            else
             {
-                workbook.Close(false);
-                Marshal.ReleaseComObject(workbook);
-            }
-            if (workbooks is not null)
-            {
-                workbooks.Close();
-                Marshal.ReleaseComObject(workbooks);
-            }
-            if (excelApp is not null)
-            {
-                excelApp.Quit();
-                Marshal.ReleaseComObject(excelApp);
+                // Add new sheet after the last one
+                worksheet = (Worksheet)sheets.Add(After: worksheets[^1]);
             }
 
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            GC.Collect();
+            // Rename the worksheet to match the product code
+            worksheet.Name = project.Products.ElementAt(i).Code;
+
+            // Add the worksheet to the collection
+            worksheets.Add(worksheet);
         }
+
+        workbook.SaveAs(excelFilePath);
+    }
+
+    public async Task ImportSurveyFile(IStorageFile storageFile, Guid notificationId)
+    {
+        await Task.Run(async () => await ExecuteWithCleanupAsync(async () => await ImportSurveyFileInternal(storageFile, notificationId)));
+    }
+
+    private async Task ImportSurveyFileInternal(IStorageFile storageFile, Guid notificationId)
+    {
+        // Create a silent Excel application
+        excelApp = new Application
+        {
+            Visible = false,
+            DisplayAlerts = false
+        };
+        workbooks = excelApp.Workbooks;
+        workbook = workbooks.Open(storageFile.Path);
+        sheets = workbook.Sheets;
+
+        foreach (Worksheet sheet in sheets)
+        {
+            worksheets.Add(sheet);
+
+            // TODO: Implement the actual import logic here
+        }
+
+        await notificationService.RemoveNotification(notificationId);
+
+        notificationService.ShowProgressNotification("Importazione completata", "Il file è stato importato con successo.");
     }
 }

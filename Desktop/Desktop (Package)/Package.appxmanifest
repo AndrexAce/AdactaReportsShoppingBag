@@ -6,6 +6,8 @@
         xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
         xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
         xmlns:uap18="http://schemas.microsoft.com/appx/manifest/uap/windows10/18"
+		xmlns:com="http://schemas.microsoft.com/appx/manifest/com/windows10"
+        xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
         IgnorableNamespaces="uap rescap uap18">
 
     <Identity
@@ -69,6 +71,16 @@
                         <uap:InfoTip>Apre il progetto in Adacta Reports Shopping Bag.</uap:InfoTip>
                     </uap:FileTypeAssociation>
                 </uap:Extension>
+				<desktop:Extension Category="windows.toastNotificationActivation">
+					<desktop:ToastNotificationActivation ToastActivatorCLSID="E6A541EB-06CC-4B81-9C33-A2081D683ED8" />
+				</desktop:Extension>
+				<com:Extension Category="windows.comServer">
+					<com:ComServer>
+						<com:ExeServer Executable="Desktop\AdactaReportsShoppingBag.exe" DisplayName="Adacta Reports Shopping Bag" Arguments="----AppNotificationActivated:">
+							<com:Class Id="E6A541EB-06CC-4B81-9C33-A2081D683ED8" />
+						</com:ExeServer>
+					</com:ComServer>
+				</com:Extension>
             </Extensions>
         </Application>
     </Applications>

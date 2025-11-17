@@ -84,14 +84,14 @@ internal sealed class DialogService : IDialogService
         return (await dialog.ShowAsync(), control.Username, control.Password);
     }
 
-    public async Task<StorageFile?> ShowFileOpenPickerAsync()
+    public async Task<StorageFile?> ShowFileOpenPickerAsync(string fileExtension, string settingsIdentifier)
     {
         FileOpenPicker openPicker = new()
         {
             ViewMode = PickerViewMode.Thumbnail,
             SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
-            FileTypeFilter = { ".reportprj" },
-            SettingsIdentifier = "AdactaReportsShoppingBagOpenProjectPicker"
+            FileTypeFilter = { fileExtension },
+            SettingsIdentifier = settingsIdentifier
         };
 
         var hwnd = WindowNative.GetWindowHandle(_window);

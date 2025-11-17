@@ -23,7 +23,9 @@ internal sealed partial class MainViewModel(
     IProjectFileService projectFileService,
     IDialogService dialogService,
     IStorageService storageService,
-    IProductsRepository productsRepository)
+    IProductsRepository productsRepository,
+    IExcelService excelService,
+    INotificationService notificationService)
     : ObservableObject
 {
     [ObservableProperty]
@@ -101,7 +103,7 @@ internal sealed partial class MainViewModel(
     [RelayCommand]
     private async Task OpenProjectAsync()
     {
-        var file = await dialogService.ShowFileOpenPickerAsync();
+        var file = await dialogService.ShowFileOpenPickerAsync(".reportprj", "AdactaReportsShoppingBagOpenProjectPicker");
 
         if (file == null) return;
 
@@ -157,6 +159,18 @@ internal sealed partial class MainViewModel(
         {
             await dialogService.ShowInformationDialogAsync("Errore apertura file classi", "Il file non esiste, è danneggiato o non hai i permessi necessari.", "Ok");
         }
+    }
+
+    [RelayCommand]
+    private async Task ImportInputFileAsync()
+    {
+        var file = await dialogService.ShowFileOpenPickerAsync(".xlsx", "AdactaReportsShoppingBagOpenInputFilePicker");
+
+        if (file == null) return;
+
+        var notificationId = notificationService.ShowProgressNotification("Importazione file in corso...", "Potrebbero volerci alcuni minuti.");
+
+        await excelService.ImportSurveyFile(file, notificationId);
     }
 
     public async Task LoadProjectFileAsync(IStorageFile file)

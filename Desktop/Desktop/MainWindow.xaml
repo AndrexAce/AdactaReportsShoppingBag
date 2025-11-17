@@ -56,7 +56,7 @@
             </muxc:MenuBarItem>
 
             <muxc:MenuBarItem Title="Elaborazione" Visibility="{x:Bind ViewModel.SurveyMenuItemVisibility, Mode=OneWay}">
-                <MenuFlyoutItem Text="Importa file input" Icon="Import">
+                <MenuFlyoutItem Text="Importa file input" Icon="Import" Command="{x:Bind ViewModel.ImportInputFileCommand}">
                     <MenuFlyoutItem.KeyboardAccelerators>
                         <KeyboardAccelerator Key="I" Modifiers="Control" />
                     </MenuFlyoutItem.KeyboardAccelerators>

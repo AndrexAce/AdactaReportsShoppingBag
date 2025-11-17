@@ -4,6 +4,8 @@ using AdactaInternational.AdactaReportsShoppingBag.Desktop.ViewModels;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Windows.AppLifecycle;
+using Microsoft.Windows.AppNotifications;
+using System;
 using Windows.ApplicationModel.Activation;
 using Windows.Storage;
 
@@ -18,6 +20,8 @@ public sealed partial class App
         ConfigureDependencyInjection();
 
         CreateDataStorage();
+
+        ConfigureNotifications();
     }
 
     private static void ConfigureDependencyInjection()
@@ -31,6 +35,7 @@ public sealed partial class App
                 .AddSingleton<IDialogService, DialogService>()
                 .AddSingleton<IStorageService, StorageService>()
                 .AddSingleton<IExcelService, ExcelService>()
+                .AddSingleton<INotificationService, NotificationService>()
                 .AddSingleton<IProductsRepository, ProductRepository>()
                 .AddSingleton<IPenelopeClient, PenelopeClient>()
                 .BuildServiceProvider());
@@ -42,6 +47,16 @@ public sealed partial class App
 
         if (!storageService.DoesContainerExist("Credentials"))
             storageService.CreateContainer("Credentials");
+    }
+
+    private static void ConfigureNotifications()
+    {
+        AppNotificationManager.Default.Register();
+
+        AppDomain.CurrentDomain.ProcessExit += (s, e) =>
+        {
+            AppNotificationManager.Default.Unregister();
+        };
     }
 
     protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
