@@ -1,3 +1,8 @@
+using System;
+using Windows.Graphics;
+using Windows.Storage;
+using Windows.UI;
+using Windows.UI.ViewManagement;
 using AdactaInternational.AdactaReportsShoppingBag.Desktop.Pages;
 using AdactaInternational.AdactaReportsShoppingBag.Desktop.ViewModels;
 using AdactaInternational.AdactaReportsShoppingBag.Model;
@@ -8,22 +13,16 @@ using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media.Imaging;
-using System;
-using Windows.Storage;
-using Windows.UI;
-using Windows.UI.ViewManagement;
 using WinRT.Interop;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop;
 
 internal sealed partial class MainWindow
 {
-    public MainViewModel ViewModel { get; }
-    private readonly IStorageFile? _projectFile;
-    private readonly UISettings _uiSettings = new();
-
     private const string LogoDarkThemePath = "Assets/LogoDarkTheme.png";
     private const string LogoLightThemePath = "Assets/LogoLightTheme.png";
+    private readonly IStorageFile? _projectFile;
+    private readonly UISettings _uiSettings = new();
 
     public MainWindow(IStorageFile? storageFile)
     {
@@ -34,6 +33,8 @@ internal sealed partial class MainWindow
 
         InitializeAppWindowAndSize(640, 480);
     }
+
+    public MainViewModel ViewModel { get; }
 
     private void InitializeAppWindowAndSize(int width, int height)
     {
@@ -46,7 +47,7 @@ internal sealed partial class MainWindow
         var appWindow = AppWindow.GetFromWindowId(windowId);
 
         // Resize the app window
-        appWindow?.Resize(new Windows.Graphics.SizeInt32 { Width = width, Height = height });
+        appWindow?.Resize(new SizeInt32 { Width = width, Height = height });
 
         // Ensure the default presenter is applied, then configure it
         appWindow?.SetPresenter(AppWindowPresenterKind.Default);
@@ -97,7 +98,14 @@ internal sealed partial class MainWindow
 
     private async void NavigationView_Loaded(object sender, RoutedEventArgs args)
     {
-        if (_projectFile is not null) await ViewModel.LoadProjectFileAsync(_projectFile);
+        try
+        {
+            if (_projectFile is not null) await ViewModel.LoadProjectFileAsync(_projectFile);
+        }
+        catch
+        {
+            // Do nothing - errors are already handled
+        }
     }
 
     private void MainWindow_Closed(object sender, WindowEventArgs args)
@@ -108,18 +116,15 @@ internal sealed partial class MainWindow
 
     private void NavigationView_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
     {
-        if (args.SelectedItem is Product product)
-        {
-            RootFrame.Navigate(typeof(ProductPage), product);
-        }
+        if (args.SelectedItem is Product product) RootFrame.Navigate(typeof(ProductPage), product);
     }
 
     private void Button_Click(object sender, RoutedEventArgs args)
     {
-        if (sender is Button button && button.Tag is Product product)
-        {
-            product.Classification = product.Classification is ProductClassification.Unknown or ProductClassification.NonFood ?
-                ProductClassification.Food : ProductClassification.NonFood;
-        }
+        if (sender is Button { Tag: Product product })
+            product.Classification =
+                product.Classification is ProductClassification.Unknown or ProductClassification.NonFood
+                    ? ProductClassification.Food
+                    : ProductClassification.NonFood;
     }
 }

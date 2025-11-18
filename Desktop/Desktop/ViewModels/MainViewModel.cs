@@ -1,13 +1,4 @@
-﻿using AdactaInternational.AdactaReportsShoppingBag.Desktop.Exceptions;
-using AdactaInternational.AdactaReportsShoppingBag.Desktop.Repositories;
-using AdactaInternational.AdactaReportsShoppingBag.Desktop.Services;
-using AdactaInternational.AdactaReportsShoppingBag.Model;
-using AdactaInternational.AdactaReportsShoppingBag.Model.Soap.Response;
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -16,6 +7,15 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Windows.Storage;
+using AdactaInternational.AdactaReportsShoppingBag.Desktop.Exceptions;
+using AdactaInternational.AdactaReportsShoppingBag.Desktop.Repositories;
+using AdactaInternational.AdactaReportsShoppingBag.Desktop.Services;
+using AdactaInternational.AdactaReportsShoppingBag.Model;
+using AdactaInternational.AdactaReportsShoppingBag.Model.Soap.Response;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.ViewModels;
 
@@ -28,12 +28,15 @@ internal sealed partial class MainViewModel(
     INotificationService notificationService)
     : ObservableObject
 {
+    private string? _projectFilePath;
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(SaveStateText), nameof(SaveButtonVisibility))]
     public partial bool? IsProjectEdited { get; private set; } = null;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsProjectEdited), nameof(NavigationViewMenuItems), nameof(SurveyMenuItemVisibility))]
+    [NotifyPropertyChangedFor(nameof(IsProjectEdited), nameof(NavigationViewMenuItems),
+        nameof(SurveyMenuItemVisibility))]
     public partial ReportPrj? ReportProject { get; private set; } = null;
 
     public string SaveStateText => IsProjectEdited switch
@@ -48,9 +51,7 @@ internal sealed partial class MainViewModel(
 
     public Visibility SurveyMenuItemVisibility => ReportProject is null ? Visibility.Collapsed : Visibility.Visible;
 
-    public ObservableCollection<Product>? NavigationViewMenuItems => new(ReportProject?.Products ?? []);
-
-    private string? _projectFilePath;
+    public ObservableCollection<Product> NavigationViewMenuItems => new(ReportProject?.Products ?? []);
 
     [RelayCommand]
     private async Task NewProjectAsync()
@@ -63,14 +64,14 @@ internal sealed partial class MainViewModel(
         IEnumerable<Product>? products = null;
 
         while (products is null)
-        {
             try
             {
                 products = await productsRepository.GetProductsAsync(projectCode);
             }
             catch (PenelopeNotFoundException)
             {
-                await dialogService.ShowInformationDialogAsync("Codice progetto non valido", "Il progetto inserito è errato o non esistente.", "Ok");
+                await dialogService.ShowInformationDialogAsync("Codice progetto non valido",
+                    "Il progetto inserito è errato o non esistente.", "Ok");
 
                 return;
             }
@@ -84,13 +85,13 @@ internal sealed partial class MainViewModel(
                 storageService.SaveData("Credentials", "Username", penelopeUsername);
                 storageService.SaveData("Credentials", "Password", penelopePassword);
             }
-        }
 
         var userChosenFolder = await dialogService.ShowFolderPicker();
 
         if (userChosenFolder is null) return;
 
-        var project = new ReportPrj(Assembly.GetExecutingAssembly().GetName().Version?.ToString(), projectName, projectCode, products);
+        var project = new ReportPrj(Assembly.GetExecutingAssembly().GetName().Version?.ToString(), projectName,
+            projectCode, products);
 
         _projectFilePath = projectFileService.CreateProjectFolder(project, userChosenFolder.Path);
 
@@ -103,7 +104,8 @@ internal sealed partial class MainViewModel(
     [RelayCommand]
     private async Task OpenProjectAsync()
     {
-        var file = await dialogService.ShowFileOpenPickerAsync(".reportprj", "AdactaReportsShoppingBagOpenProjectPicker");
+        var file = await dialogService.ShowFileOpenPickerAsync(".reportprj",
+            "AdactaReportsShoppingBagOpenProjectPicker");
 
         if (file is null) return;
 
@@ -144,7 +146,8 @@ internal sealed partial class MainViewModel(
 
         try
         {
-            var projectFolderPath = Path.GetDirectoryName(_projectFilePath) ?? throw new FileNotFoundException("The project folder path could not be reached.");
+            var projectFolderPath = Path.GetDirectoryName(_projectFilePath) ??
+                                    throw new FileNotFoundException("The project folder path could not be reached.");
             var excelFilePath = Path.Combine(projectFolderPath, $"Classi{ReportProject.ProjectCode}.xlsx");
 
             // Open the file with the default associated application
@@ -157,7 +160,8 @@ internal sealed partial class MainViewModel(
         }
         catch
         {
-            await dialogService.ShowInformationDialogAsync("Errore apertura file classi", "Il file non esiste, è danneggiato o non hai i permessi necessari.", "Ok");
+            await dialogService.ShowInformationDialogAsync("Errore apertura file classi",
+                "Il file non esiste, è danneggiato o non hai i permessi necessari.", "Ok");
         }
     }
 
@@ -168,11 +172,14 @@ internal sealed partial class MainViewModel(
 
         if (file is null) return;
 
-        var notificationId = notificationService.ShowProgressNotification("Importazione file in corso...", "Potrebbero volerci alcuni minuti.");
+        var notificationId =
+            notificationService.ShowProgressNotification("Importazione file in corso...",
+                "Potrebbero volerci alcuni minuti.");
 
         if (ReportProject is null || _projectFilePath is null) return;
 
-        var projectFolderPath = Path.GetDirectoryName(_projectFilePath) ?? throw new FileNotFoundException("The project folder path could not be reached.");
+        var projectFolderPath = Path.GetDirectoryName(_projectFilePath) ??
+                                throw new FileNotFoundException("The project folder path could not be reached.");
         await excelService.ImportSurveyFileAsync(file, notificationId, ReportProject.ProjectCode, projectFolderPath);
     }
 
@@ -183,11 +190,14 @@ internal sealed partial class MainViewModel(
 
         if (file is null) return;
 
-        var notificationId = notificationService.ShowProgressNotification("Importazione file in corso...", "Potrebbero volerci alcuni minuti.");
+        var notificationId =
+            notificationService.ShowProgressNotification("Importazione file in corso...",
+                "Potrebbero volerci alcuni minuti.");
 
         if (ReportProject is null || _projectFilePath is null) return;
 
-        var projectFolderPath = Path.GetDirectoryName(_projectFilePath) ?? throw new FileNotFoundException("The project folder path could not be reached.");
+        var projectFolderPath = Path.GetDirectoryName(_projectFilePath) ??
+                                throw new FileNotFoundException("The project folder path could not be reached.");
         await excelService.ImportClassesFileAsync(file, notificationId, ReportProject.ProjectCode, projectFolderPath);
     }
 
@@ -211,38 +221,29 @@ internal sealed partial class MainViewModel(
     {
         // Unsubscribe from old products
         if (oldValue?.Products is not null)
-        {
             foreach (var product in oldValue.Products.OfType<INotifyPropertyChanged>())
             {
                 product.PropertyChanged -= Product_PropertyChanged;
 
                 // Unsubscribe from product photos
-                if (product is Product p)
-                {
-                    foreach (var photo in p.ProductPhotos.OfType<INotifyPropertyChanged>())
-                    {
-                        photo.PropertyChanged -= ProductPhoto_PropertyChanged;
-                    }
-                }
+                if (product is not Product p) continue;
+
+                foreach (var photo in p.ProductPhotos.OfType<INotifyPropertyChanged>())
+                    photo.PropertyChanged -= ProductPhoto_PropertyChanged;
             }
-        }
 
         // Subscribe to new products
-        if (newValue?.Products is not null)
-        {
-            foreach (var product in newValue.Products.OfType<INotifyPropertyChanged>())
-            {
-                product.PropertyChanged += Product_PropertyChanged;
+        if (newValue?.Products is null) return;
 
-                // Subscribe to product photos
-                if (product is Product p)
-                {
-                    foreach (var photo in p.ProductPhotos.OfType<INotifyPropertyChanged>())
-                    {
-                        photo.PropertyChanged += ProductPhoto_PropertyChanged;
-                    }
-                }
-            }
+        foreach (var product in newValue.Products.OfType<INotifyPropertyChanged>())
+        {
+            product.PropertyChanged += Product_PropertyChanged;
+
+            // Subscribe to product photos
+            if (product is not Product p) continue;
+
+            foreach (var photo in p.ProductPhotos.OfType<INotifyPropertyChanged>())
+                photo.PropertyChanged += ProductPhoto_PropertyChanged;
         }
     }
 
@@ -259,21 +260,17 @@ internal sealed partial class MainViewModel(
     ~MainViewModel()
     {
         // Unsubscribe property changed from products
-        if (ReportProject?.Products is not null)
-        {
-            foreach (var product in ReportProject.Products.OfType<INotifyPropertyChanged>())
-            {
-                product.PropertyChanged -= Product_PropertyChanged;
+        if (ReportProject?.Products is null) return;
 
-                // Unsubscribe from product photos
-                if (product is Product p)
-                {
-                    foreach (var photo in p.ProductPhotos.OfType<INotifyPropertyChanged>())
-                    {
-                        photo.PropertyChanged -= ProductPhoto_PropertyChanged;
-                    }
-                }
-            }
+        foreach (var product in ReportProject.Products.OfType<INotifyPropertyChanged>())
+        {
+            product.PropertyChanged -= Product_PropertyChanged;
+
+            // Unsubscribe from product photos
+            if (product is not Product p) continue;
+
+            foreach (var photo in p.ProductPhotos.OfType<INotifyPropertyChanged>())
+                photo.PropertyChanged -= ProductPhoto_PropertyChanged;
         }
     }
 }

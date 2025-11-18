@@ -1,5 +1,6 @@
-﻿using Microsoft.Office.Interop.Excel;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
+using Microsoft.Office.Interop.Excel;
+using DataTable = System.Data.DataTable;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.Extensions;
 
@@ -7,9 +8,9 @@ internal static class RangeExtensions
 {
     extension(Range range)
     {
-        public System.Data.DataTable MakeDataTable()
+        public DataTable MakeDataTable()
         {
-            var dataTable = new System.Data.DataTable();
+            var dataTable = new DataTable();
 
             Range? columns = null;
             Range? rows = null;
@@ -20,7 +21,7 @@ internal static class RangeExtensions
                 rows = range.Rows;
 
                 // Add columns
-                for (int colIndex = 1; colIndex <= columns.Count; colIndex++)
+                for (var colIndex = 1; colIndex <= columns.Count; colIndex++)
                 {
                     Range cell = range.Cells[1, colIndex];
 
@@ -31,11 +32,11 @@ internal static class RangeExtensions
                 }
 
                 // Add rows
-                for (int rowIndex = 2; rowIndex <= rows.Count; rowIndex++)
+                for (var rowIndex = 2; rowIndex <= rows.Count; rowIndex++)
                 {
                     var dataRow = dataTable.NewRow();
 
-                    for (int colIndex = 1; colIndex <= columns.Count; colIndex++)
+                    for (var colIndex = 1; colIndex <= columns.Count; colIndex++)
                     {
                         Range cell = range[rowIndex, colIndex];
 

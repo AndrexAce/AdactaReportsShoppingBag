@@ -1,34 +1,30 @@
-﻿using Microsoft.Office.Interop.Excel;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
+using Microsoft.Office.Interop.Excel;
+using DataTable = System.Data.DataTable;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.Extensions;
 
 internal static class DataTableExtensions
 {
-    extension(System.Data.DataTable dataTable)
+    extension(DataTable dataTable)
     {
         public void WriteToWorksheet(Worksheet worksheet, string tableName)
         {
-            int rowCount = dataTable.Rows.Count;
-            int colCount = dataTable.Columns.Count;
+            var rowCount = dataTable.Rows.Count;
+            var colCount = dataTable.Columns.Count;
 
             // Build a 2D object array for bulk write
             var values = new object[rowCount + 1, colCount];
 
             // Write column headers
-            for (int c = 0; c < colCount; c++)
-            {
-                values[0, c] = dataTable.Columns[c].ColumnName;
-            }
+            for (var c = 0; c < colCount; c++) values[0, c] = dataTable.Columns[c].ColumnName;
 
             // Write data rows
-            for (int r = 0; r < rowCount; r++)
+            for (var r = 0; r < rowCount; r++)
+            for (var c = 0; c < colCount; c++)
             {
-                for (int c = 0; c < colCount; c++)
-                {
-                    var cellValue = dataTable.Rows[r][c];
-                    values[r + 1, c] = cellValue?.ToString() ?? "";
-                }
+                var cellValue = dataTable.Rows[r][c];
+                values[r + 1, c] = cellValue.ToString() ?? "";
             }
 
             Range? startCell = null;
@@ -49,7 +45,8 @@ internal static class DataTableExtensions
 
                 // Create an Excel table from the range
                 tables = worksheet.ListObjects;
-                table = tables.Add(XlListObjectSourceType.xlSrcRange, writeRange, XlListObjectHasHeaders: XlYesNoGuess.xlYes);
+                table = tables.Add(XlListObjectSourceType.xlSrcRange, writeRange,
+                    XlListObjectHasHeaders: XlYesNoGuess.xlYes);
                 table.Name = tableName;
 
                 // Final formatting

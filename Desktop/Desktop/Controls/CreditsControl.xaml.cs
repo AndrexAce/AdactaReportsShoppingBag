@@ -1,6 +1,6 @@
-using Microsoft.UI.Xaml;
 using System;
 using System.Reflection;
+using Microsoft.UI.Xaml;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.Controls;
 
@@ -20,6 +20,11 @@ internal sealed partial class CreditsControl
             typeof(CreditsControl),
             new PropertyMetadata(DateTime.Now.Year.ToString()));
 
+    public CreditsControl()
+    {
+        InitializeComponent();
+    }
+
     public string Version
     {
         get => (string)GetValue(VersionProperty);
@@ -30,10 +35,5 @@ internal sealed partial class CreditsControl
     {
         get => (string)GetValue(YearProperty);
         set => SetValue(YearProperty, value);
-    }
-
-    public CreditsControl()
-    {
-        InitializeComponent();
     }
 }

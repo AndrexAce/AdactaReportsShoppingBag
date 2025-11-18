@@ -1,14 +1,12 @@
+using System.ComponentModel;
 using AdactaInternational.AdactaReportsShoppingBag.Desktop.ViewModels;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using Microsoft.UI.Xaml;
-using System.ComponentModel;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.Controls;
 
 internal sealed partial class PenelopeCredentialsControl
 {
-    private readonly PenelopeCredentialsViewModel _viewModel;
-
     public static readonly DependencyProperty UsernameProperty =
         DependencyProperty.Register(
             nameof(Username),
@@ -22,6 +20,17 @@ internal sealed partial class PenelopeCredentialsControl
             typeof(string),
             typeof(NewProjectControl),
             new PropertyMetadata(string.Empty));
+
+    private readonly PenelopeCredentialsViewModel _viewModel;
+
+    public PenelopeCredentialsControl()
+    {
+        InitializeComponent();
+
+        _viewModel = Ioc.Default.GetRequiredService<PenelopeCredentialsViewModel>();
+
+        _viewModel.PropertyChanged += ConfirmButtonEnabled_Changed;
+    }
 
     public string Username
     {
@@ -38,15 +47,6 @@ internal sealed partial class PenelopeCredentialsControl
     public bool IsConfirmButtonEnabled => _viewModel.IsConfirmButtonEnabled;
 
     public event PropertyChangedEventHandler? IsConfirmButtonEnabledChanged;
-
-    public PenelopeCredentialsControl()
-    {
-        InitializeComponent();
-
-        _viewModel = Ioc.Default.GetRequiredService<PenelopeCredentialsViewModel>();
-
-        _viewModel.PropertyChanged += ConfirmButtonEnabled_Changed;
-    }
 
     ~PenelopeCredentialsControl()
     {

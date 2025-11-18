@@ -1,14 +1,12 @@
+using System.ComponentModel;
 using AdactaInternational.AdactaReportsShoppingBag.Desktop.ViewModels;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using Microsoft.UI.Xaml;
-using System.ComponentModel;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.Controls;
 
 internal sealed partial class NewProjectControl
 {
-    private readonly NewProjectControlViewModel _viewModel;
-
     public static readonly DependencyProperty ProjectCodeProperty =
         DependencyProperty.Register(
             nameof(ProjectCode),
@@ -22,6 +20,17 @@ internal sealed partial class NewProjectControl
             typeof(string),
             typeof(NewProjectControl),
             new PropertyMetadata(string.Empty));
+
+    private readonly NewProjectControlViewModel _viewModel;
+
+    public NewProjectControl()
+    {
+        InitializeComponent();
+
+        _viewModel = Ioc.Default.GetRequiredService<NewProjectControlViewModel>();
+
+        _viewModel.PropertyChanged += ConfirmButtonEnabled_Changed;
+    }
 
     public string ProjectCode
     {
@@ -38,15 +47,6 @@ internal sealed partial class NewProjectControl
     public bool IsConfirmButtonEnabled => _viewModel.IsConfirmButtonEnabled;
 
     public event PropertyChangedEventHandler? IsConfirmButtonEnabledChanged;
-
-    public NewProjectControl()
-    {
-        InitializeComponent();
-
-        _viewModel = Ioc.Default.GetRequiredService<NewProjectControlViewModel>();
-
-        _viewModel.PropertyChanged += ConfirmButtonEnabled_Changed;
-    }
 
     ~NewProjectControl()
     {

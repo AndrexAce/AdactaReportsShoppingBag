@@ -1,13 +1,14 @@
-﻿using AdactaInternational.AdactaReportsShoppingBag.Desktop.Repositories;
+﻿using System;
+using Windows.ApplicationModel.Activation;
+using Windows.Storage;
+using AdactaInternational.AdactaReportsShoppingBag.Desktop.Repositories;
 using AdactaInternational.AdactaReportsShoppingBag.Desktop.Services;
 using AdactaInternational.AdactaReportsShoppingBag.Desktop.ViewModels;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Windows.AppLifecycle;
 using Microsoft.Windows.AppNotifications;
-using System;
-using Windows.ApplicationModel.Activation;
-using Windows.Storage;
+using LaunchActivatedEventArgs = Microsoft.UI.Xaml.LaunchActivatedEventArgs;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop;
 
@@ -53,13 +54,10 @@ public sealed partial class App
     {
         AppNotificationManager.Default.Register();
 
-        AppDomain.CurrentDomain.ProcessExit += (s, e) =>
-        {
-            AppNotificationManager.Default.Unregister();
-        };
+        AppDomain.CurrentDomain.ProcessExit += (_, _) => { AppNotificationManager.Default.Unregister(); };
     }
 
-    protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
+    protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
         IStorageFile? projectFile = null;
 

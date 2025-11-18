@@ -5,7 +5,7 @@ namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.Services;
 
 internal abstract class BaseComHandler
 {
-    public void ExecuteWithCleanup(Action operation)
+    protected void ExecuteWithCleanup(Action operation)
     {
         try
         {
@@ -13,11 +13,11 @@ internal abstract class BaseComHandler
         }
         finally
         {
-            ReleaseCOMObjects();
+            ReleaseComObjects();
         }
     }
 
-    public async Task ExecuteWithCleanupAsync(Func<Task> operation)
+    protected async Task ExecuteWithCleanupAsync(Func<Task> operation)
     {
         try
         {
@@ -25,9 +25,9 @@ internal abstract class BaseComHandler
         }
         finally
         {
-            ReleaseCOMObjects();
+            ReleaseComObjects();
         }
     }
 
-    public abstract void ReleaseCOMObjects();
+    protected abstract void ReleaseComObjects();
 }

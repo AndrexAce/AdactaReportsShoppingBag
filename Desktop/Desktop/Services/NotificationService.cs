@@ -1,7 +1,7 @@
-﻿using Microsoft.Windows.AppNotifications;
-using Microsoft.Windows.AppNotifications.Builder;
-using System;
+﻿using System;
 using System.Threading.Tasks;
+using Microsoft.Windows.AppNotifications;
+using Microsoft.Windows.AppNotifications.Builder;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.Services;
 

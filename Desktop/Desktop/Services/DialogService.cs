@@ -1,14 +1,15 @@
-﻿using AdactaInternational.AdactaReportsShoppingBag.Desktop.Controls;
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Media.Imaging;
-using System;
+﻿using System;
 using System.Net.Http;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.Pickers;
 using Windows.Storage.Streams;
+using AdactaInternational.AdactaReportsShoppingBag.Desktop.Controls;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Imaging;
 using WinRT.Interop;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.Services;
@@ -61,8 +62,8 @@ internal sealed class DialogService : IDialogService
     }
 
     public async Task<(ContentDialogResult, string, string)> ShowPenelopeCredentialsDialogAsync(string title,
-    string confirmButtonText,
-    string cancelButtonText)
+        string confirmButtonText,
+        string cancelButtonText)
     {
         var control = new PenelopeCredentialsControl();
 
@@ -145,7 +146,7 @@ internal sealed class DialogService : IDialogService
             var image = new Image
             {
                 Source = bitmapImage,
-                Stretch = Microsoft.UI.Xaml.Media.Stretch.Uniform,
+                Stretch = Stretch.Uniform,
                 MaxHeight = 600,
                 MaxWidth = 800
             };

@@ -1,6 +1,6 @@
-﻿using AdactaInternational.AdactaReportsShoppingBag.Model;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Windows.Storage;
+using AdactaInternational.AdactaReportsShoppingBag.Model;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.Services;
 

@@ -1,8 +1,4 @@
-﻿using AdactaInternational.AdactaReportsShoppingBag.Desktop.Exceptions;
-using AdactaInternational.AdactaReportsShoppingBag.Model.Soap;
-using AdactaInternational.AdactaReportsShoppingBag.Model.Soap.Request;
-using AdactaInternational.AdactaReportsShoppingBag.Model.Soap.Response;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
@@ -12,6 +8,10 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Serialization;
+using AdactaInternational.AdactaReportsShoppingBag.Desktop.Exceptions;
+using AdactaInternational.AdactaReportsShoppingBag.Model.Soap;
+using AdactaInternational.AdactaReportsShoppingBag.Model.Soap.Request;
+using AdactaInternational.AdactaReportsShoppingBag.Model.Soap.Response;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.Services;
 
@@ -22,6 +22,40 @@ internal sealed class PenelopeClient(IStorageService storageService) : IPenelope
         BaseAddress = new Uri("https://services.adactainternational.com/reportservices/ws.asmx"),
         Timeout = TimeSpan.FromSeconds(10)
     };
+
+    public async Task<IEnumerable<Product>> GetProductsAsync(string jobCode)
+    {
+        if (!storageService.DoesContainerExist("Credentials"))
+            throw new PenelopeAuthenticationException("Credentials container does not exist.");
+
+        var username = storageService.FetchData<string>("Credentials", "Username");
+        var password = storageService.FetchData<string>("Credentials", "Password");
+
+        if (username is null || password is null) throw new PenelopeAuthenticationException("Missing credentials.");
+
+        var xmlContent = await SerializeSoapEnvelopeAsync(new GetJob(jobCode, username, password));
+
+        // Send the SOAP request
+        var content = new StringContent(xmlContent, Encoding.UTF8, MediaTypeNames.Application.Soap);
+        var response = await HttpClient.PostAsync("", content);
+
+        // Return the deserialized response
+        if (!response.IsSuccessStatusCode) throw new HttpRequestException("Failed to fetch products from the server.");
+
+        var deserializedResponse = await DeserializeSoapEnvelopeAsync<GetJobResponse>(response) ??
+                                   throw new SerializationException("Failed to deserialize the server response.");
+
+        // If there is no error, return the products, else throw an exception based on the error code
+        if (deserializedResponse.GetJobResult.Error is null)
+            return deserializedResponse.GetJobResult.Products;
+
+        return deserializedResponse.GetJobResult.Error.Code switch
+        {
+            -1 => throw new PenelopeAuthenticationException("Invalid credentials."),
+            -2 => throw new PenelopeNotFoundException("Job not found."),
+            _ => throw new HttpRequestException("An unknown error occurred while fetching products.")
+        };
+    }
 
     private static async Task<XmlElement?> SerializeToXmlNodeAsync<TRequest>(TRequest request)
     {
@@ -100,39 +134,5 @@ internal sealed class PenelopeClient(IStorageService storageService) : IPenelope
         using var nodeReader = new XmlNodeReader(action);
 
         return (TResponse?)actionSerializer.Deserialize(nodeReader);
-    }
-
-    public async Task<IEnumerable<Product>> GetProductsAsync(string jobCode)
-    {
-        if (!storageService.DoesContainerExist("Credentials"))
-            throw new PenelopeAuthenticationException("Credentials container does not exist.");
-
-        var username = storageService.FetchData<string>("Credentials", "Username");
-        var password = storageService.FetchData<string>("Credentials", "Password");
-
-        if (username is null || password is null) throw new PenelopeAuthenticationException("Missing credentials.");
-
-        var xmlContent = await SerializeSoapEnvelopeAsync(new GetJob(jobCode, username, password));
-
-        // Send the SOAP request
-        var content = new StringContent(xmlContent, Encoding.UTF8, MediaTypeNames.Application.Soap);
-        var response = await HttpClient.PostAsync("", content);
-
-        // Return the deserialized response
-        if (!response.IsSuccessStatusCode) throw new HttpRequestException("Failed to fetch products from the server.");
-
-        var deserializedResponse = await DeserializeSoapEnvelopeAsync<GetJobResponse>(response) ??
-                                   throw new SerializationException("Failed to deserialize the server response.");
-
-        // If there is no error, return the products, else throw an exception based on the error code
-        if (deserializedResponse.GetJobResult.Error is null)
-            return deserializedResponse.GetJobResult.Products;
-
-        return deserializedResponse.GetJobResult.Error.Code switch
-        {
-            -1 => throw new PenelopeAuthenticationException("Invalid credentials."),
-            -2 => throw new PenelopeNotFoundException("Job not found."),
-            _ => throw new HttpRequestException("An unknown error occurred while fetching products.")
-        };
     }
 }

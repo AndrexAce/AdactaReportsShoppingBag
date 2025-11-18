@@ -1,10 +1,10 @@
-﻿using AdactaInternational.AdactaReportsShoppingBag.Model;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Schema;
-using System.IO;
+﻿using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
 using Windows.Storage;
+using AdactaInternational.AdactaReportsShoppingBag.Model;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Schema;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.Services;
 
@@ -18,6 +18,34 @@ internal sealed class ProjectFileService(IExcelService excelService) : IProjectF
             (true, null) => null,
             (true, { } project) => project
         };
+    }
+
+    public Task SaveProjectFileAsync(ReportPrj project, string projectFilePath)
+    {
+        var projectJson = JObject.FromObject(project).ToString();
+        return File.WriteAllTextAsync(projectFilePath, projectJson);
+    }
+
+    public string? CreateProjectFolder(ReportPrj project, string folderPath)
+    {
+        try
+        {
+            var projectFolderPath = Path.Combine(folderPath, $"ShoppingBag{project.ProjectCode}");
+
+            Directory.CreateDirectory(projectFolderPath);
+
+            var projectFilePath = Path.Combine(projectFolderPath, $"{project.ProjectCode}.reportprj");
+
+            excelService.CreateClassesFile(project, projectFolderPath);
+
+            SaveProjectFileAsync(project, projectFilePath);
+
+            return projectFilePath;
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     private static async Task<(bool, ReportPrj?)> IsProjectFileValidAsync(IStorageFile file)
@@ -47,34 +75,6 @@ internal sealed class ProjectFileService(IExcelService excelService) : IProjectF
         catch
         {
             return (false, null);
-        }
-    }
-
-    public Task SaveProjectFileAsync(ReportPrj project, string projectFilePath)
-    {
-        var projectJson = JObject.FromObject(project).ToString();
-        return File.WriteAllTextAsync(projectFilePath, projectJson);
-    }
-
-    public string? CreateProjectFolder(ReportPrj project, string folderPath)
-    {
-        try
-        {
-            var projectFolderPath = Path.Combine(folderPath, $"ShoppingBag{project.ProjectCode}");
-
-            Directory.CreateDirectory(projectFolderPath);
-
-            var projectFilePath = Path.Combine(projectFolderPath, $"{project.ProjectCode}.reportprj");
-
-            excelService.CreateClassesFile(project, projectFolderPath);
-
-            SaveProjectFileAsync(project, projectFilePath);
-
-            return projectFilePath;
-        }
-        catch
-        {
-            return null;
         }
     }
 }

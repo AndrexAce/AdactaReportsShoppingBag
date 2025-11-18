@@ -17,18 +17,18 @@
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
-                
-                <TextBox Grid.Column="0" Header="Codice prodotto" 
-                         Text="{x:Bind CurrentProduct.Code, Mode=OneTime}"
+
+                <TextBox Grid.Column="0" Header="Codice prodotto"
+                         Text="{x:Bind CurrentProduct.Code, FallbackValue=''}"
                          IsReadOnly="True" />
 
-                <TextBox Grid.Column="1" Header="Nome prodotto" 
-                         Text="{x:Bind CurrentProduct.Name, Mode=TwoWay}"
+                <TextBox Grid.Column="1" Header="Nome prodotto"
+                         Text="{x:Bind CurrentProduct.Name, Mode=TwoWay, FallbackValue=''}"
                          PlaceholderText="Nome completo del prodotto"
                          MaxLength="100" />
 
-                <TextBox Grid.Column="2" Header="Categoria" 
-                         Text="{x:Bind CurrentProduct.Category, Mode=TwoWay}"
+                <TextBox Grid.Column="2" Header="Categoria"
+                         Text="{x:Bind CurrentProduct.Category, Mode=TwoWay, FallbackValue=''}"
                          PlaceholderText="Categoria del prodotto" />
             </Grid>
 
@@ -41,20 +41,20 @@
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <TextBox Grid.Column="0" Header="Produttore" 
-                         Text="{x:Bind CurrentProduct.Manufacturer, Mode=TwoWay}"
+                <TextBox Grid.Column="0" Header="Produttore"
+                         Text="{x:Bind CurrentProduct.Manufacturer, Mode=TwoWay, FallbackValue=''}"
                          PlaceholderText="Nome del produttore" />
 
-                <TextBox Grid.Column="1" Header="Formato" 
-                         Text="{x:Bind CurrentProduct.Format, Mode=TwoWay}"
+                <TextBox Grid.Column="1" Header="Formato"
+                         Text="{x:Bind CurrentProduct.Format, Mode=TwoWay, FallbackValue=''}"
                          PlaceholderText="Formato del prodotto" />
 
-                <TextBox Grid.Column="2" Header="EAN" 
-                         Text="{x:Bind CurrentProduct.EAN, Mode=TwoWay}"
+                <TextBox Grid.Column="2" Header="EAN"
+                         Text="{x:Bind CurrentProduct.EAN, Mode=TwoWay, FallbackValue=''}"
                          PlaceholderText="Codice a barre EAN del prodotto" />
 
-                <TextBox Grid.Column="3" Header="Lotto" 
-                         Text="{x:Bind CurrentProduct.Batch, Mode=TwoWay}"
+                <TextBox Grid.Column="3" Header="Lotto"
+                         Text="{x:Bind CurrentProduct.Batch, Mode=TwoWay, FallbackValue=''}"
                          PlaceholderText="Numero di lotto del prodotto" />
             </Grid>
 
@@ -65,29 +65,29 @@
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <TextBox Grid.Column="0" Header="Data di produzione" 
-                         Text="{x:Bind CurrentProduct.ProductionDate, Mode=TwoWay}"
+                <TextBox Grid.Column="0" Header="Data di produzione"
+                         Text="{x:Bind CurrentProduct.ProductionDate, Mode=TwoWay, FallbackValue=''}"
                          PlaceholderText="Data di produzione del prodotto" />
 
-                <TextBox Grid.Column="1" Header="Data di scadenza" 
+                <TextBox Grid.Column="1" Header="Data di scadenza"
                          Text="{x:Bind CurrentProduct.ExpiryDate, Mode=TwoWay}" />
 
-                <TextBox Grid.Column="2" Header="Stabilimento di produzione" 
-                         Text="{x:Bind CurrentProduct.ProductionFacility, Mode=TwoWay}"
+                <TextBox Grid.Column="2" Header="Stabilimento di produzione"
+                         Text="{x:Bind CurrentProduct.ProductionFacility, Mode=TwoWay, FallbackValue=''}"
                          PlaceholderText="Luogo di produzione del prodotto" />
             </Grid>
 
-            <TextBox Header="Ingredienti" 
-                         Text="{x:Bind CurrentProduct.Ingredients, Mode=TwoWay}"
-                         TextWrapping="Wrap"
-                         AcceptsReturn="True"
-                         MinHeight="100"
-                         PlaceholderText="Elenco ingredienti del prodotto" />
+            <TextBox Header="Ingredienti"
+                     Text="{x:Bind CurrentProduct.Ingredients, Mode=TwoWay, FallbackValue=''}"
+                     TextWrapping="Wrap"
+                     AcceptsReturn="True"
+                     MinHeight="100"
+                     PlaceholderText="Elenco ingredienti del prodotto" />
 
             <TextBlock Text="Foto prodotto" Style="{StaticResource TitleTextBlockStyle}" />
 
-                <ListView ItemsSource="{x:Bind CurrentProduct.ProductPhotos, Mode=OneWay}"
-                          SelectionMode="None">
+            <ListView ItemsSource="{x:Bind CurrentProduct.ProductPhotos, Mode=OneWay}"
+                      SelectionMode="None">
                 <ListView.ItemTemplate>
                     <DataTemplate x:DataType="local:ProductPhoto">
                         <Grid Margin="0,12,0,0" ColumnSpacing="12">
@@ -98,7 +98,7 @@
                             </Grid.ColumnDefinitions>
 
                             <TextBox Grid.Column="0"
-                                     Header="Tipo" 
+                                     Header="Tipo"
                                      Text="{x:Bind Type, Mode=TwoWay}" />
 
                             <TextBox Grid.Column="1"

@@ -1,7 +1,7 @@
-﻿using AdactaInternational.AdactaReportsShoppingBag.Desktop.Services;
-using AdactaInternational.AdactaReportsShoppingBag.Model.Soap.Response;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using AdactaInternational.AdactaReportsShoppingBag.Desktop.Services;
+using AdactaInternational.AdactaReportsShoppingBag.Model.Soap.Response;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.Repositories;
 

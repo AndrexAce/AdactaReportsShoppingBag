@@ -1,45 +1,48 @@
-﻿using Microsoft.Office.Interop.Excel;
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
+using Microsoft.Office.Interop.Excel;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.Services;
 
-[SuppressMessage("Critical Code Smell", "S1215:\"GC.Collect\" should not be called", Justification = "COM objects lifetime should be manually managed.")]
-internal class ExcelComHandler : BaseComHandler
+[SuppressMessage("Critical Code Smell", "S1215:\"GC.Collect\" should not be called",
+    Justification = "COM objects lifetime should be manually managed.")]
+internal abstract class ExcelComHandler : BaseComHandler
 {
-    protected Application? excelApp = null;
-    protected Workbooks? workbooks = null;
-    protected Workbook? workbook = null;
-    protected Sheets? sheets = null;
-    protected Collection<Worksheet> worksheets = [];
+    protected readonly Collection<Worksheet> Worksheets = [];
+    protected Application? ExcelApp;
+    protected Sheets? Sheets;
+    protected Workbook? Workbook;
+    protected Workbooks? Workbooks;
 
-    override public void ReleaseCOMObjects()
+    protected override void ReleaseComObjects()
     {
         // Release COM objects to prevent memory leaks
-        foreach (var element in worksheets) Marshal.ReleaseComObject(element);
-        worksheets.Clear();
+        foreach (var element in Worksheets) Marshal.ReleaseComObject(element);
+        Worksheets.Clear();
 
-        if (sheets is not null) Marshal.ReleaseComObject(sheets);
-        sheets = null;
+        if (Sheets is not null) Marshal.ReleaseComObject(Sheets);
+        Sheets = null;
 
-        if (workbook is not null)
+        if (Workbook is not null)
         {
-            workbook.Close(false);
-            Marshal.ReleaseComObject(workbook);
+            Workbook.Close(false);
+            Marshal.ReleaseComObject(Workbook);
         }
-        workbook = null;
 
-        if (workbooks is not null) Marshal.ReleaseComObject(workbooks);
-        workbooks = null;
+        Workbook = null;
 
-        if (excelApp is not null)
+        if (Workbooks is not null) Marshal.ReleaseComObject(Workbooks);
+        Workbooks = null;
+
+        if (ExcelApp is not null)
         {
-            excelApp.Quit();
-            Marshal.ReleaseComObject(excelApp);
+            ExcelApp.Quit();
+            Marshal.ReleaseComObject(ExcelApp);
         }
-        excelApp = null;
+
+        ExcelApp = null;
 
         GC.Collect();
         GC.WaitForPendingFinalizers();

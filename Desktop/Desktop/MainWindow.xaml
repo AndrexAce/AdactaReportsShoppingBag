@@ -55,18 +55,22 @@
                 </MenuFlyoutItem>
             </muxc:MenuBarItem>
 
-            <muxc:MenuBarItem Title="Elaborazione" Visibility="{x:Bind ViewModel.SurveyMenuItemVisibility, Mode=OneWay}">
-                <MenuFlyoutItem Text="Importa file input (Penelope)" Icon="Import" Command="{x:Bind ViewModel.ImportInputFileCommand}">
+            <muxc:MenuBarItem Title="Elaborazione"
+                              Visibility="{x:Bind ViewModel.SurveyMenuItemVisibility, Mode=OneWay}">
+                <MenuFlyoutItem Text="Importa file input (Penelope)" Icon="Import"
+                                Command="{x:Bind ViewModel.ImportInputFileCommand}">
                     <MenuFlyoutItem.KeyboardAccelerators>
                         <KeyboardAccelerator Key="P" Modifiers="Control" />
                     </MenuFlyoutItem.KeyboardAccelerators>
                 </MenuFlyoutItem>
-                <MenuFlyoutItem Text="Importa file classi (ActiveViewing)" Icon="Import" Command="{x:Bind ViewModel.ImportClassesFileCommand}">
+                <MenuFlyoutItem Text="Importa file classi (ActiveViewing)" Icon="Import"
+                                Command="{x:Bind ViewModel.ImportClassesFileCommand}">
                     <MenuFlyoutItem.KeyboardAccelerators>
                         <KeyboardAccelerator Key="V" Modifiers="Control" />
                     </MenuFlyoutItem.KeyboardAccelerators>
                 </MenuFlyoutItem>
-                <MenuFlyoutItem Text="Apri file classi domande" Icon="Document" Command="{x:Bind ViewModel.OpenClassesFileCommand}">
+                <MenuFlyoutItem Text="Apri file classi domande" Icon="Document"
+                                Command="{x:Bind ViewModel.OpenClassesFileCommand}">
                     <MenuFlyoutItem.KeyboardAccelerators>
                         <KeyboardAccelerator Key="C" Modifiers="Control" />
                     </MenuFlyoutItem.KeyboardAccelerators>
@@ -100,7 +104,8 @@
                 <DataTemplate x:DataType="model:Product">
                     <StackPanel Orientation="Horizontal" Spacing="12">
                         <Button Click="Button_Click" Tag="{x:Bind Mode=OneWay}">
-                            <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="{x:Bind NavigationMenuItemIcon, Mode=OneWay}"/>
+                            <FontIcon FontFamily="Segoe MDL2 Assets"
+                                      Glyph="{x:Bind NavigationMenuItemIcon, Mode=OneWay}" />
                         </Button>
                         <TextBlock Text="{x:Bind DisplayName, Mode=OneWay}" VerticalAlignment="Center" />
                     </StackPanel>

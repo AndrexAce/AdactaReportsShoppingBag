@@ -1,7 +1,7 @@
-﻿using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Windows.Storage;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.Services;
 
@@ -14,7 +14,8 @@ internal interface IDialogService
     public Task<(ContentDialogResult, string, string)> ShowNewProjectDialogAsync(string title, string confirmButtonText,
         string cancelButtonText);
 
-    public Task<(ContentDialogResult, string, string)> ShowPenelopeCredentialsDialogAsync(string title, string confirmButtonText,
+    public Task<(ContentDialogResult, string, string)> ShowPenelopeCredentialsDialogAsync(string title,
+        string confirmButtonText,
         string cancelButtonText);
 
     public Task<StorageFile?> ShowFileOpenPickerAsync(string fileExtension, string settingsIdentifier);
