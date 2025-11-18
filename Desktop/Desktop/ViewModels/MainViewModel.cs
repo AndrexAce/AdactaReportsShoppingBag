@@ -105,7 +105,7 @@ internal sealed partial class MainViewModel(
     {
         var file = await dialogService.ShowFileOpenPickerAsync(".reportprj", "AdactaReportsShoppingBagOpenProjectPicker");
 
-        if (file == null) return;
+        if (file is null) return;
 
         ReportProject = await projectFileService.LoadProjectFileAsync(file);
 
@@ -124,7 +124,7 @@ internal sealed partial class MainViewModel(
     [RelayCommand]
     private async Task SaveProjectAsync()
     {
-        if (ReportProject == null || _projectFilePath == null) return;
+        if (ReportProject is null || _projectFilePath is null) return;
 
         await projectFileService.SaveProjectFileAsync(ReportProject, _projectFilePath);
 
@@ -166,11 +166,29 @@ internal sealed partial class MainViewModel(
     {
         var file = await dialogService.ShowFileOpenPickerAsync(".xlsx", "AdactaReportsShoppingBagOpenInputFilePicker");
 
-        if (file == null) return;
+        if (file is null) return;
 
         var notificationId = notificationService.ShowProgressNotification("Importazione file in corso...", "Potrebbero volerci alcuni minuti.");
 
-        await excelService.ImportSurveyFile(file, notificationId);
+        if (ReportProject is null || _projectFilePath is null) return;
+
+        var projectFolderPath = Path.GetDirectoryName(_projectFilePath) ?? throw new FileNotFoundException("The project folder path could not be reached.");
+        await excelService.ImportSurveyFileAsync(file, notificationId, ReportProject.ProjectCode, projectFolderPath);
+    }
+
+    [RelayCommand]
+    private async Task ImportClassesFileAsync()
+    {
+        var file = await dialogService.ShowFileOpenPickerAsync(".xlsx", "AdactaReportsShoppingBagOpenInputFilePicker");
+
+        if (file is null) return;
+
+        var notificationId = notificationService.ShowProgressNotification("Importazione file in corso...", "Potrebbero volerci alcuni minuti.");
+
+        if (ReportProject is null || _projectFilePath is null) return;
+
+        var projectFolderPath = Path.GetDirectoryName(_projectFilePath) ?? throw new FileNotFoundException("The project folder path could not be reached.");
+        await excelService.ImportClassesFileAsync(file, notificationId, ReportProject.ProjectCode, projectFolderPath);
     }
 
     public async Task LoadProjectFileAsync(IStorageFile file)

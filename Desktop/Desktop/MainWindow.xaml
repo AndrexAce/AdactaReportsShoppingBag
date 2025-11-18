@@ -56,9 +56,14 @@
             </muxc:MenuBarItem>
 
             <muxc:MenuBarItem Title="Elaborazione" Visibility="{x:Bind ViewModel.SurveyMenuItemVisibility, Mode=OneWay}">
-                <MenuFlyoutItem Text="Importa file input" Icon="Import" Command="{x:Bind ViewModel.ImportInputFileCommand}">
+                <MenuFlyoutItem Text="Importa file input (Penelope)" Icon="Import" Command="{x:Bind ViewModel.ImportInputFileCommand}">
                     <MenuFlyoutItem.KeyboardAccelerators>
-                        <KeyboardAccelerator Key="I" Modifiers="Control" />
+                        <KeyboardAccelerator Key="P" Modifiers="Control" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem Text="Importa file classi (ActiveViewing)" Icon="Import" Command="{x:Bind ViewModel.ImportClassesFileCommand}">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="V" Modifiers="Control" />
                     </MenuFlyoutItem.KeyboardAccelerators>
                 </MenuFlyoutItem>
                 <MenuFlyoutItem Text="Apri file classi domande" Icon="Document" Command="{x:Bind ViewModel.OpenClassesFileCommand}">

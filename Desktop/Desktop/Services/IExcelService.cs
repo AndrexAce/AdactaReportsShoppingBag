@@ -9,5 +9,7 @@ internal interface IExcelService
 {
     public void CreateClassesFile(ReportPrj project, string projectFolderPath);
 
-    public Task ImportSurveyFile(IStorageFile storageFile, Guid notificationId);
+    public Task ImportSurveyFileAsync(IStorageFile storageFile, Guid notificationId, string projectCode, string projectFolderPath);
+
+    public Task ImportClassesFileAsync(IStorageFile storageFile, Guid notificationId, string projectCode, string projectFolderPath);
 }

@@ -97,7 +97,7 @@ internal sealed partial class MainWindow
 
     private async void NavigationView_Loaded(object sender, RoutedEventArgs args)
     {
-        if (_projectFile != null) await ViewModel.LoadProjectFileAsync(_projectFile);
+        if (_projectFile is not null) await ViewModel.LoadProjectFileAsync(_projectFile);
     }
 
     private void MainWindow_Closed(object sender, WindowEventArgs args)

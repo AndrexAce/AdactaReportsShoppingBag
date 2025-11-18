@@ -18,16 +18,10 @@ internal class ExcelComHandler : BaseComHandler
     override public void ReleaseCOMObjects()
     {
         // Release COM objects to prevent memory leaks
-        foreach (var element in worksheets)
-        {
-            Marshal.ReleaseComObject(element);
-        }
+        foreach (var element in worksheets) Marshal.ReleaseComObject(element);
         worksheets.Clear();
 
-        if (sheets is not null)
-        {
-            Marshal.ReleaseComObject(sheets);
-        }
+        if (sheets is not null) Marshal.ReleaseComObject(sheets);
         sheets = null;
 
         if (workbook is not null)
@@ -37,11 +31,7 @@ internal class ExcelComHandler : BaseComHandler
         }
         workbook = null;
 
-        if (workbooks is not null)
-        {
-            workbooks.Close();
-            Marshal.ReleaseComObject(workbooks);
-        }
+        if (workbooks is not null) Marshal.ReleaseComObject(workbooks);
         workbooks = null;
 
         if (excelApp is not null)
