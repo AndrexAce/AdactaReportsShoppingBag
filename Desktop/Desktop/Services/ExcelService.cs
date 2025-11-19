@@ -130,6 +130,11 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             notificationService.ShowProgressNotification("Importazione completata",
                 "Il file è stato importato con successo.");
         }
+        catch (Exception e)
+        {
+            notificationService.ShowProgressNotification("Importazione fallita",
+                "Si è verificato un errore durante l'importazione del file: " + e.Message);
+        }
         finally // Clean up the resources not managed by the base class
         {
             if (responseTableRange is not null) Marshal.ReleaseComObject(responseTableRange);
@@ -272,6 +277,11 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             notificationService.ShowProgressNotification("Importazione completata",
                 "Il file è stato importato con successo.");
         }
+        catch (Exception e)
+        {
+            notificationService.ShowProgressNotification("Importazione fallita",
+                "Si è verificato un errore durante l'importazione del file: " + e.Message);
+        }
         finally // Clean up the resources not managed by the base class
         {
             if (responseTableRange is not null) Marshal.ReleaseComObject(responseTableRange);
@@ -293,7 +303,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
         // Take only the needed columns and rename them
         var newColumns = oldDataTable.Copy().Columns
             .Cast<DataColumn>()
-            .Where((c, index) => index is 1 or 4 or 5)
+            .Where((_, index) => index is 1 or 4 or 5)
             .Select(c =>
             {
                 c.ColumnName = c.ColumnName switch
@@ -309,7 +319,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
         // Add the data to a new datatable with the new columns
         var newDataTable = new DataTable();
 
-        foreach (var column in newColumns)
+        foreach (var column in newColumns.Reverse())
             newDataTable.Columns.Add(new DataColumn(column.ColumnName, typeof(string)));
 
         foreach (DataRow row in oldDataTable.Rows)
