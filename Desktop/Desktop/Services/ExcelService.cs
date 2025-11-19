@@ -162,7 +162,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
         var questions = oldDataTable.Columns
             .Cast<DataColumn>()
             .Select(c => c.ColumnName)
-            .Where(s => s.StartsWith('D'))
+            .Where(s => s.StartsWith('D') && !s.Contains("PUNTO DI CAMPIONAMENTO"))
             .ToArray();
 
         // Populate the questions datatable
