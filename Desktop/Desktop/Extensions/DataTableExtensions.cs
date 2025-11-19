@@ -1,4 +1,6 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Data;
+using System.Linq;
+using System.Runtime.InteropServices;
 using Microsoft.Office.Interop.Excel;
 using DataTable = System.Data.DataTable;
 
@@ -61,6 +63,48 @@ internal static class DataTableExtensions
                 if (table is not null) Marshal.ReleaseComObject(table);
                 if (tables is not null) Marshal.ReleaseComObject(tables);
             }
+        }
+
+        public DataTable RemoveLastColumns(uint amount)
+        {
+            if (dataTable.Columns.Count <= amount)
+                return dataTable.Copy();
+
+            var result = new DataTable();
+            var columnsToKeep = dataTable.Columns.Cast<DataColumn>()
+                .Take(dataTable.Columns.Count - (int)amount)
+                .ToList();
+
+            // Add columns to result
+            foreach (var col in columnsToKeep)
+                result.Columns.Add(col.ColumnName, col.DataType);
+
+            // Copy rows
+            foreach (DataRow row in dataTable.Rows)
+            {
+                var newRow = result.NewRow();
+                for (var i = 0; i < columnsToKeep.Count; i++)
+                    newRow[i] = row[columnsToKeep[i].ColumnName];
+                result.Rows.Add(newRow);
+            }
+
+            return result;
+        }
+
+        public DataTable RemoveLastRows(uint amount)
+        {
+            if (dataTable.Rows.Count <= amount)
+                return dataTable.Copy();
+
+            var result = dataTable.Clone();
+            var rowsToKeep = dataTable.Rows.Cast<DataRow>()
+                .Take(dataTable.Rows.Count - (int)amount);
+
+            // Add rows to result
+            foreach (var row in rowsToKeep)
+                result.ImportRow(row);
+
+            return result;
         }
     }
 }

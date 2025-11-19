@@ -192,18 +192,19 @@ internal sealed class ExcelService(INotificationService notificationService) : E
     #region Classes file import
 
     public async Task ImportClassesFileAsync(IStorageFile storageFile, Guid notificationId, string projectCode,
-        string projectFolderPath)
+        string projectFolderPath, string productCode)
     {
         await Task.Run(async () => await ExecuteWithCleanupAsync(async () =>
-            await ImportClassesFileInternal(storageFile, notificationId, projectCode, projectFolderPath)));
+            await ImportClassesFileInternal(storageFile, notificationId, projectCode, projectFolderPath, productCode)));
     }
 
     private async Task ImportClassesFileInternal(IStorageFile storageFile, Guid notificationId, string projectCode,
-        string projectFolderPath)
+        string projectFolderPath, string productCode)
     {
         // Track the COM classes to be released
         Workbook? classesWorkbook = null;
         Sheets? classesSheets = null;
+        Worksheet? classesSheet = null;
         Range? responseTableRange = null;
 
         try
@@ -231,9 +232,37 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                     continue;
                 }
 
-                // TODO
+                // Find the corresponding worksheet in the app's classes file.
+                // If there is none, create the sheet.
+                try
+                {
+                    classesSheet = classesSheets.Item[productCode];
+                }
+                catch
+                {
+                    classesSheet = classesSheets.Add();
+                    classesSheet.Name = productCode;
+                }
+
+                // Copy and paste the table
+                responseTableRange = sheet.UsedRange;
+
+                var originalDataTable = responseTableRange.MakeDataTable();
+
+                // Step 1: Remove the useless rows
+                var newDataTable = originalDataTable.RemoveLastRows(3);
+
+                // Step 2: Remove the useless columns
+                newDataTable = newDataTable.RemoveLastColumns(6);
+
+                // Step 3 : Take the needed columns and rename them
+                newDataTable = TakeColumnsAndRename(newDataTable);
+
+                // Step 4: Write the new datatable to the classes worksheet
+                newDataTable.WriteToWorksheet(classesSheet, "Classi");
 
                 Marshal.ReleaseComObject(sheet);
+                break;
             }
 
             classesWorkbook.Save();
@@ -247,7 +276,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
         {
             if (responseTableRange is not null) Marshal.ReleaseComObject(responseTableRange);
 
-            Worksheets.Clear();
+            if (classesSheet is not null) Marshal.ReleaseComObject(classesSheet);
 
             if (classesSheets is not null) Marshal.ReleaseComObject(classesSheets);
 
@@ -257,6 +286,42 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                 Marshal.ReleaseComObject(classesWorkbook);
             }
         }
+    }
+
+    private static DataTable TakeColumnsAndRename(DataTable oldDataTable)
+    {
+        // Take only the needed columns and rename them
+        var newColumns = oldDataTable.Copy().Columns
+            .Cast<DataColumn>()
+            .Where((c, index) => index is 1 or 4 or 5)
+            .Select(c =>
+            {
+                c.ColumnName = c.ColumnName switch
+                {
+                    "Testo Domanda" => "Domanda",
+                    "Etichetta Domanda" => "Etichetta",
+                    _ => c.ColumnName
+                };
+
+                return c;
+            });
+
+        // Add the data to a new datatable with the new columns
+        var newDataTable = new DataTable();
+
+        foreach (var column in newColumns)
+            newDataTable.Columns.Add(new DataColumn(column.ColumnName, typeof(string)));
+
+        foreach (DataRow row in oldDataTable.Rows)
+        {
+            var newRow = newDataTable.NewRow();
+            newRow["Domanda"] = row["Testo Domanda"];
+            newRow["Etichetta"] = row["Etichetta Domanda"];
+            newRow["Classe"] = row["Classe"];
+            newDataTable.Rows.Add(newRow);
+        }
+
+        return newDataTable;
     }
 
     #endregion

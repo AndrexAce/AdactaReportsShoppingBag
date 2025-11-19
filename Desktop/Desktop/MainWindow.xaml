@@ -57,13 +57,13 @@
 
             <muxc:MenuBarItem Title="Elaborazione"
                               Visibility="{x:Bind ViewModel.SurveyMenuItemVisibility, Mode=OneWay}">
-                <MenuFlyoutItem Text="Importa file input (Penelope)" Icon="Import"
+                <MenuFlyoutItem Text="Importa classi in gruppo (Penelope)" Icon="Import"
                                 Command="{x:Bind ViewModel.ImportInputFileCommand}">
                     <MenuFlyoutItem.KeyboardAccelerators>
                         <KeyboardAccelerator Key="P" Modifiers="Control" />
                     </MenuFlyoutItem.KeyboardAccelerators>
                 </MenuFlyoutItem>
-                <MenuFlyoutItem Text="Importa file classi (ActiveViewing)" Icon="Import"
+                <MenuFlyoutItem Text="Importa classi singolo (ActiveViewing)" Icon="Import"
                                 Command="{x:Bind ViewModel.ImportClassesFileCommand}">
                     <MenuFlyoutItem.KeyboardAccelerators>
                         <KeyboardAccelerator Key="V" Modifiers="Control" />
@@ -99,7 +99,8 @@
                         PaneDisplayMode="Left"
                         Loaded="NavigationView_Loaded"
                         MenuItemsSource="{x:Bind ViewModel.NavigationViewMenuItems, Mode=OneWay}"
-                        SelectionChanged="NavigationView_SelectionChanged">
+                        SelectionChanged="NavigationView_SelectionChanged"
+                        SelectedItem="{x:Bind ViewModel.NavigationMenuSelectedItem, Mode=TwoWay}">
             <NavigationView.MenuItemTemplate>
                 <DataTemplate x:DataType="model:Product">
                     <StackPanel Orientation="Horizontal" Spacing="12">

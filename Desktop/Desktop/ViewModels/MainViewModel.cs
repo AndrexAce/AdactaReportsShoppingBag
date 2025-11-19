@@ -39,6 +39,8 @@ internal sealed partial class MainViewModel(
         nameof(SurveyMenuItemVisibility))]
     public partial ReportPrj? ReportProject { get; private set; } = null;
 
+    public Product? NavigationMenuSelectedItem { get; set; } = null;
+
     public string SaveStateText => IsProjectEdited switch
     {
         true => "– Modifiche non salvate",
@@ -186,6 +188,13 @@ internal sealed partial class MainViewModel(
     [RelayCommand]
     private async Task ImportClassesFileAsync()
     {
+        if (NavigationMenuSelectedItem is null)
+        {
+            await dialogService.ShowInformationDialogAsync("Selezione vuota",
+                "Seleziona un prodotto prima di importare da ActiveViewing.", "Ok");
+            return;
+        }
+
         var file = await dialogService.ShowFileOpenPickerAsync(".xlsx", "AdactaReportsShoppingBagOpenInputFilePicker");
 
         if (file is null) return;
@@ -198,7 +207,8 @@ internal sealed partial class MainViewModel(
 
         var projectFolderPath = Path.GetDirectoryName(_projectFilePath) ??
                                 throw new FileNotFoundException("The project folder path could not be reached.");
-        await excelService.ImportClassesFileAsync(file, notificationId, ReportProject.ProjectCode, projectFolderPath);
+        await excelService.ImportClassesFileAsync(file, notificationId, ReportProject.ProjectCode, projectFolderPath,
+            NavigationMenuSelectedItem.Code);
     }
 
     public async Task LoadProjectFileAsync(IStorageFile file)

@@ -13,5 +13,5 @@ internal interface IExcelService
         string projectFolderPath);
 
     public Task ImportClassesFileAsync(IStorageFile storageFile, Guid notificationId, string projectCode,
-        string projectFolderPath);
+        string projectFolderPath, string productCode);
 }
