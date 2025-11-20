@@ -60,6 +60,50 @@ internal sealed class ExcelService(INotificationService notificationService) : E
 
     #endregion
 
+    #region Survey data file creation
+
+    public void CreateSurveyDataFile(ReportPrj project, string projectFolderPath)
+    {
+        ExecuteWithCleanup(() => CreateSurveyDataFileInternal(project, projectFolderPath));
+    }
+
+    private void CreateSurveyDataFileInternal(ReportPrj project, string projectFolderPath)
+    {
+        var excelFilePath = Path.Combine(projectFolderPath, $"Dati{project.ProjectCode}.xlsx");
+
+        // Create a silent Excel application
+        ExcelApp = new Application
+        {
+            Visible = false,
+            DisplayAlerts = false
+        };
+        Workbooks = ExcelApp.Workbooks;
+        Workbook = Workbooks.Add();
+        Sheets = Workbook.Sheets;
+
+        for (var i = 0; i < project.Products.Count(); i++)
+        {
+            Worksheet worksheet;
+
+            if (i == 0)
+                // Use the first default sheet
+                worksheet = (Worksheet)Sheets[1];
+            else
+                // Add new sheet after the last one
+                worksheet = (Worksheet)Sheets.Add(After: Worksheets[^1]);
+
+            // Rename the worksheet to match the product code
+            worksheet.Name = project.Products.ElementAt(i).Code;
+
+            // Add the worksheet to the collection
+            Worksheets.Add(worksheet);
+        }
+
+        Workbook.SaveAs(excelFilePath);
+    }
+
+    #endregion
+
     #region Survey file import
 
     public async Task ImportSurveyFileAsync(IStorageFile storageFile, Guid notificationId, string projectCode,

@@ -37,6 +37,7 @@ internal sealed class ProjectFileService(IExcelService excelService) : IProjectF
             var projectFilePath = Path.Combine(projectFolderPath, $"{project.ProjectCode}.reportprj");
 
             excelService.CreateClassesFile(project, projectFolderPath);
+            excelService.CreateSurveyDataFile(project, projectFolderPath);
 
             SaveProjectFileAsync(project, projectFilePath);
 
