@@ -68,25 +68,20 @@ internal static class DataTableExtensions
         public DataTable RemoveLastColumns(uint amount)
         {
             if (dataTable.Columns.Count <= amount)
-                return dataTable.Copy();
+                return dataTable;
 
-            var result = new DataTable();
-            var columnsToKeep = dataTable.Columns.Cast<DataColumn>()
-                .Take(dataTable.Columns.Count - (int)amount)
+            var result = dataTable.Clone();
+            var columnsToRemove = dataTable.Columns.Cast<DataColumn>()
+                .Skip(dataTable.Columns.Count - (int)amount)
                 .ToList();
 
-            // Add columns to result
-            foreach (var col in columnsToKeep)
-                result.Columns.Add(col.ColumnName, col.DataType);
+            // Remove unwanted columns
+            foreach (var col in columnsToRemove)
+                result.Columns.Remove(col.ColumnName);
 
-            // Copy rows
+            // Add rows to result
             foreach (DataRow row in dataTable.Rows)
-            {
-                var newRow = result.NewRow();
-                for (var i = 0; i < columnsToKeep.Count; i++)
-                    newRow[i] = row[columnsToKeep[i].ColumnName];
-                result.Rows.Add(newRow);
-            }
+                result.ImportRow(row);
 
             return result;
         }
@@ -94,7 +89,7 @@ internal static class DataTableExtensions
         public DataTable RemoveLastRows(uint amount)
         {
             if (dataTable.Rows.Count <= amount)
-                return dataTable.Copy();
+                return dataTable;
 
             var result = dataTable.Clone();
             var rowsToKeep = dataTable.Rows.Cast<DataRow>()

@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
-using Microsoft.Office.Interop.Excel;
 using DataTable = System.Data.DataTable;
+using Range = Microsoft.Office.Interop.Excel.Range;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.Extensions;
 
@@ -20,29 +20,30 @@ internal static class RangeExtensions
                 columns = range.Columns;
                 rows = range.Rows;
 
-                // Add columns
-                for (var colIndex = 1; colIndex <= columns.Count; colIndex++)
+                // Get all values at once
+                var values = (object[,])range.Value2;
+
+                if (values == null) return dataTable;
+
+                var rowCount = values.GetLength(0);
+                var colCount = values.GetLength(1);
+
+                // Add columns from first row
+                for (var colIndex = 1; colIndex <= colCount; colIndex++)
                 {
-                    Range cell = range.Cells[1, colIndex];
-
-                    var columnName = cell.Value2?.ToString() ?? colIndex.ToString();
+                    var columnName = values[1, colIndex].ToString() ?? colIndex.ToString();
                     dataTable.Columns.Add(columnName);
-
-                    Marshal.ReleaseComObject(cell);
                 }
 
-                // Add rows
-                for (var rowIndex = 2; rowIndex <= rows.Count; rowIndex++)
+                // Add data rows (skip header row)
+                for (var rowIndex = 2; rowIndex <= rowCount; rowIndex++)
                 {
                     var dataRow = dataTable.NewRow();
 
-                    for (var colIndex = 1; colIndex <= columns.Count; colIndex++)
+                    for (var colIndex = 1; colIndex <= colCount; colIndex++)
                     {
-                        Range cell = range[rowIndex, colIndex];
-
-                        dataRow[colIndex - 1] = cell.Value2?.ToString() ?? "";
-
-                        Marshal.ReleaseComObject(cell);
+                        var value = values[rowIndex, colIndex];
+                        dataRow[colIndex - 1] = value;
                     }
 
                     dataTable.Rows.Add(dataRow);

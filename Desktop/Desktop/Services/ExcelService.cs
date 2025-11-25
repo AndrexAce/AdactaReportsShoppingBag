@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.ObjectModel;
 using System.Data;
 using System.IO;
 using System.Linq;
@@ -25,37 +24,45 @@ internal sealed class ExcelService(INotificationService notificationService) : E
 
     private void CreateClassesFileInternal(ReportPrj project, string projectFolderPath)
     {
-        var excelFilePath = Path.Combine(projectFolderPath, $"Classi{project.ProjectCode}.xlsx");
+        Worksheet? worksheet = null;
 
-        // Create a silent Excel application
-        ExcelApp = new Application
+        try
         {
-            Visible = false,
-            DisplayAlerts = false
-        };
-        Workbooks = ExcelApp.Workbooks;
-        Workbook = Workbooks.Add();
-        Sheets = Workbook.Sheets;
+            var excelFilePath = Path.Combine(projectFolderPath, $"Classi{project.ProjectCode}.xlsx");
 
-        for (var i = 0; i < project.Products.Count(); i++)
-        {
-            Worksheet worksheet;
+            // Create a silent Excel application
+            ExcelApp = new Application
+            {
+                Visible = false,
+                DisplayAlerts = false
+            };
+            Workbooks = ExcelApp.Workbooks;
+            Workbook = Workbooks.Add();
+            Worksheets = Workbook.Worksheets;
 
-            if (i == 0)
-                // Use the first default sheet
-                worksheet = (Worksheet)Sheets[1];
-            else
-                // Add new sheet after the last one
-                worksheet = (Worksheet)Sheets.Add(After: Worksheets[^1]);
+            for (var i = 0; i < project.Products.Count(); i++)
+            {
+                if (i == 0)
+                    // Use the first default sheet
+                    worksheet = (Worksheet)Worksheets[1];
+                else
+                    // Add new sheet after the last one
+                    worksheet = (Worksheet)Worksheets.Add();
 
-            // Rename the worksheet to match the product code
-            worksheet.Name = project.Products.ElementAt(i).Code;
+                // Rename the worksheet to match the product code
+                worksheet.Name = project.Products.ElementAt(i).Code;
 
-            // Add the worksheet to the collection
-            Worksheets.Add(worksheet);
+                // Release the worksheet on each iteration
+                Marshal.ReleaseComObject(worksheet);
+                worksheet = null;
+            }
+
+            Workbook.SaveAs(excelFilePath);
         }
-
-        Workbook.SaveAs(excelFilePath);
+        finally
+        {
+            if (worksheet is not null) Marshal.ReleaseComObject(worksheet);
+        }
     }
 
     #endregion
@@ -69,57 +76,75 @@ internal sealed class ExcelService(INotificationService notificationService) : E
 
     private void CreateSurveyDataFileInternal(ReportPrj project, string projectFolderPath)
     {
-        var excelFilePath = Path.Combine(projectFolderPath, $"Dati{project.ProjectCode}.xlsx");
+        Worksheet? worksheet = null;
 
-        // Create a silent Excel application
-        ExcelApp = new Application
+        try
         {
-            Visible = false,
-            DisplayAlerts = false
-        };
-        Workbooks = ExcelApp.Workbooks;
-        Workbook = Workbooks.Add();
-        Sheets = Workbook.Sheets;
+            var excelFilePath = Path.Combine(projectFolderPath, $"Dati{project.ProjectCode}.xlsx");
 
-        for (var i = 0; i < project.Products.Count(); i++)
-        {
-            Worksheet worksheet;
+            // Create a silent Excel application
+            ExcelApp = new Application
+            {
+                Visible = false,
+                DisplayAlerts = false
+            };
+            Workbooks = ExcelApp.Workbooks;
+            Workbook = Workbooks.Add();
+            Worksheets = Workbook.Worksheets;
 
-            if (i == 0)
-                // Use the first default sheet
-                worksheet = (Worksheet)Sheets[1];
-            else
-                // Add new sheet after the last one
-                worksheet = (Worksheet)Sheets.Add(After: Worksheets[^1]);
+            for (var i = 0; i < project.Products.Count(); i++)
+            {
+                if (i == 0)
+                    // Use the first default sheet
+                    worksheet = (Worksheet)Worksheets[1];
+                else
+                    // Add new sheet after the last one
+                    worksheet = (Worksheet)Worksheets.Add();
 
-            // Rename the worksheet to match the product code
-            worksheet.Name = project.Products.ElementAt(i).Code;
+                // Rename the worksheet to match the product code
+                worksheet.Name = project.Products.ElementAt(i).Code;
 
-            // Add the worksheet to the collection
-            Worksheets.Add(worksheet);
+                // Release the worksheet on each iteration
+                Marshal.ReleaseComObject(worksheet);
+                worksheet = null;
+            }
+
+            Workbook.SaveAs(excelFilePath);
         }
-
-        Workbook.SaveAs(excelFilePath);
+        finally
+        {
+            if (worksheet is not null) Marshal.ReleaseComObject(worksheet);
+        }
     }
 
     #endregion
 
-    #region Survey file import
+    #region Penelope file import
 
-    public async Task ImportSurveyFileAsync(IStorageFile storageFile, Guid notificationId, string projectCode,
+    public async Task ImportPenelopeFileAsync(IStorageFile storageFile, Guid notificationId, string projectCode,
         string projectFolderPath)
     {
-        await Task.Run(async () => await ExecuteWithCleanupAsync(async () =>
-            await ImportSurveyFileInternal(storageFile, notificationId, projectCode, projectFolderPath)));
+        await ExecuteWithCleanupAsync(async () =>
+            {
+                await ImportPenelopeFileInternalAsync(storageFile, notificationId, projectCode, projectFolderPath);
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                GC.Collect();
+            }
+        );
     }
 
-    private async Task ImportSurveyFileInternal(IStorageFile storageFile, Guid notificationId, string projectCode,
+    private async Task ImportPenelopeFileInternalAsync(IStorageFile storageFile, Guid notificationId,
+        string projectCode,
         string projectFolderPath)
     {
         // Track the COM classes to be released
         Workbook? classesWorkbook = null;
+        Workbook? dataWorkbook = null;
         Sheets? classesSheets = null;
-        Collection<Worksheet> classesWorksheets = [];
+        Sheets? dataSheets = null;
+        Worksheet? classesWorksheet = null;
+        Worksheet? dataWorksheet = null;
         Range? responseTableRange = null;
 
         try
@@ -132,42 +157,73 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             };
             Workbooks = ExcelApp.Workbooks;
             Workbook = Workbooks.Open(storageFile.Path);
-            Sheets = Workbook.Sheets;
+            Worksheets = Workbook.Worksheets;
 
-            // Open the survey classes file
+            // Open the survey classes and survey data file
             classesWorkbook = Workbooks.Open(Path.Combine(projectFolderPath, $"Classi{projectCode}.xlsx"));
+            dataWorkbook = Workbooks.Open(Path.Combine(projectFolderPath, $"Dati{projectCode}.xlsx"));
             classesSheets = classesWorkbook.Sheets;
+            dataSheets = dataWorkbook.Sheets;
 
-            // For each worksheet in the survey file, find the corresponding worksheet in the classes file and populate it
-            foreach (Worksheet sheet in Sheets)
+            // For each worksheet in the input file, find the corresponding worksheet in the files and populate it
+            foreach (Worksheet sheet in Worksheets)
             {
-                Worksheet classesWorksheet = classesSheets.Item[sheet.Name];
+                // Find the corresponding worksheets in the app's files.
+                // If there are none, create the sheets.
+                try
+                {
+                    classesWorksheet = classesSheets.Item[sheet.Name];
+                }
+                catch
+                {
+                    classesWorksheet = classesSheets.Add();
+                    classesWorksheet.Name = sheet.Name;
+                }
 
-                if (classesWorksheet is null) continue;
+                try
+                {
+                    dataWorksheet = dataSheets.Item[sheet.Name];
+                }
+                catch
+                {
+                    dataWorksheet = dataSheets.Add();
+                    dataWorksheet.Name = sheet.Name;
+                }
 
-                // Get the used range of the survey file, it contains the class names
                 responseTableRange = sheet.UsedRange;
 
                 var originalDataTable = responseTableRange.MakeDataTable();
 
                 // Step 1: Make the questions column
-                var newDataTable = AddQuestionsColumn(originalDataTable);
+                var newClassesDataTable = AddQuestionsColumn(originalDataTable);
 
                 // Step 2: Add the field name column
-                newDataTable = AddFieldNameColumn(newDataTable);
+                newClassesDataTable = AddFieldNameColumn(newClassesDataTable);
 
                 // Step 3: Add the category column
-                newDataTable = AddCategoryColumn(newDataTable);
+                newClassesDataTable = AddCategoryColumn(newClassesDataTable);
 
                 // Step 4: Write the new datatable to the classes worksheet
-                newDataTable.WriteToWorksheet(classesWorksheet, "Classi");
+                newClassesDataTable.WriteToWorksheet(classesWorksheet, "Classi");
 
-                // Add the worksheets to the collection
-                Worksheets.Add(sheet);
-                classesWorksheets.Add(classesWorksheet);
+                // Step 5: Keep only the question data from the original datatable
+                var newDataDataTable = KeepDataColumns(originalDataTable);
+
+                // Step 6: Write the new datatable to the data worksheet
+                newDataDataTable.WriteToWorksheet(dataWorksheet, "Dati");
+
+                // Release the resources on each iteration
+                Marshal.ReleaseComObject(responseTableRange);
+                responseTableRange = null;
+                Marshal.ReleaseComObject(dataWorksheet);
+                dataWorksheet = null;
+                Marshal.ReleaseComObject(classesWorksheet);
+                classesWorksheet = null;
+                Marshal.ReleaseComObject(sheet);
             }
 
             classesWorkbook.Save();
+            dataWorkbook.Save();
 
             await notificationService.RemoveNotification(notificationId);
 
@@ -183,10 +239,17 @@ internal sealed class ExcelService(INotificationService notificationService) : E
         {
             if (responseTableRange is not null) Marshal.ReleaseComObject(responseTableRange);
 
-            foreach (var element in classesWorksheets) Marshal.ReleaseComObject(element);
-            Worksheets.Clear();
+            if (dataWorksheet is not null) Marshal.ReleaseComObject(dataWorksheet);
+            if (classesWorksheet is not null) Marshal.ReleaseComObject(classesWorksheet);
 
+            if (dataSheets is not null) Marshal.ReleaseComObject(dataSheets);
             if (classesSheets is not null) Marshal.ReleaseComObject(classesSheets);
+
+            if (dataWorkbook is not null)
+            {
+                dataWorkbook.Close(false);
+                Marshal.ReleaseComObject(dataWorkbook);
+            }
 
             if (classesWorkbook is not null)
             {
@@ -236,25 +299,64 @@ internal sealed class ExcelService(INotificationService notificationService) : E
         return newDataTable;
     }
 
-    #endregion
-
-    #region Classes file import
-
-    public async Task ImportClassesFileAsync(IStorageFile storageFile, Guid notificationId, string projectCode,
-        string projectFolderPath, string productCode)
+    private static DataTable KeepDataColumns(DataTable oldDataTable)
     {
-        await Task.Run(async () => await ExecuteWithCleanupAsync(async () =>
-            await ImportClassesFileInternal(storageFile, notificationId, projectCode, projectFolderPath, productCode)));
+        // Create the new datatable with only the data columns
+        var newDataTable = new DataTable();
+
+        // Extract the data columns from the original datatable
+        var dataColumns = oldDataTable.Columns
+            .Cast<DataColumn>()
+            .Where(c => c.ColumnName.StartsWith('D'))
+            .ToArray();
+
+        // Add the data columns to the new datatable
+        foreach (var column in dataColumns)
+            newDataTable.Columns.Add(new DataColumn(column.ColumnName, typeof(string)));
+
+        // Populate the new datatable with the data from the original datatable
+        foreach (DataRow row in oldDataTable.Rows)
+        {
+            var newRow = newDataTable.NewRow();
+            foreach (var column in dataColumns)
+                newRow[column.ColumnName] = row[column.ColumnName];
+            newDataTable.Rows.Add(newRow);
+        }
+
+        return newDataTable;
     }
 
-    private async Task ImportClassesFileInternal(IStorageFile storageFile, Guid notificationId, string projectCode,
+    #endregion
+
+    #region ActiveViewing file import
+
+    public async Task ImportActiveViewingFileAsync(IStorageFile storageFile, Guid notificationId, string projectCode,
+        string projectFolderPath, string productCode)
+    {
+        await ExecuteWithCleanupAsync(async () =>
+            {
+                await ImportActiveViewingFileInternal(storageFile, notificationId, projectCode, projectFolderPath,
+                    productCode);
+
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                GC.Collect();
+            }
+        );
+    }
+
+    private async Task ImportActiveViewingFileInternal(IStorageFile storageFile, Guid notificationId,
+        string projectCode,
         string projectFolderPath, string productCode)
     {
         // Track the COM classes to be released
         Workbook? classesWorkbook = null;
+        Workbook? dataWorkbook = null;
         Sheets? classesSheets = null;
-        Worksheet? classesSheet = null;
-        Range? responseTableRange = null;
+        Sheets? dataSheets = null;
+        Worksheet? classesWorksheet = null;
+        Worksheet? dataWorksheet = null;
+        Range? tableRange = null;
 
         try
         {
@@ -266,55 +368,64 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             };
             Workbooks = ExcelApp.Workbooks;
             Workbook = Workbooks.Open(storageFile.Path);
-            Sheets = Workbook.Sheets;
+            Worksheets = Workbook.Sheets;
 
-            // Open the app's survey classes file
+            // Open the survey classes and survey data file
             classesWorkbook = Workbooks.Open(Path.Combine(projectFolderPath, $"Classi{projectCode}.xlsx"));
+            dataWorkbook = Workbooks.Open(Path.Combine(projectFolderPath, $"Dati{projectCode}.xlsx"));
             classesSheets = classesWorkbook.Sheets;
+            dataSheets = dataWorkbook.Sheets;
 
             // Find ActiveViewing's classes file and import it
-            foreach (Worksheet sheet in Sheets)
+            foreach (Worksheet sheet in Worksheets)
             {
-                if (!sheet.Name.Contains("Classi domande"))
+                if (sheet.Name == "Input")
                 {
-                    Marshal.ReleaseComObject(sheet);
-                    continue;
+                    dataWorksheet = dataSheets.Item[productCode];
+
+                    tableRange = sheet.UsedRange;
+
+                    var originalDataTable = tableRange.MakeDataTable();
+
+                    // Step 1: Filter the datatable data by product code
+                    var newDataTable = GetTableByProductCode(originalDataTable, productCode);
+
+                    // Step 2 : Write the new datatable to the data worksheet
+                    newDataTable.WriteToWorksheet(dataWorksheet, "Dati");
+                }
+                else if (sheet.Name.Contains("Classi domande"))
+                {
+                    classesWorksheet = classesSheets.Item[productCode];
+
+                    tableRange = sheet.UsedRange;
+
+                    var originalDataTable = tableRange.MakeDataTable();
+
+                    // Step 1: Remove the useless rows
+                    var newDataTable = originalDataTable.RemoveLastRows(3);
+
+                    // Step 2: Remove the useless columns
+                    newDataTable = newDataTable.RemoveLastColumns(6);
+
+                    // Step 3 : Take the needed columns and rename them
+                    newDataTable = TakeColumnsAndRename(newDataTable);
+
+                    // Step 4: Write the new datatable to the classes worksheet
+                    newDataTable.WriteToWorksheet(classesWorksheet, "Classi");
                 }
 
-                // Find the corresponding worksheet in the app's classes file.
-                // If there is none, create the sheet.
-                try
-                {
-                    classesSheet = classesSheets.Item[productCode];
-                }
-                catch
-                {
-                    classesSheet = classesSheets.Add();
-                    classesSheet.Name = productCode;
-                }
-
-                // Copy and paste the table
-                responseTableRange = sheet.UsedRange;
-
-                var originalDataTable = responseTableRange.MakeDataTable();
-
-                // Step 1: Remove the useless rows
-                var newDataTable = originalDataTable.RemoveLastRows(3);
-
-                // Step 2: Remove the useless columns
-                newDataTable = newDataTable.RemoveLastColumns(6);
-
-                // Step 3 : Take the needed columns and rename them
-                newDataTable = TakeColumnsAndRename(newDataTable);
-
-                // Step 4: Write the new datatable to the classes worksheet
-                newDataTable.WriteToWorksheet(classesSheet, "Classi");
-
+                // Release the resources on each iteration
+                if (tableRange is not null) Marshal.ReleaseComObject(tableRange);
+                tableRange = null;
+                if (dataWorksheet is not null) Marshal.ReleaseComObject(dataWorksheet);
+                dataWorksheet = null;
+                if (classesWorksheet is not null) Marshal.ReleaseComObject(classesWorksheet);
+                classesWorksheet = null;
                 Marshal.ReleaseComObject(sheet);
-                break;
             }
 
             classesWorkbook.Save();
+            dataWorkbook.Save();
 
             await notificationService.RemoveNotification(notificationId);
 
@@ -328,11 +439,19 @@ internal sealed class ExcelService(INotificationService notificationService) : E
         }
         finally // Clean up the resources not managed by the base class
         {
-            if (responseTableRange is not null) Marshal.ReleaseComObject(responseTableRange);
+            if (tableRange is not null) Marshal.ReleaseComObject(tableRange);
 
-            if (classesSheet is not null) Marshal.ReleaseComObject(classesSheet);
+            if (dataWorksheet is not null) Marshal.ReleaseComObject(dataWorksheet);
+            if (classesWorksheet is not null) Marshal.ReleaseComObject(classesWorksheet);
 
+            if (dataSheets is not null) Marshal.ReleaseComObject(dataSheets);
             if (classesSheets is not null) Marshal.ReleaseComObject(classesSheets);
+
+            if (dataWorkbook is not null)
+            {
+                dataWorkbook.Close(false);
+                Marshal.ReleaseComObject(dataWorkbook);
+            }
 
             if (classesWorkbook is not null)
             {
@@ -345,7 +464,9 @@ internal sealed class ExcelService(INotificationService notificationService) : E
     private static DataTable TakeColumnsAndRename(DataTable oldDataTable)
     {
         // Take only the needed columns and rename them
-        var newColumns = oldDataTable.Copy().Columns
+        var newColumns = oldDataTable
+            .Clone()
+            .Columns
             .Cast<DataColumn>()
             .Where((_, index) => index is 1 or 4 or 5)
             .Select(c =>
@@ -374,6 +495,28 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             newRow["Classe"] = row["Classe"];
             newDataTable.Rows.Add(newRow);
         }
+
+        return newDataTable;
+    }
+
+    private static DataTable GetTableByProductCode(DataTable dataTable, string productCode)
+    {
+        // Take only the rows related to the given product
+        var newDataTable = dataTable.AsEnumerable()
+            .Where(row => row.Field<string>("Prodotto") == productCode)
+            .CopyToDataTable();
+
+        // Take the columns to remove
+        var columnsToRemove = newDataTable.Columns
+            .Cast<DataColumn>()
+            .Where(c => !c.ColumnName.StartsWith("D.") && c.ColumnName != "LegCampionamento")
+            .ToArray();
+
+        // Remove the useless columns
+        foreach (var column in columnsToRemove) newDataTable.Columns.Remove(column);
+
+        // Rename first column
+        newDataTable.Columns[0].ColumnName = "D.1 PUNTO DI CAMPIONAMENTO";
 
         return newDataTable;
     }

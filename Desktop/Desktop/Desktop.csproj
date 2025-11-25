@@ -1,99 +1,99 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-    <PropertyGroup>
-        <OutputType>WinExe</OutputType>
-        <LangVersion>preview</LangVersion>
-        <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
-        <TargetPlatformMinVersion>10.0.22000.0</TargetPlatformMinVersion>
-        <RootNamespace>AdactaInternational.AdactaReportsShoppingBag.Desktop</RootNamespace>
-        <ApplicationManifest>AdactaReportsShoppingBag.manifest</ApplicationManifest>
-        <Platforms>x86;x64;ARM64</Platforms>
-        <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
-        <UseWinUI>true</UseWinUI>
-        <WinUISDKReferences>false</WinUISDKReferences>
-        <Nullable>enable</Nullable>
-        <EnableWindowsTargeting>true</EnableWindowsTargeting>
-    </PropertyGroup>
-    <ItemGroup>
-      <COMReference Include="Microsoft.Office.Interop.Excel">
-        <WrapperTool>tlbimp</WrapperTool>
-        <VersionMinor>9</VersionMinor>
-        <VersionMajor>1</VersionMajor>
-        <Guid>00020813-0000-0000-c000-000000000046</Guid>
-        <Lcid>0</Lcid>
-        <Isolated>false</Isolated>
-        <EmbedInteropTypes>true</EmbedInteropTypes>
-      </COMReference>
-    </ItemGroup>
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<LangVersion>preview</LangVersion>
+		<TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+		<TargetPlatformMinVersion>10.0.22000.0</TargetPlatformMinVersion>
+		<RootNamespace>AdactaInternational.AdactaReportsShoppingBag.Desktop</RootNamespace>
+		<ApplicationManifest>AdactaReportsShoppingBag.manifest</ApplicationManifest>
+		<Platforms>x86;x64;ARM64</Platforms>
+		<RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
+		<UseWinUI>true</UseWinUI>
+		<WinUISDKReferences>false</WinUISDKReferences>
+		<Nullable>enable</Nullable>
+		<EnableWindowsTargeting>true</EnableWindowsTargeting>
+	</PropertyGroup>
+	<ItemGroup>
+		<COMReference Include="Microsoft.Office.Interop.Excel">
+			<WrapperTool>tlbimp</WrapperTool>
+			<VersionMinor>9</VersionMinor>
+			<VersionMajor>1</VersionMajor>
+			<Guid>00020813-0000-0000-c000-000000000046</Guid>
+			<Lcid>0</Lcid>
+			<Isolated>false</Isolated>
+			<EmbedInteropTypes>true</EmbedInteropTypes>
+		</COMReference>
+	</ItemGroup>
 
-    <ItemGroup>
-        <Manifest Include="$(ApplicationManifest)" />
-    </ItemGroup>
+	<ItemGroup>
+		<Manifest Include="$(ApplicationManifest)" />
+	</ItemGroup>
 
-    <ItemGroup>
-        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
-        <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.7175" />
-        <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.251106002" />
-        <PackageReference Include="Newtonsoft.Json.Schema" Version="4.0.1" />
-    </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
+		<PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.7175" />
+		<PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.251106002" />
+		<PackageReference Include="Newtonsoft.Json.Schema" Version="4.0.1" />
+	</ItemGroup>
 
-    <ItemGroup>
-        <ProjectReference Include="..\..\Model\Model.fsproj" />
-    </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\Model\Model.fsproj" />
+	</ItemGroup>
 
-    <ItemGroup>
-        <Content Update="Assets\favicon.ico">
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-        </Content>
-        <EmbeddedResource Include="Assets\ReportPrj.schema.json" />
-    </ItemGroup>
+	<ItemGroup>
+		<Content Update="Assets\favicon.ico">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+		<EmbeddedResource Include="Assets\ReportPrj.schema.json" />
+	</ItemGroup>
 
-    <ItemGroup>
-        <Page Update="Controls\CreditsControl.xaml">
-            <Generator>MSBuild:Compile</Generator>
-        </Page>
-    </ItemGroup>
+	<ItemGroup>
+		<Page Update="Controls\CreditsControl.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</Page>
+	</ItemGroup>
 
-    <ItemGroup>
-        <Page Update="Controls\NewProjectControl.xaml">
-            <Generator>MSBuild:Compile</Generator>
-        </Page>
-    </ItemGroup>
+	<ItemGroup>
+		<Page Update="Controls\NewProjectControl.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</Page>
+	</ItemGroup>
 
-    <ItemGroup>
-      <Page Update="Pages\ProductPage.xaml">
-        <Generator>MSBuild:Compile</Generator>
-      </Page>
-    </ItemGroup>
+	<ItemGroup>
+		<Page Update="Pages\ProductPage.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</Page>
+	</ItemGroup>
 
-    <!-- Publish Properties -->
-    <PropertyGroup>
-        <SupportedOSPlatformVersion>10.0.22000.0</SupportedOSPlatformVersion>
-        <AssemblyName>AdactaReportsShoppingBag</AssemblyName>
-        <Company>Adacta International</Company>
-        <Product>Adacta Reports Shopping Bag</Product>
-        <NeutralLanguage>it</NeutralLanguage>
-        <Copyright>Andrea Lucchese</Copyright>
-        <Version>1.0.0</Version>
-        <ApplicationIcon>Assets\favicon.ico</ApplicationIcon>
-        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
-        <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-        <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
-        <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
-        <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-        <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
-        <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
-    </PropertyGroup>
+	<!-- Publish Properties -->
+	<PropertyGroup>
+		<SupportedOSPlatformVersion>10.0.22000.0</SupportedOSPlatformVersion>
+		<AssemblyName>AdactaReportsShoppingBag</AssemblyName>
+		<Company>Adacta International</Company>
+		<Product>Adacta Reports Shopping Bag</Product>
+		<NeutralLanguage>it</NeutralLanguage>
+		<Copyright>Andrea Lucchese</Copyright>
+		<Version>1.0.0</Version>
+		<ApplicationIcon>Assets\favicon.ico</ApplicationIcon>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
+		<CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+		<CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
+		<CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
+		<CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+		<CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
+		<CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
+	</PropertyGroup>
 </Project>

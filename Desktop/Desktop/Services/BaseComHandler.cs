@@ -30,13 +30,9 @@ internal abstract class BaseComHandler
         finally
         {
             if (syncContext != null)
-            {
                 syncContext.Post(_ => ReleaseComObjects(), null);
-            }
             else
-            {
                 ReleaseComObjects();
-            }
         }
     }
 

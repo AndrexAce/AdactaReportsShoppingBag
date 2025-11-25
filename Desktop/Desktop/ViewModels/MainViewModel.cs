@@ -168,7 +168,7 @@ internal sealed partial class MainViewModel(
     }
 
     [RelayCommand]
-    private async Task ImportInputFileAsync()
+    private async Task ImportPenelopeFileAsync()
     {
         var file = await dialogService.ShowFileOpenPickerAsync(".xlsx", "AdactaReportsShoppingBagOpenInputFilePicker");
 
@@ -182,11 +182,11 @@ internal sealed partial class MainViewModel(
 
         var projectFolderPath = Path.GetDirectoryName(_projectFilePath) ??
                                 throw new FileNotFoundException("The project folder path could not be reached.");
-        await excelService.ImportSurveyFileAsync(file, notificationId, ReportProject.ProjectCode, projectFolderPath);
+        await excelService.ImportPenelopeFileAsync(file, notificationId, ReportProject.ProjectCode, projectFolderPath);
     }
 
     [RelayCommand]
-    private async Task ImportClassesFileAsync()
+    private async Task ImportActiveViewingFileAsync()
     {
         if (NavigationMenuSelectedItem is null)
         {
@@ -207,7 +207,8 @@ internal sealed partial class MainViewModel(
 
         var projectFolderPath = Path.GetDirectoryName(_projectFilePath) ??
                                 throw new FileNotFoundException("The project folder path could not be reached.");
-        await excelService.ImportClassesFileAsync(file, notificationId, ReportProject.ProjectCode, projectFolderPath,
+        await excelService.ImportActiveViewingFileAsync(file, notificationId, ReportProject.ProjectCode,
+            projectFolderPath,
             NavigationMenuSelectedItem.Code);
     }
 
