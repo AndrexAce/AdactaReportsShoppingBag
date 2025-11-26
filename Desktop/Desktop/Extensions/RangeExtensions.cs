@@ -31,7 +31,7 @@ internal static class RangeExtensions
                 // Add columns from first row
                 for (var colIndex = 1; colIndex <= colCount; colIndex++)
                 {
-                    var columnName = values[1, colIndex].ToString() ?? colIndex.ToString();
+                    var columnName = values[1, colIndex]?.ToString() ?? colIndex.ToString();
                     dataTable.Columns.Add(columnName);
                 }
 
