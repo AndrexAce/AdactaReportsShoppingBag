@@ -124,15 +124,8 @@ internal sealed class ExcelService(INotificationService notificationService) : E
     public async Task ImportPenelopeFileAsync(IStorageFile storageFile, Guid notificationId, string projectCode,
         string projectFolderPath)
     {
-        await ExecuteWithCleanupAsync(async () =>
-            {
-                await ImportPenelopeFileInternalAsync(storageFile, notificationId, projectCode, projectFolderPath);
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
-                GC.Collect();
+        await ExecuteWithCleanupAsync(async () => await ImportPenelopeFileInternalAsync(storageFile, notificationId, projectCode, projectFolderPath));
             }
-        );
-    }
 
     private async Task ImportPenelopeFileInternalAsync(IStorageFile storageFile, Guid notificationId,
         string projectCode,
@@ -333,17 +326,8 @@ internal sealed class ExcelService(INotificationService notificationService) : E
     public async Task ImportActiveViewingFileAsync(IStorageFile storageFile, Guid notificationId, string projectCode,
         string projectFolderPath, string productCode)
     {
-        await ExecuteWithCleanupAsync(async () =>
-            {
-                await ImportActiveViewingFileInternal(storageFile, notificationId, projectCode, projectFolderPath,
-                    productCode);
-
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
-                GC.Collect();
+        await ExecuteWithCleanupAsync(async () => await ImportActiveViewingFileInternal(storageFile, notificationId, projectCode, projectFolderPath, productCode));
             }
-        );
-    }
 
     private async Task ImportActiveViewingFileInternal(IStorageFile storageFile, Guid notificationId,
         string projectCode,

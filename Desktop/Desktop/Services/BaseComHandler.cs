@@ -15,6 +15,10 @@ internal abstract class BaseComHandler
         finally
         {
             ReleaseComObjects();
+
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
         }
     }
 
@@ -33,6 +37,10 @@ internal abstract class BaseComHandler
                 syncContext.Post(_ => ReleaseComObjects(), null);
             else
                 ReleaseComObjects();
+
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
         }
     }
 
