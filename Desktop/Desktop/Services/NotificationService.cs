@@ -7,7 +7,7 @@ namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.Services;
 
 internal class NotificationService : INotificationService
 {
-    public Guid ShowProgressNotification(string title, string message)
+    public Guid ShowNotification(string title, string message)
     {
         var tag = Guid.NewGuid();
 
@@ -25,7 +25,7 @@ internal class NotificationService : INotificationService
         return tag;
     }
 
-    public async Task RemoveNotification(Guid tag)
+    public async Task RemoveNotificationAsync(Guid tag)
     {
         await AppNotificationManager.Default.RemoveByTagAsync(tag.ToString()).AsTask();
     }

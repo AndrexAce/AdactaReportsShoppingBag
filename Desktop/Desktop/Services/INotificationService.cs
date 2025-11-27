@@ -5,7 +5,7 @@ namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.Services;
 
 internal interface INotificationService
 {
-    public Guid ShowProgressNotification(string title, string message);
+    public Guid ShowNotification(string title, string message);
 
-    public Task RemoveNotification(Guid tag);
+    public Task RemoveNotificationAsync(Guid tag);
 }

@@ -101,7 +101,7 @@ internal sealed class DialogService : IDialogService
         return await openPicker.PickSingleFileAsync();
     }
 
-    public async Task<StorageFolder?> ShowFolderPicker()
+    public async Task<StorageFolder?> ShowFolderPickerAsync()
     {
         FolderPicker folderPicker = new()
         {

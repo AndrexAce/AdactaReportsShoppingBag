@@ -218,14 +218,14 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             classesWorkbook.Save();
             dataWorkbook.Save();
 
-            await notificationService.RemoveNotification(notificationId);
+            await notificationService.RemoveNotificationAsync(notificationId);
 
-            notificationService.ShowProgressNotification("Importazione completata",
+            notificationService.ShowNotification("Importazione completata",
                 "Il file è stato importato con successo.");
         }
         catch (Exception e)
         {
-            notificationService.ShowProgressNotification("Importazione fallita",
+            notificationService.ShowNotification("Importazione fallita",
                 "Si è verificato un errore durante l'importazione del file: " + e.Message);
         }
         finally // Clean up the resources not managed by the base class
@@ -326,10 +326,10 @@ internal sealed class ExcelService(INotificationService notificationService) : E
     public async Task ImportActiveViewingFileAsync(IStorageFile storageFile, Guid notificationId, string projectCode,
         string projectFolderPath, string productCode)
     {
-        await ExecuteWithCleanupAsync(async () => await ImportActiveViewingFileInternal(storageFile, notificationId, projectCode, projectFolderPath, productCode));
+        await ExecuteWithCleanupAsync(async () => await ImportActiveViewingFileInternalAsync(storageFile, notificationId, projectCode, projectFolderPath, productCode));
             }
 
-    private async Task ImportActiveViewingFileInternal(IStorageFile storageFile, Guid notificationId,
+    private async Task ImportActiveViewingFileInternalAsync(IStorageFile storageFile, Guid notificationId,
         string projectCode,
         string projectFolderPath, string productCode)
     {
@@ -411,14 +411,14 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             classesWorkbook.Save();
             dataWorkbook.Save();
 
-            await notificationService.RemoveNotification(notificationId);
+            await notificationService.RemoveNotificationAsync(notificationId);
 
-            notificationService.ShowProgressNotification("Importazione completata",
+            notificationService.ShowNotification("Importazione completata",
                 "Il file è stato importato con successo.");
         }
         catch (Exception e)
         {
-            notificationService.ShowProgressNotification("Importazione fallita",
+            notificationService.ShowNotification("Importazione fallita",
                 "Si è verificato un errore durante l'importazione del file: " + e.Message);
         }
         finally // Clean up the resources not managed by the base class

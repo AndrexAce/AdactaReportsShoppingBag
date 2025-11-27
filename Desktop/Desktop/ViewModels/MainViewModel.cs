@@ -39,7 +39,7 @@ internal sealed partial class MainViewModel(
         nameof(SurveyMenuItemVisibility))]
     public partial ReportPrj? ReportProject { get; private set; } = null;
 
-    public Product? NavigationMenuSelectedItem { get; set; } = null;
+    public Product? NavigationMenuSelectedItem { get; set; }
 
     public string SaveStateText => IsProjectEdited switch
     {
@@ -88,7 +88,7 @@ internal sealed partial class MainViewModel(
                 storageService.SaveData("Credentials", "Password", penelopePassword);
             }
 
-        var userChosenFolder = await dialogService.ShowFolderPicker();
+        var userChosenFolder = await dialogService.ShowFolderPickerAsync();
 
         if (userChosenFolder is null) return;
 
@@ -175,7 +175,7 @@ internal sealed partial class MainViewModel(
         if (file is null) return;
 
         var notificationId =
-            notificationService.ShowProgressNotification("Importazione file in corso...",
+            notificationService.ShowNotification("Importazione file in corso...",
                 "Potrebbero volerci alcuni minuti.");
 
         if (ReportProject is null || _projectFilePath is null) return;
@@ -200,7 +200,7 @@ internal sealed partial class MainViewModel(
         if (file is null) return;
 
         var notificationId =
-            notificationService.ShowProgressNotification("Importazione file in corso...",
+            notificationService.ShowNotification("Importazione file in corso...",
                 "Potrebbero volerci alcuni minuti.");
 
         if (ReportProject is null || _projectFilePath is null) return;
