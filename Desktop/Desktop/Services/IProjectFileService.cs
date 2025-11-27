@@ -10,5 +10,5 @@ internal interface IProjectFileService
 
     public Task SaveProjectFileAsync(ReportPrj project, string projectFilePath);
 
-    public string? CreateProjectFolder(ReportPrj project, string folderPath);
+    public Task<string?> CreateProjectFolderAsync(ReportPrj project, string folderPath);
 }

@@ -95,7 +95,7 @@ internal sealed partial class MainViewModel(
         var project = new ReportPrj(Assembly.GetExecutingAssembly().GetName().Version?.ToString(), projectName,
             projectCode, products);
 
-        _projectFilePath = projectFileService.CreateProjectFolder(project, userChosenFolder.Path);
+        _projectFilePath = await projectFileService.CreateProjectFolderAsync(project, userChosenFolder.Path);
 
         if (_projectFilePath is null) return;
 

@@ -26,7 +26,7 @@ internal sealed class ProjectFileService(IExcelService excelService) : IProjectF
         return File.WriteAllTextAsync(projectFilePath, projectJson);
     }
 
-    public string? CreateProjectFolder(ReportPrj project, string folderPath)
+    public async Task<string?> CreateProjectFolderAsync(ReportPrj project, string folderPath)
     {
         try
         {
@@ -36,10 +36,10 @@ internal sealed class ProjectFileService(IExcelService excelService) : IProjectF
 
             var projectFilePath = Path.Combine(projectFolderPath, $"{project.ProjectCode}.reportprj");
 
-            excelService.CreateClassesFile(project, projectFolderPath);
-            excelService.CreateSurveyDataFile(project, projectFolderPath);
+            await excelService.CreateClassesFileAsync(project, projectFolderPath);
+            await excelService.CreateSurveyDataFileAsync(project, projectFolderPath);
 
-            SaveProjectFileAsync(project, projectFilePath);
+            await SaveProjectFileAsync(project, projectFilePath);
 
             return projectFilePath;
         }

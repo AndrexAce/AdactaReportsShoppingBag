@@ -17,9 +17,11 @@ internal sealed class ExcelService(INotificationService notificationService) : E
 {
     #region Classes file creation
 
-    public void CreateClassesFile(ReportPrj project, string projectFolderPath)
+    public async Task CreateClassesFileAsync(ReportPrj project, string projectFolderPath)
     {
-        ExecuteWithCleanup(() => CreateClassesFileInternal(project, projectFolderPath));
+        await Task.Run(() =>
+            ExecuteWithCleanup(() =>
+                CreateClassesFileInternal(project, projectFolderPath)));
     }
 
     private void CreateClassesFileInternal(ReportPrj project, string projectFolderPath)
@@ -69,9 +71,11 @@ internal sealed class ExcelService(INotificationService notificationService) : E
 
     #region Survey data file creation
 
-    public void CreateSurveyDataFile(ReportPrj project, string projectFolderPath)
+    public async Task CreateSurveyDataFileAsync(ReportPrj project, string projectFolderPath)
     {
-        ExecuteWithCleanup(() => CreateSurveyDataFileInternal(project, projectFolderPath));
+        await Task.Run(() =>
+            ExecuteWithCleanup(() =>
+                CreateSurveyDataFileInternal(project, projectFolderPath)));
     }
 
     private void CreateSurveyDataFileInternal(ReportPrj project, string projectFolderPath)
@@ -124,10 +128,12 @@ internal sealed class ExcelService(INotificationService notificationService) : E
     public async Task ImportPenelopeFileAsync(IStorageFile storageFile, Guid notificationId, string projectCode,
         string projectFolderPath)
     {
-        await ExecuteWithCleanupAsync(async () => await ImportPenelopeFileInternalAsync(storageFile, notificationId, projectCode, projectFolderPath));
+        await Task.Run(() =>
+            ExecuteWithCleanup(() => 
+                ImportPenelopeFileInternal(storageFile, notificationId, projectCode, projectFolderPath)));
             }
 
-    private async Task ImportPenelopeFileInternalAsync(IStorageFile storageFile, Guid notificationId,
+    private void ImportPenelopeFileInternal(IStorageFile storageFile, Guid notificationId,
         string projectCode,
         string projectFolderPath)
     {
@@ -218,7 +224,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             classesWorkbook.Save();
             dataWorkbook.Save();
 
-            await notificationService.RemoveNotificationAsync(notificationId);
+            notificationService.RemoveNotificationAsync(notificationId).GetAwaiter().GetResult();
 
             notificationService.ShowNotification("Importazione completata",
                 "Il file è stato importato con successo.");
@@ -326,10 +332,12 @@ internal sealed class ExcelService(INotificationService notificationService) : E
     public async Task ImportActiveViewingFileAsync(IStorageFile storageFile, Guid notificationId, string projectCode,
         string projectFolderPath, string productCode)
     {
-        await ExecuteWithCleanupAsync(async () => await ImportActiveViewingFileInternalAsync(storageFile, notificationId, projectCode, projectFolderPath, productCode));
+        await Task.Run(() =>
+            ExecuteWithCleanup(() => 
+                ImportActiveViewingFileInternal(storageFile, notificationId, projectCode, projectFolderPath, productCode)));
             }
 
-    private async Task ImportActiveViewingFileInternalAsync(IStorageFile storageFile, Guid notificationId,
+    private void ImportActiveViewingFileInternal(IStorageFile storageFile, Guid notificationId,
         string projectCode,
         string projectFolderPath, string productCode)
     {
@@ -411,7 +419,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             classesWorkbook.Save();
             dataWorkbook.Save();
 
-            await notificationService.RemoveNotificationAsync(notificationId);
+            notificationService.RemoveNotificationAsync(notificationId).GetAwaiter().GetResult();
 
             notificationService.ShowNotification("Importazione completata",
                 "Il file è stato importato con successo.");
