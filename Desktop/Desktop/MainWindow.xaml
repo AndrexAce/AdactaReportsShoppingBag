@@ -76,7 +76,8 @@
                     </MenuFlyoutItem.KeyboardAccelerators>
                 </MenuFlyoutItem>
                 <MenuFlyoutSeparator />
-                <MenuFlyoutItem Text="Elabora" Icon="SlideShow">
+                <MenuFlyoutItem Text="Elabora" Icon="SlideShow"
+                                Command="{x:Bind ViewModel.ProcessExcelFilesCommand}">
                     <MenuFlyoutItem.KeyboardAccelerators>
                         <KeyboardAccelerator Key="E" Modifiers="Control" />
                     </MenuFlyoutItem.KeyboardAccelerators>

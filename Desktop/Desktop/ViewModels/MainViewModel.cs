@@ -212,6 +212,25 @@ internal sealed partial class MainViewModel(
             NavigationMenuSelectedItem.Code);
     }
 
+    [RelayCommand]
+    private async Task ProcessExcelFilesAsync()
+    {
+        if (ReportProject is null || _projectFilePath is null) return;
+
+        var notificationId =
+            await notificationService.ShowProgressNotificationAsync("Elaborazione in corso...",
+                "Potrebbero volerci alcuni minuti.", "Creazione file prodotti in corso...",
+                (uint)ReportProject.Products.Count());
+
+        var projectFolderPath = Path.GetDirectoryName(_projectFilePath) ??
+                                throw new FileNotFoundException("The project folder path could not be reached.");
+
+        await excelService.CreateProductFilesAsync(notificationId, ReportProject.Products, projectFolderPath,
+            ReportProject.ProjectCode);
+
+        // TODO: Process data for each product file
+    }
+
     public async Task LoadProjectFileAsync(IStorageFile file)
     {
         ReportProject = await projectFileService.LoadProjectFileAsync(file);

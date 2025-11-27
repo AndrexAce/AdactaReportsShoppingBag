@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
@@ -7,6 +8,7 @@ using System.Threading.Tasks;
 using Windows.Storage;
 using AdactaInternational.AdactaReportsShoppingBag.Desktop.Extensions;
 using AdactaInternational.AdactaReportsShoppingBag.Model;
+using AdactaInternational.AdactaReportsShoppingBag.Model.Soap.Response;
 using Microsoft.Office.Interop.Excel;
 using DataTable = System.Data.DataTable;
 using Range = Microsoft.Office.Interop.Excel.Range;
@@ -512,6 +514,152 @@ internal sealed class ExcelService(INotificationService notificationService) : E
         newDataTable.Columns[0].ColumnName = "D.1 PUNTO DI CAMPIONAMENTO";
 
         return newDataTable;
+    }
+
+    #endregion
+
+    #region Product file creation
+
+    public async Task CreateProductFilesAsync(Guid notificationId, IEnumerable<Product> products,
+        string projectFolderPath, string projectCode)
+    {
+        await Task.Run(() =>
+            ExecuteWithCleanup(() =>
+                ProcessExcelFilesInternal(notificationId, products, projectFolderPath, projectCode)));
+    }
+
+    private void ProcessExcelFilesInternal(Guid notificationId, IEnumerable<Product> products, string projectFolderPath,
+        string projectCode)
+    {
+        var productList = products.ToList();
+        var productTotalCount = productList.Count;
+        var productCurrentCount = 0;
+
+        // Track the COM classes to be released
+        Workbook? workbook = null;
+        Sheets? worksheets = null;
+        Worksheet? worksheet = null;
+        Workbook? classesWorkbook = null;
+        Workbook? dataWorkbook = null;
+        Sheets? classesSheets = null;
+        Sheets? dataSheets = null;
+        Worksheet? classesWorksheet = null;
+        Worksheet? dataWorksheet = null;
+
+        try
+        {
+            if (!Directory.Exists(Path.Combine(projectFolderPath, "Elaborazioni")))
+                Directory.CreateDirectory(Path.Combine(projectFolderPath, "Elaborazioni"));
+
+            // Create a silent Excel application
+            ExcelApp = new Application
+            {
+                Visible = false,
+                DisplayAlerts = false
+            };
+            Workbooks = ExcelApp.Workbooks;
+
+            foreach (var product in productList)
+            {
+                workbook = Workbooks.Add();
+                worksheets = workbook.Worksheets;
+                worksheet = worksheets[1];
+
+                // Open the survey classes and survey data file
+                classesWorkbook = Workbooks.Open(Path.Combine(projectFolderPath, $"Classi{projectCode}.xlsx"));
+                dataWorkbook = Workbooks.Open(Path.Combine(projectFolderPath, $"Dati{projectCode}.xlsx"));
+                classesSheets = classesWorkbook.Sheets;
+                dataSheets = dataWorkbook.Sheets;
+                classesWorksheet = classesSheets.Item[product.Code];
+                dataWorksheet = dataSheets.Item[product.Code];
+
+                // Copy the sheets and paste them in the product file and rename
+                classesWorksheet.Copy(After: worksheets[worksheets.Count]);
+                Marshal.ReleaseComObject(classesWorksheet);
+                classesWorksheet = null;
+                classesWorksheet = worksheets[worksheets.Count];
+                classesWorksheet.Name = "Classi";
+
+                dataWorksheet.Copy(After: worksheets[worksheets.Count]);
+                Marshal.ReleaseComObject(dataWorksheet);
+                dataWorksheet = null;
+                dataWorksheet = worksheets[worksheets.Count];
+                dataWorksheet.Name = "Dati";
+
+                // Delete the first empty sheet in the product file
+                worksheet.Delete();
+
+                var excelFilePath =
+                    Path.Combine(Path.Combine(projectFolderPath, "Elaborazioni"), $"{product.Code}.xlsx");
+                workbook.SaveAs(excelFilePath);
+
+                // Release the resources on each iteration
+                Marshal.ReleaseComObject(dataWorksheet);
+                dataWorksheet = null;
+                Marshal.ReleaseComObject(classesWorksheet);
+                classesWorksheet = null;
+                Marshal.ReleaseComObject(dataSheets);
+                dataSheets = null;
+                Marshal.ReleaseComObject(classesSheets);
+                classesSheets = null;
+                dataWorkbook.Close(false);
+                Marshal.ReleaseComObject(dataWorkbook);
+                dataWorkbook = null;
+                classesWorkbook.Close(false);
+                Marshal.ReleaseComObject(classesWorkbook);
+                classesWorkbook = null;
+                Marshal.ReleaseComObject(worksheet);
+                worksheet = null;
+                Marshal.ReleaseComObject(worksheets);
+                worksheets = null;
+                workbook.Close(false);
+                Marshal.ReleaseComObject(workbook);
+                workbook = null;
+
+                notificationService.UpdateProgressNotificationAsync(notificationId,
+                    "Creazione file prodotti in corso...",
+                    (uint)++productCurrentCount,
+                    (uint)productTotalCount).GetAwaiter().GetResult();
+            }
+
+            notificationService.RemoveNotificationAsync(notificationId).GetAwaiter().GetResult();
+        }
+        catch (Exception e)
+        {
+            notificationService.RemoveNotificationAsync(notificationId).GetAwaiter().GetResult();
+            notificationService.ShowNotification("Elaborazione fallita",
+                "Si è verificato un errore durante la creazione dei file di prodotti: " + e.Message);
+        }
+        finally // Clean up the resources not managed by the base class
+        {
+            if (dataWorksheet is not null) Marshal.ReleaseComObject(dataWorksheet);
+            if (classesWorksheet is not null) Marshal.ReleaseComObject(classesWorksheet);
+
+            if (dataSheets is not null) Marshal.ReleaseComObject(dataSheets);
+            if (classesSheets is not null) Marshal.ReleaseComObject(classesSheets);
+
+            if (dataWorkbook is not null)
+            {
+                dataWorkbook.Close(false);
+                Marshal.ReleaseComObject(dataWorkbook);
+            }
+
+            if (classesWorkbook is not null)
+            {
+                classesWorkbook.Close(false);
+                Marshal.ReleaseComObject(classesWorkbook);
+            }
+
+            if (worksheet is not null) Marshal.ReleaseComObject(worksheet);
+
+            if (worksheets is not null) Marshal.ReleaseComObject(worksheets);
+
+            if (workbook is not null)
+            {
+                workbook.Close(false);
+                Marshal.ReleaseComObject(workbook);
+            }
+        }
     }
 
     #endregion
