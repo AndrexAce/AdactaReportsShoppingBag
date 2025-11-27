@@ -26,7 +26,8 @@ internal class NotificationService : INotificationService
         return tag;
     }
 
-    public async Task<Guid> ShowProgressNotificationAsync(string title, string message, string statusMessage, uint totalToProcess)
+    public async Task<Guid> ShowProgressNotificationAsync(string title, string message, string statusMessage,
+        uint totalToProcess)
     {
         var tag = Guid.NewGuid();
 
@@ -34,9 +35,9 @@ internal class NotificationService : INotificationService
             .AddText(title)
             .AddText(message)
             .AddProgressBar(new AppNotificationProgressBar()
-            .BindStatus()
-            .BindValue()
-            .BindValueStringOverride())
+                .BindStatus()
+                .BindValue()
+                .BindValueStringOverride())
             .BuildNotification();
 
         notification.Tag = tag.ToString();
@@ -56,12 +57,13 @@ internal class NotificationService : INotificationService
         await AppNotificationManager.Default.RemoveByTagAndGroupAsync(tag.ToString(), tag.ToString());
     }
 
-    public async Task UpdateProgressNotificationAsync(Guid tag, string statusMessage, uint processed, uint totalToProcess)
+    public async Task UpdateProgressNotificationAsync(Guid tag, string statusMessage, uint processed,
+        uint totalToProcess)
     {
         var data = new AppNotificationProgressData(processed + 1)
         {
             Status = statusMessage,
-            Value = (double) processed / totalToProcess,
+            Value = (double)processed / totalToProcess,
             ValueStringOverride = $"{processed}/{totalToProcess}"
         };
 

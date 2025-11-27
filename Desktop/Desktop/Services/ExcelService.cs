@@ -129,9 +129,9 @@ internal sealed class ExcelService(INotificationService notificationService) : E
         string projectFolderPath)
     {
         await Task.Run(() =>
-            ExecuteWithCleanup(() => 
+            ExecuteWithCleanup(() =>
                 ImportPenelopeFileInternal(storageFile, notificationId, projectCode, projectFolderPath)));
-            }
+    }
 
     private void ImportPenelopeFileInternal(IStorageFile storageFile, Guid notificationId,
         string projectCode,
@@ -333,9 +333,10 @@ internal sealed class ExcelService(INotificationService notificationService) : E
         string projectFolderPath, string productCode)
     {
         await Task.Run(() =>
-            ExecuteWithCleanup(() => 
-                ImportActiveViewingFileInternal(storageFile, notificationId, projectCode, projectFolderPath, productCode)));
-            }
+            ExecuteWithCleanup(() =>
+                ImportActiveViewingFileInternal(storageFile, notificationId, projectCode, projectFolderPath,
+                    productCode)));
+    }
 
     private void ImportActiveViewingFileInternal(IStorageFile storageFile, Guid notificationId,
         string projectCode,
