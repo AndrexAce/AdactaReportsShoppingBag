@@ -217,15 +217,19 @@ internal sealed partial class MainViewModel(
     {
         if (ReportProject is null || _projectFilePath is null) return;
 
-        var notificationId =
-            await notificationService.ShowProgressNotificationAsync("Elaborazione in corso...",
-                "Potrebbero volerci alcuni minuti.", "Creazione file prodotti in corso...",
-                (uint)ReportProject.Products.Count());
-
         var projectFolderPath = Path.GetDirectoryName(_projectFilePath) ??
                                 throw new FileNotFoundException("The project folder path could not be reached.");
 
-        await excelService.CreateProductFilesAsync(notificationId, ReportProject.Products, projectFolderPath,
+        var productsToProcess = ReportProject.Products.Where(product =>
+                !File.Exists(Path.Combine(Path.Combine(projectFolderPath, "Elaborazioni"), $"{product.Code}.xlsx")))
+            .ToList();
+
+        var notificationId =
+            await notificationService.ShowProgressNotificationAsync("Elaborazione in corso...",
+                "Potrebbero volerci alcuni minuti.", "Creazione file prodotti in corso...",
+                (uint)productsToProcess.Count);
+
+        await excelService.CreateProductFilesAsync(notificationId, productsToProcess, projectFolderPath,
             ReportProject.ProjectCode);
 
         // TODO: Process data for each product file

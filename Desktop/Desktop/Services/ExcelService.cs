@@ -146,6 +146,8 @@ internal sealed class ExcelService(INotificationService notificationService) : E
         Sheets? dataSheets = null;
         Worksheet? classesWorksheet = null;
         Worksheet? dataWorksheet = null;
+        ListObjects? tables = null;
+        ListObject? table = null;
         Range? responseTableRange = null;
 
         try
@@ -174,6 +176,15 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                 try
                 {
                     classesWorksheet = classesSheets.Item[sheet.Name];
+
+                    // Clean the previous table if there is any
+                    tables = classesWorksheet.ListObjects;
+
+                    if (tables.Count > 0)
+                    {
+                        table = tables["Classi"];
+                        table.Delete();
+                }
                 }
                 catch
                 {
@@ -184,6 +195,15 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                 try
                 {
                     dataWorksheet = dataSheets.Item[sheet.Name];
+
+                    // Clean the previous table if there is any
+                    tables = dataWorksheet.ListObjects;
+
+                    if (tables.Count > 0)
+                    {
+                        table = tables["Dati"];
+                        table.Delete();
+                    }
                 }
                 catch
                 {
@@ -216,6 +236,10 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                 // Release the resources on each iteration
                 Marshal.ReleaseComObject(responseTableRange);
                 responseTableRange = null;
+                if (table is not null) Marshal.ReleaseComObject(table);
+                table = null;
+                if (tables is not null) Marshal.ReleaseComObject(tables);
+                tables = null;
                 Marshal.ReleaseComObject(dataWorksheet);
                 dataWorksheet = null;
                 Marshal.ReleaseComObject(classesWorksheet);
@@ -239,6 +263,10 @@ internal sealed class ExcelService(INotificationService notificationService) : E
         finally // Clean up the resources not managed by the base class
         {
             if (responseTableRange is not null) Marshal.ReleaseComObject(responseTableRange);
+
+            if (table is not null) Marshal.ReleaseComObject(table);
+
+            if (tables is not null) Marshal.ReleaseComObject(tables);
 
             if (dataWorksheet is not null) Marshal.ReleaseComObject(dataWorksheet);
             if (classesWorksheet is not null) Marshal.ReleaseComObject(classesWorksheet);
@@ -351,6 +379,8 @@ internal sealed class ExcelService(INotificationService notificationService) : E
         Sheets? dataSheets = null;
         Worksheet? classesWorksheet = null;
         Worksheet? dataWorksheet = null;
+        ListObjects? tables = null;
+        ListObject? table = null;
         Range? tableRange = null;
 
         try
@@ -376,7 +406,26 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             {
                 if (sheet.Name == "Input")
                 {
+                    // Find the corresponding worksheet in the app's files.
+                    // If there is none, create the sheet.
+                    try
+                    {
                     dataWorksheet = dataSheets.Item[productCode];
+
+                        // Clean the previous table if there is any
+                        tables = dataWorksheet.ListObjects;
+
+                        if (tables.Count > 0)
+                        {
+                            table = tables["Dati"];
+                            table.Delete();
+                        }
+                    }
+                    catch
+                    {
+                        dataWorksheet = dataSheets.Add();
+                        dataWorksheet.Name = productCode;
+                    }
 
                     tableRange = sheet.UsedRange;
 
@@ -390,7 +439,26 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                 }
                 else if (sheet.Name.Contains("Classi domande"))
                 {
+                    // Find the corresponding worksheet in the app's files.
+                    // If there is none, create the sheet.
+                    try
+                    {
                     classesWorksheet = classesSheets.Item[productCode];
+
+                        // Clean the previous table if there is any
+                        tables = classesWorksheet.ListObjects;
+
+                        if (tables.Count > 0)
+                        {
+                            table = tables["Classi"];
+                            table.Delete();
+                        }
+                    }
+                    catch
+                    {
+                        classesWorksheet = classesSheets.Add();
+                        classesWorksheet.Name = productCode;
+                    }
 
                     tableRange = sheet.UsedRange;
 
@@ -412,6 +480,10 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                 // Release the resources on each iteration
                 if (tableRange is not null) Marshal.ReleaseComObject(tableRange);
                 tableRange = null;
+                if (table is not null) Marshal.ReleaseComObject(table);
+                table = null;
+                if (tables is not null) Marshal.ReleaseComObject(tables);
+                tables = null;
                 if (dataWorksheet is not null) Marshal.ReleaseComObject(dataWorksheet);
                 dataWorksheet = null;
                 if (classesWorksheet is not null) Marshal.ReleaseComObject(classesWorksheet);
@@ -435,6 +507,10 @@ internal sealed class ExcelService(INotificationService notificationService) : E
         finally // Clean up the resources not managed by the base class
         {
             if (tableRange is not null) Marshal.ReleaseComObject(tableRange);
+
+            if (table is not null) Marshal.ReleaseComObject(table);
+
+            if (tables is not null) Marshal.ReleaseComObject(tables);
 
             if (dataWorksheet is not null) Marshal.ReleaseComObject(dataWorksheet);
             if (classesWorksheet is not null) Marshal.ReleaseComObject(classesWorksheet);
@@ -520,7 +596,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
 
     #region Product file creation
 
-    public async Task CreateProductFilesAsync(Guid notificationId, IEnumerable<Product> products,
+    public async Task CreateProductFilesAsync(Guid notificationId, ICollection<Product> products,
         string projectFolderPath, string projectCode)
     {
         await Task.Run(() =>
@@ -528,11 +604,11 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                 ProcessExcelFilesInternal(notificationId, products, projectFolderPath, projectCode)));
     }
 
-    private void ProcessExcelFilesInternal(Guid notificationId, IEnumerable<Product> products, string projectFolderPath,
+    private void ProcessExcelFilesInternal(Guid notificationId, ICollection<Product> products, string projectFolderPath,
         string projectCode)
     {
-        var productList = products.ToList();
-        var productTotalCount = productList.Count;
+        // Filter the products to create files only for those that don't have one yet
+        var productTotalCount = products.Count;
         var productCurrentCount = 0;
 
         // Track the COM classes to be released
@@ -548,6 +624,14 @@ internal sealed class ExcelService(INotificationService notificationService) : E
 
         try
         {
+            if (productTotalCount == 0)
+            {
+                notificationService.RemoveNotificationAsync(notificationId).GetAwaiter().GetResult();
+                notificationService.ShowNotification("Creazione file prodotti",
+                    "Tutti i file di prodotti sono già stati creati.");
+                return;
+            }
+
             if (!Directory.Exists(Path.Combine(projectFolderPath, "Elaborazioni")))
                 Directory.CreateDirectory(Path.Combine(projectFolderPath, "Elaborazioni"));
 
@@ -559,7 +643,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             };
             Workbooks = ExcelApp.Workbooks;
 
-            foreach (var product in productList)
+            foreach (var product in products)
             {
                 workbook = Workbooks.Add();
                 worksheets = workbook.Worksheets;
@@ -654,6 +738,15 @@ internal sealed class ExcelService(INotificationService notificationService) : E
 
             if (worksheets is not null) Marshal.ReleaseComObject(worksheets);
 
+            if (workbook is not null)
+            {
+                workbook.Close(false);
+                Marshal.ReleaseComObject(workbook);
+            }
+        }
+    }
+
+    #endregion
             if (workbook is not null)
             {
                 workbook.Close(false);
