@@ -298,7 +298,8 @@ internal sealed class ExcelService(INotificationService notificationService) : E
         var questions = oldDataTable.Columns
             .Cast<DataColumn>()
             .Select(c => c.ColumnName)
-            .Where(s => s.StartsWith('D') && !s.Contains("PUNTO DI CAMPIONAMENTO"))
+            .Where(s => s.StartsWith("D", StringComparison.CurrentCultureIgnoreCase) &&
+                        !s.Contains("PUNTO DI CAMPIONAMENTO", StringComparison.CurrentCultureIgnoreCase))
             .ToArray();
 
         // Populate the questions datatable
@@ -404,7 +405,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             // Find ActiveViewing's classes file and import it
             foreach (Worksheet sheet in Worksheets)
             {
-                if (sheet.Name == "Input")
+                if (string.Compare(sheet.Name, "Input", StringComparison.CurrentCultureIgnoreCase) == 0)
                 {
                     // Find the corresponding worksheet in the app's files.
                     // If there is none, create the sheet.
@@ -437,7 +438,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                     // Step 2 : Write the new datatable to the data worksheet
                     newDataTable.WriteToWorksheet(dataWorksheet, "Dati");
                 }
-                else if (sheet.Name.Contains("Classi domande"))
+                else if (sheet.Name.Contains("Classi domande", StringComparison.CurrentCultureIgnoreCase))
                 {
                     // Find the corresponding worksheet in the app's files.
                     // If there is none, create the sheet.
@@ -542,12 +543,10 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             .Where((_, index) => index is 1 or 4 or 5)
             .Select(c =>
             {
-                c.ColumnName = c.ColumnName switch
-                {
-                    "Testo Domanda" => "Domanda",
-                    "Etichetta Domanda" => "Etichetta",
-                    _ => c.ColumnName
-                };
+                if (string.Compare(c.ColumnName, "Testo Domanda", StringComparison.CurrentCultureIgnoreCase) == 0)
+                    c.ColumnName = "Domanda";
+                else if (string.Compare(c.ColumnName, "Etichetta Domanda", StringComparison.CurrentCultureIgnoreCase) ==
+                         0) c.ColumnName = "Etichetta";
 
                 return c;
             });
@@ -574,13 +573,19 @@ internal sealed class ExcelService(INotificationService notificationService) : E
     {
         // Take only the rows related to the given product
         var newDataTable = dataTable.AsEnumerable()
-            .Where(row => row.Field<string>("Prodotto") == productCode)
+            .Where(row =>
+                string.Compare(row.Field<string>("Prodotto"), productCode, StringComparison.CurrentCultureIgnoreCase) ==
+                0 ||
+                string.Compare(row.Field<string>("prodotto"), productCode, StringComparison.CurrentCultureIgnoreCase) ==
+                0)
             .CopyToDataTable();
 
         // Take the columns to remove
         var columnsToRemove = newDataTable.Columns
             .Cast<DataColumn>()
-            .Where(c => !c.ColumnName.StartsWith("D.") && c.ColumnName != "LegCampionamento")
+            .Where(c => !c.ColumnName.StartsWith("D.", StringComparison.CurrentCultureIgnoreCase) &&
+                        string.Compare(c.ColumnName, "LegCampionamento", StringComparison.CurrentCultureIgnoreCase) !=
+                        0)
             .ToArray();
 
         // Remove the useless columns
@@ -748,6 +753,12 @@ internal sealed class ExcelService(INotificationService notificationService) : E
 
     #region Product file processing
 
+    private enum TableType
+    {
+        Scale5,
+        Scale9
+    }
+
     public async Task ProcessProductFilesAsync(Guid notificationId, string projectFolderPath)
     {
         await Task.Run(() =>
@@ -774,7 +785,8 @@ internal sealed class ExcelService(INotificationService notificationService) : E
 
             try
             {
-                ProcessScale5Table(notificationId, workbook, Path.GetFileNameWithoutExtension(fileName));
+                ProcessClosedTable(workbook, Path.GetFileNameWithoutExtension(fileName), TableType.Scale5);
+                ProcessClosedTable(workbook, Path.GetFileNameWithoutExtension(fileName), TableType.Scale9);
 
                 workbook.Save();
 
@@ -804,8 +816,11 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             "I file dei prodotti sono stati elaborati con successo.");
     }
 
-    private static void ProcessScale5Table(Guid notificationId, Workbook workbook, string productCode)
+    private static void ProcessClosedTable(Workbook workbook, string productCode, TableType scale)
     {
+        if (scale != TableType.Scale5 && scale != TableType.Scale9)
+            throw new ArgumentOutOfRangeException(nameof(scale), "Invalid table type.");
+
         Sheets? worksheets = null;
         Worksheet? classesSheet = null;
         Worksheet? dataSheet = null;
@@ -822,7 +837,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             // Check if the sheet already exists, if so clean it
             try
             {
-                scale5Sheet = worksheets.Item["Tabelle 5"];
+                scale5Sheet = worksheets.Item[scale == TableType.Scale5 ? "Tabelle 5" : "Tabelle 9"];
 
                 // Clean the previous table if there is any
                 tables = scale5Sheet.ListObjects;
@@ -836,7 +851,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             catch
             {
                 scale5Sheet = worksheets.Add();
-                scale5Sheet.Name = "Tabelle 5";
+                scale5Sheet.Name = scale == TableType.Scale5 ? "Tabelle 5" : "Tabelle 9";
             }
 
             dataRange = classesSheet.UsedRange;
@@ -849,21 +864,36 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             Marshal.ReleaseComObject(dataRange);
             dataRange = null;
 
-            // Take the questions and labels of scale 5 questions
+            // Take the questions and labels
             var questionsAndLabels = from classRow in classesDataTable.AsEnumerable().AsQueryable()
                 let classe = classRow.Field<string?>("Classe")
-                where classe == "A"
+                where classe == (scale == TableType.Scale5 ? "A" : "G") ||
+                      classe == (scale == TableType.Scale5 ? "a" : "g")
                 select new
                 {
                     Question = classRow.Field<string?>("Domanda"),
                     Label = classRow.Field<string?>("Etichetta")
                 };
 
+            // If the table is 9-scaled, put the "Gradimento complessivo" label at the first position
+            if (scale == TableType.Scale9)
+            {
+                var firstRow = questionsAndLabels.FirstOrDefault(q =>
+                    string.Compare(q.Label, "Gradimento complessivo", StringComparison.CurrentCultureIgnoreCase) == 0);
+
+                if (firstRow is not null)
+                    questionsAndLabels = questionsAndLabels
+                        .Where(q => string.Compare(q.Label, "Gradimento complessivo",
+                            StringComparison.CurrentCultureIgnoreCase) != 0)
+                        .Prepend(firstRow);
+            }
+
             // Find the columns to delete
             var columnsToRemove = dataDataTable.Columns
                 .Cast<DataColumn>()
                 .Where(column => column.ColumnName != "D.1 PUNTO DI CAMPIONAMENTO" &&
-                                 !questionsAndLabels.Any(q => q.Question == column.ColumnName))
+                                 !questionsAndLabels.Any(q => string.Compare(q.Question, column.ColumnName,
+                                     StringComparison.CurrentCultureIgnoreCase) == 0))
                 .ToList();
 
             foreach (var column in columnsToRemove) dataDataTable.Columns.Remove(column);
@@ -890,7 +920,8 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                 foreach (var qAndL in questionsAndLabels)
                 {
                     var questionRows = dataDataTable.AsEnumerable()
-                        .Where(row => row.Field<string?>("D.1 PUNTO DI CAMPIONAMENTO") == location);
+                        .Where(row => string.Compare(row.Field<string?>("D.1 PUNTO DI CAMPIONAMENTO"), location,
+                            StringComparison.CurrentCultureIgnoreCase) == 0);
 
                     var values = questionRows
                         .Select(row => Convert.ToDouble(row.Field<string?>(qAndL.Question) ?? "0"))
@@ -944,7 +975,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             }
 
             // Write all the datatables to the worksheet
-            foreach (var kvp in dataTables) kvp.Value.WriteScale5TableToWorksheet(scale5Sheet, kvp.Key);
+            foreach (var kvp in dataTables) kvp.Value.WriteClosedTableToWorksheet(scale5Sheet, kvp.Key);
         }
         finally // Clean up the resources not managed by the base class
         {

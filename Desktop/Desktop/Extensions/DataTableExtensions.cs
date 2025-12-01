@@ -67,7 +67,7 @@ internal static class DataTableExtensions
             }
         }
 
-        public void WriteScale5TableToWorksheet(Worksheet worksheet, string tableName)
+        public void WriteClosedTableToWorksheet(Worksheet worksheet, string tableName)
         {
             var rowCount = dataTable.Rows.Count;
             var colCount = dataTable.Columns.Count;
