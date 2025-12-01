@@ -184,7 +184,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                     {
                         table = tables["Classi"];
                         table.Delete();
-                }
+                    }
                 }
                 catch
                 {
@@ -410,7 +410,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                     // If there is none, create the sheet.
                     try
                     {
-                    dataWorksheet = dataSheets.Item[productCode];
+                        dataWorksheet = dataSheets.Item[productCode];
 
                         // Clean the previous table if there is any
                         tables = dataWorksheet.ListObjects;
@@ -443,7 +443,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                     // If there is none, create the sheet.
                     try
                     {
-                    classesWorksheet = classesSheets.Item[productCode];
+                        classesWorksheet = classesSheets.Item[productCode];
 
                         // Clean the previous table if there is any
                         tables = classesWorksheet.ListObjects;
@@ -627,8 +627,6 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             if (productTotalCount == 0)
             {
                 notificationService.RemoveNotificationAsync(notificationId).GetAwaiter().GetResult();
-                notificationService.ShowNotification("Creazione file prodotti",
-                    "Tutti i file di prodotti sono già stati creati.");
                 return;
             }
 
@@ -747,11 +745,215 @@ internal sealed class ExcelService(INotificationService notificationService) : E
     }
 
     #endregion
-            if (workbook is not null)
+
+    #region Product file processing
+
+    public async Task ProcessProductFilesAsync(Guid notificationId, string projectFolderPath)
+    {
+        await Task.Run(() =>
+            ExecuteWithCleanup(() =>
+                ProcessProductFileInternal(notificationId, projectFolderPath)));
+    }
+
+    private void ProcessProductFileInternal(Guid notificationId, string projectFolderPath)
+    {
+        // Create a silent Excel application
+        ExcelApp = new Application
+        {
+            Visible = false,
+            DisplayAlerts = false
+        };
+        Workbooks = ExcelApp.Workbooks;
+
+        var fileNames = Directory.GetFiles(Path.Combine(projectFolderPath, "Elaborazioni"), "*.xlsx");
+
+        var processedFiles = 0u;
+        foreach (var fileName in fileNames)
+        {
+            var workbook = Workbooks.Open(fileName);
+
+            try
             {
-                workbook.Close(false);
-                Marshal.ReleaseComObject(workbook);
+                ProcessScale5Table(notificationId, workbook, Path.GetFileNameWithoutExtension(fileName));
+
+                workbook.Save();
+
+                notificationService.UpdateProgressNotificationAsync(notificationId,
+                    "Elaborazione file prodotti in corso...",
+                    ++processedFiles,
+                    (uint)fileNames.Length).GetAwaiter().GetResult();
             }
+            catch (Exception e)
+            {
+                notificationService.RemoveNotificationAsync(notificationId).GetAwaiter().GetResult();
+                notificationService.ShowNotification("Elaborazione fallita",
+                    "Si è verificato un errore durante l'elaborazione dei file dei prodotti: " + e.Message);
+            }
+            finally // Clean up the resources not managed by the base class
+            {
+                if (workbook is not null)
+                {
+                    workbook.Close(false);
+                    Marshal.ReleaseComObject(workbook);
+                }
+            }
+        }
+
+        notificationService.RemoveNotificationAsync(notificationId).GetAwaiter().GetResult();
+        notificationService.ShowNotification("Elaborazione completata",
+            "I file dei prodotti sono stati elaborati con successo.");
+    }
+
+    private static void ProcessScale5Table(Guid notificationId, Workbook workbook, string productCode)
+    {
+        Sheets? worksheets = null;
+        Worksheet? classesSheet = null;
+        Worksheet? dataSheet = null;
+        Worksheet? scale5Sheet = null;
+        ListObjects? tables = null;
+        Range? dataRange = null;
+
+        try
+        {
+            worksheets = workbook.Worksheets;
+            classesSheet = worksheets["Classi"];
+            dataSheet = worksheets["Dati"];
+
+            // Check if the sheet already exists, if so clean it
+            try
+            {
+                scale5Sheet = worksheets.Item["Tabelle 5"];
+
+                // Clean the previous table if there is any
+                tables = scale5Sheet.ListObjects;
+
+                foreach (ListObject table in tables)
+                {
+                    table.Delete();
+                    Marshal.ReleaseComObject(table);
+                }
+            }
+            catch
+            {
+                scale5Sheet = worksheets.Add();
+                scale5Sheet.Name = "Tabelle 5";
+            }
+
+            dataRange = classesSheet.UsedRange;
+            var classesDataTable = dataRange.MakeDataTable();
+            Marshal.ReleaseComObject(dataRange);
+            dataRange = null;
+
+            dataRange = dataSheet.UsedRange;
+            var dataDataTable = dataRange.MakeDataTable();
+            Marshal.ReleaseComObject(dataRange);
+            dataRange = null;
+
+            // Take the questions and labels of scale 5 questions
+            var questionsAndLabels = from classRow in classesDataTable.AsEnumerable().AsQueryable()
+                let classe = classRow.Field<string?>("Classe")
+                where classe == "A"
+                select new
+                {
+                    Question = classRow.Field<string?>("Domanda"),
+                    Label = classRow.Field<string?>("Etichetta")
+                };
+
+            // Find the columns to delete
+            var columnsToRemove = dataDataTable.Columns
+                .Cast<DataColumn>()
+                .Where(column => column.ColumnName != "D.1 PUNTO DI CAMPIONAMENTO" &&
+                                 !questionsAndLabels.Any(q => q.Question == column.ColumnName))
+                .ToList();
+
+            foreach (var column in columnsToRemove) dataDataTable.Columns.Remove(column);
+
+            // Take the list of possible locations and create groups
+            var locations = from dataRow in dataDataTable.AsEnumerable().AsQueryable()
+                group dataRow by dataRow.Field<string?>("D.1 PUNTO DI CAMPIONAMENTO")
+                into locationGroup
+                select locationGroup.Key;
+
+            var dataTables = new Dictionary<string, DataTable>();
+
+            // Create a table for each location
+            foreach (var location in locations)
+            {
+                var locationTable = new DataTable();
+                locationTable.Columns.Add(new DataColumn(location, typeof(string)));
+                // Add the product name column
+                locationTable.Columns.Add(new DataColumn(productCode, typeof(double)));
+                // Add the lsd column
+                locationTable.Columns.Add(new DataColumn("LSD", typeof(double)));
+
+                // For each question, calculate the average and lsd
+                foreach (var qAndL in questionsAndLabels)
+                {
+                    var questionRows = dataDataTable.AsEnumerable()
+                        .Where(row => row.Field<string?>("D.1 PUNTO DI CAMPIONAMENTO") == location);
+
+                    var values = questionRows
+                        .Select(row => Convert.ToDouble(row.Field<string?>(qAndL.Question) ?? "0"))
+                        .ToList();
+
+                    var average = values.Average();
+                    var lsd = 1.96 * (Math.Sqrt(values.Select(v => Math.Pow(v - average, 2)).Sum() / values.Count) /
+                                      Math.Sqrt(values.Count));
+
+                    var newRow = locationTable.NewRow();
+                    newRow[location] = string.IsNullOrEmpty(qAndL.Label) ? qAndL.Question : qAndL.Label;
+                    newRow[productCode] = average;
+                    newRow["LSD"] = lsd;
+                    locationTable.Rows.Add(newRow);
+                }
+
+                dataTables.Add(location, locationTable);
+            }
+
+            if (locations.Any())
+            {
+                // Create the generic table
+                var genericTable = new DataTable();
+                genericTable.Columns.Add(new DataColumn("generale", typeof(string)));
+                // Add the product name column
+                genericTable.Columns.Add(new DataColumn(productCode, typeof(double)));
+                // Add the lsd column
+                genericTable.Columns.Add(new DataColumn("LSD", typeof(double)));
+
+                // For each question, calculate the average and lsd
+                foreach (var qAndL in questionsAndLabels)
+                {
+                    var questionRows = dataDataTable.AsEnumerable();
+
+                    var values = questionRows
+                        .Select(row => Convert.ToDouble(row.Field<string?>(qAndL.Question) ?? "0"))
+                        .ToList();
+
+                    var average = values.Average();
+                    var lsd = 1.96 * (Math.Sqrt(values.Select(v => Math.Pow(v - average, 2)).Sum() / values.Count) /
+                                      Math.Sqrt(values.Count));
+
+                    var newRow = genericTable.NewRow();
+                    newRow["generale"] = string.IsNullOrEmpty(qAndL.Label) ? qAndL.Question : qAndL.Label;
+                    newRow[productCode] = average;
+                    newRow["LSD"] = lsd;
+                    genericTable.Rows.Add(newRow);
+                }
+
+                dataTables.Add("generale", genericTable);
+            }
+
+            // Write all the datatables to the worksheet
+            foreach (var kvp in dataTables) kvp.Value.WriteScale5TableToWorksheet(scale5Sheet, kvp.Key);
+        }
+        finally // Clean up the resources not managed by the base class
+        {
+            if (dataRange is not null) Marshal.ReleaseComObject(dataRange);
+            if (tables is not null) Marshal.ReleaseComObject(tables);
+            if (scale5Sheet is not null) Marshal.ReleaseComObject(scale5Sheet);
+            if (dataSheet is not null) Marshal.ReleaseComObject(dataSheet);
+            if (classesSheet is not null) Marshal.ReleaseComObject(classesSheet);
+            if (worksheets is not null) Marshal.ReleaseComObject(worksheets);
         }
     }
 

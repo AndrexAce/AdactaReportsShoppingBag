@@ -232,7 +232,11 @@ internal sealed partial class MainViewModel(
         await excelService.CreateProductFilesAsync(notificationId, productsToProcess, projectFolderPath,
             ReportProject.ProjectCode);
 
-        // TODO: Process data for each product file
+        notificationId = await notificationService.ShowProgressNotificationAsync("Elaborazione in corso...",
+            "Potrebbero volerci alcuni minuti.", "Elaborazione file prodotti in corso...",
+            (uint)ReportProject.Products.Count());
+
+        await excelService.ProcessProductFilesAsync(notificationId, projectFolderPath);
     }
 
     public async Task LoadProjectFileAsync(IStorageFile file)
