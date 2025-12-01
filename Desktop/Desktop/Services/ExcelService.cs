@@ -824,7 +824,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
         Sheets? worksheets = null;
         Worksheet? classesSheet = null;
         Worksheet? dataSheet = null;
-        Worksheet? scale5Sheet = null;
+        Worksheet? destinationSheet = null;
         ListObjects? tables = null;
         Range? dataRange = null;
 
@@ -837,10 +837,10 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             // Check if the sheet already exists, if so clean it
             try
             {
-                scale5Sheet = worksheets.Item[scale == TableType.Scale5 ? "Tabelle 5" : "Tabelle 9"];
+                destinationSheet = worksheets.Item[scale == TableType.Scale5 ? "Tabelle 5" : "Tabelle 9"];
 
                 // Clean the previous table if there is any
-                tables = scale5Sheet.ListObjects;
+                tables = destinationSheet.ListObjects;
 
                 foreach (ListObject table in tables)
                 {
@@ -850,8 +850,8 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             }
             catch
             {
-                scale5Sheet = worksheets.Add();
-                scale5Sheet.Name = scale == TableType.Scale5 ? "Tabelle 5" : "Tabelle 9";
+                destinationSheet = worksheets.Add();
+                destinationSheet.Name = scale == TableType.Scale5 ? "Tabelle 5" : "Tabelle 9";
             }
 
             dataRange = classesSheet.UsedRange;
@@ -975,13 +975,13 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             }
 
             // Write all the datatables to the worksheet
-            foreach (var kvp in dataTables) kvp.Value.WriteClosedTableToWorksheet(scale5Sheet, kvp.Key);
+            foreach (var kvp in dataTables) kvp.Value.WriteClosedTableToWorksheet(destinationSheet, kvp.Key);
         }
         finally // Clean up the resources not managed by the base class
         {
             if (dataRange is not null) Marshal.ReleaseComObject(dataRange);
             if (tables is not null) Marshal.ReleaseComObject(tables);
-            if (scale5Sheet is not null) Marshal.ReleaseComObject(scale5Sheet);
+            if (destinationSheet is not null) Marshal.ReleaseComObject(destinationSheet);
             if (dataSheet is not null) Marshal.ReleaseComObject(dataSheet);
             if (classesSheet is not null) Marshal.ReleaseComObject(classesSheet);
             if (worksheets is not null) Marshal.ReleaseComObject(worksheets);
