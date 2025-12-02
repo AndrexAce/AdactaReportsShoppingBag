@@ -9,6 +9,7 @@ using Windows.Storage;
 using AdactaInternational.AdactaReportsShoppingBag.Desktop.Extensions;
 using AdactaInternational.AdactaReportsShoppingBag.Model;
 using AdactaInternational.AdactaReportsShoppingBag.Model.Soap.Response;
+using Humanizer;
 using Microsoft.Office.Interop.Excel;
 using DataTable = System.Data.DataTable;
 using Range = Microsoft.Office.Interop.Excel.Range;
@@ -574,9 +575,9 @@ internal sealed class ExcelService(INotificationService notificationService) : E
         // Take only the rows related to the given product
         var newDataTable = dataTable.AsEnumerable()
             .Where(row =>
-                string.Compare(row.Field<string>("Prodotto"), productCode, StringComparison.CurrentCultureIgnoreCase) ==
+                string.Compare(row.Field<string?>("Prodotto"), productCode, StringComparison.CurrentCultureIgnoreCase) ==
                 0 ||
-                string.Compare(row.Field<string>("prodotto"), productCode, StringComparison.CurrentCultureIgnoreCase) ==
+                string.Compare(row.Field<string?>("prodotto"), productCode, StringComparison.CurrentCultureIgnoreCase) ==
                 0)
             .CopyToDataTable();
 
@@ -629,12 +630,6 @@ internal sealed class ExcelService(INotificationService notificationService) : E
 
         try
         {
-            if (productTotalCount == 0)
-            {
-                notificationService.RemoveNotificationAsync(notificationId).GetAwaiter().GetResult();
-                return;
-            }
-
             if (!Directory.Exists(Path.Combine(projectFolderPath, "Elaborazioni")))
                 Directory.CreateDirectory(Path.Combine(projectFolderPath, "Elaborazioni"));
 
@@ -661,13 +656,13 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                 dataWorksheet = dataSheets.Item[product.Code];
 
                 // Copy the sheets and paste them in the product file and rename
-                classesWorksheet.Copy(After: worksheets[worksheets.Count]);
+                classesWorksheet.Copy(After: worksheet);
                 Marshal.ReleaseComObject(classesWorksheet);
                 classesWorksheet = null;
                 classesWorksheet = worksheets[worksheets.Count];
                 classesWorksheet.Name = "Classi";
 
-                dataWorksheet.Copy(After: worksheets[worksheets.Count]);
+                dataWorksheet.Copy(After: classesWorksheet);
                 Marshal.ReleaseComObject(dataWorksheet);
                 dataWorksheet = null;
                 dataWorksheet = worksheets[worksheets.Count];
@@ -677,7 +672,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                 worksheet.Delete();
 
                 var excelFilePath =
-                    Path.Combine(Path.Combine(projectFolderPath, "Elaborazioni"), $"{product.Code}.xlsx");
+                    Path.Combine(Path.Combine(projectFolderPath, "Elaborazioni"), $"{product.DisplayName.Trim()}.xlsx");
                 workbook.SaveAs(excelFilePath);
 
                 // Release the resources on each iteration
@@ -777,16 +772,18 @@ internal sealed class ExcelService(INotificationService notificationService) : E
         Workbooks = ExcelApp.Workbooks;
 
         var fileNames = Directory.GetFiles(Path.Combine(projectFolderPath, "Elaborazioni"), "*.xlsx");
-
         var processedFiles = 0u;
-        foreach (var fileName in fileNames)
-        {
-            var workbook = Workbooks.Open(fileName);
 
-            try
+        Workbook? workbook = null;
+
+        try
+        {
+            foreach (var fileName in fileNames)
             {
-                ProcessClosedTable(workbook, Path.GetFileNameWithoutExtension(fileName), TableType.Scale5);
-                ProcessClosedTable(workbook, Path.GetFileNameWithoutExtension(fileName), TableType.Scale9);
+                workbook = Workbooks.Open(fileName);
+
+                ProcessClosedTable(workbook, TableType.Scale9);
+                ProcessClosedTable(workbook, TableType.Scale5);
 
                 workbook.Save();
 
@@ -794,29 +791,33 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                     "Elaborazione file prodotti in corso...",
                     ++processedFiles,
                     (uint)fileNames.Length).GetAwaiter().GetResult();
+
+                workbook.Close(false);
+                Marshal.ReleaseComObject(workbook);
+                workbook = null;
             }
-            catch (Exception e)
+
+            notificationService.RemoveNotificationAsync(notificationId).GetAwaiter().GetResult();
+            notificationService.ShowNotification("Elaborazione completata",
+                "I file dei prodotti sono stati elaborati con successo.");
+        }
+        catch (Exception e)
+        {
+            notificationService.RemoveNotificationAsync(notificationId).GetAwaiter().GetResult();
+            notificationService.ShowNotification("Elaborazione fallita",
+                "Si è verificato un errore durante l'elaborazione dei file dei prodotti: " + e.Message);
+        }
+        finally // Clean up the resources not managed by the base class
+        {
+            if (workbook is not null)
             {
-                notificationService.RemoveNotificationAsync(notificationId).GetAwaiter().GetResult();
-                notificationService.ShowNotification("Elaborazione fallita",
-                    "Si è verificato un errore durante l'elaborazione dei file dei prodotti: " + e.Message);
-            }
-            finally // Clean up the resources not managed by the base class
-            {
-                if (workbook is not null)
-                {
-                    workbook.Close(false);
-                    Marshal.ReleaseComObject(workbook);
-                }
+                workbook.Close(false);
+                Marshal.ReleaseComObject(workbook);
             }
         }
-
-        notificationService.RemoveNotificationAsync(notificationId).GetAwaiter().GetResult();
-        notificationService.ShowNotification("Elaborazione completata",
-            "I file dei prodotti sono stati elaborati con successo.");
     }
 
-    private static void ProcessClosedTable(Workbook workbook, string productCode, TableType scale)
+    private static void ProcessClosedTable(Workbook workbook, TableType scale)
     {
         if (scale != TableType.Scale5 && scale != TableType.Scale9)
             throw new ArgumentOutOfRangeException(nameof(scale), "Invalid table type.");
@@ -850,7 +851,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             }
             catch
             {
-                destinationSheet = worksheets.Add();
+                destinationSheet = worksheets.Add(After: dataSheet);
                 destinationSheet.Name = scale == TableType.Scale5 ? "Tabelle 5" : "Tabelle 9";
             }
 
@@ -904,15 +905,15 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                 into locationGroup
                 select locationGroup.Key;
 
-            var dataTables = new Dictionary<string, DataTable>();
+            IEnumerable<KeyValuePair<string, DataTable>> dataTables = [];
 
             // Create a table for each location
             foreach (var location in locations)
             {
                 var locationTable = new DataTable();
-                locationTable.Columns.Add(new DataColumn(location, typeof(string)));
+                locationTable.Columns.Add(new DataColumn(location.ApplyCase(LetterCasing.Sentence), typeof(string)));
                 // Add the product name column
-                locationTable.Columns.Add(new DataColumn(productCode, typeof(double)));
+                locationTable.Columns.Add(new DataColumn("Media", typeof(double)));
                 // Add the lsd column
                 locationTable.Columns.Add(new DataColumn("LSD", typeof(double)));
 
@@ -924,7 +925,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                             StringComparison.CurrentCultureIgnoreCase) == 0);
 
                     var values = questionRows
-                        .Select(row => Convert.ToDouble(row.Field<string?>(qAndL.Question) ?? "0"))
+                        .Select(row => Convert.ToDouble(row.Field<string?>(qAndL.Question)))
                         .ToList();
 
                     var average = values.Average();
@@ -932,22 +933,23 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                                       Math.Sqrt(values.Count));
 
                     var newRow = locationTable.NewRow();
-                    newRow[location] = string.IsNullOrEmpty(qAndL.Label) ? qAndL.Question : qAndL.Label;
-                    newRow[productCode] = average;
+                    newRow[location.ApplyCase(LetterCasing.Sentence)] =
+                        string.IsNullOrEmpty(qAndL.Label) ? qAndL.Question : qAndL.Label;
+                    newRow["Media"] = average;
                     newRow["LSD"] = lsd;
                     locationTable.Rows.Add(newRow);
                 }
 
-                dataTables.Add(location, locationTable);
+                dataTables = dataTables.Append(new KeyValuePair<string, DataTable>(location, locationTable));
             }
 
             if (locations.Any())
             {
                 // Create the generic table
                 var genericTable = new DataTable();
-                genericTable.Columns.Add(new DataColumn("generale", typeof(string)));
+                genericTable.Columns.Add(new DataColumn("Generale", typeof(string)));
                 // Add the product name column
-                genericTable.Columns.Add(new DataColumn(productCode, typeof(double)));
+                genericTable.Columns.Add(new DataColumn("Media", typeof(double)));
                 // Add the lsd column
                 genericTable.Columns.Add(new DataColumn("LSD", typeof(double)));
 
@@ -957,7 +959,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                     var questionRows = dataDataTable.AsEnumerable();
 
                     var values = questionRows
-                        .Select(row => Convert.ToDouble(row.Field<string?>(qAndL.Question) ?? "0"))
+                        .Select(row => Convert.ToDouble(row.Field<string?>(qAndL.Question)))
                         .ToList();
 
                     var average = values.Average();
@@ -965,13 +967,13 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                                       Math.Sqrt(values.Count));
 
                     var newRow = genericTable.NewRow();
-                    newRow["generale"] = string.IsNullOrEmpty(qAndL.Label) ? qAndL.Question : qAndL.Label;
-                    newRow[productCode] = average;
+                    newRow["Generale"] = string.IsNullOrEmpty(qAndL.Label) ? qAndL.Question : qAndL.Label;
+                    newRow["Media"] = average;
                     newRow["LSD"] = lsd;
                     genericTable.Rows.Add(newRow);
                 }
 
-                dataTables.Add("generale", genericTable);
+                dataTables = dataTables.Prepend(new KeyValuePair<string, DataTable>("Generale", genericTable));
             }
 
             // Write all the datatables to the worksheet
