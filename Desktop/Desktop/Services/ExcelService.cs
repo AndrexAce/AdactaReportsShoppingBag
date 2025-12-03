@@ -575,9 +575,11 @@ internal sealed class ExcelService(INotificationService notificationService) : E
         // Take only the rows related to the given product
         var newDataTable = dataTable.AsEnumerable()
             .Where(row =>
-                string.Compare(row.Field<string?>("Prodotto"), productCode, StringComparison.CurrentCultureIgnoreCase) ==
+                string.Compare(row.Field<string?>("Prodotto"), productCode,
+                    StringComparison.CurrentCultureIgnoreCase) ==
                 0 ||
-                string.Compare(row.Field<string?>("prodotto"), productCode, StringComparison.CurrentCultureIgnoreCase) ==
+                string.Compare(row.Field<string?>("prodotto"), productCode,
+                    StringComparison.CurrentCultureIgnoreCase) ==
                 0)
             .CopyToDataTable();
 
@@ -784,6 +786,8 @@ internal sealed class ExcelService(INotificationService notificationService) : E
 
                 ProcessClosedTable(workbook, TableType.Scale9);
                 ProcessClosedTable(workbook, TableType.Scale5);
+                ProcessFrequenciesTable(workbook, TableType.Scale9);
+                ProcessFrequenciesTable(workbook, TableType.Scale5);
 
                 workbook.Save();
 
@@ -978,6 +982,152 @@ internal sealed class ExcelService(INotificationService notificationService) : E
 
             // Write all the datatables to the worksheet
             foreach (var kvp in dataTables) kvp.Value.WriteClosedTableToWorksheet(destinationSheet, kvp.Key);
+        }
+        finally // Clean up the resources not managed by the base class
+        {
+            if (dataRange is not null) Marshal.ReleaseComObject(dataRange);
+            if (tables is not null) Marshal.ReleaseComObject(tables);
+            if (destinationSheet is not null) Marshal.ReleaseComObject(destinationSheet);
+            if (dataSheet is not null) Marshal.ReleaseComObject(dataSheet);
+            if (classesSheet is not null) Marshal.ReleaseComObject(classesSheet);
+            if (worksheets is not null) Marshal.ReleaseComObject(worksheets);
+        }
+    }
+
+    private static void ProcessFrequenciesTable(Workbook workbook, TableType scale)
+    {
+        if (scale != TableType.Scale5 && scale != TableType.Scale9)
+            throw new ArgumentOutOfRangeException(nameof(scale), "Invalid table type.");
+
+        Sheets? worksheets = null;
+        Worksheet? classesSheet = null;
+        Worksheet? dataSheet = null;
+        Worksheet? destinationSheet = null;
+        ListObjects? tables = null;
+        Range? dataRange = null;
+
+        try
+        {
+            worksheets = workbook.Worksheets;
+            classesSheet = worksheets["Classi"];
+            dataSheet = worksheets["Dati"];
+
+            // Check if the sheet already exists, if so clean it
+            try
+            {
+                destinationSheet = worksheets.Item[scale == TableType.Scale5 ? "Frequenze 5" : "Frequenze 9"];
+
+                // Clean the previous table if there is any
+                tables = destinationSheet.ListObjects;
+
+                foreach (ListObject table in tables)
+                {
+                    table.Delete();
+                    Marshal.ReleaseComObject(table);
+                }
+            }
+            catch
+            {
+                destinationSheet = worksheets.Add(After: dataSheet);
+                destinationSheet.Name = scale == TableType.Scale5 ? "Frequenze 5" : "Frequenze 9";
+            }
+
+            dataRange = classesSheet.UsedRange;
+            var classesDataTable = dataRange.MakeDataTable();
+            Marshal.ReleaseComObject(dataRange);
+            dataRange = null;
+
+            dataRange = dataSheet.UsedRange;
+            var dataDataTable = dataRange.MakeDataTable();
+            Marshal.ReleaseComObject(dataRange);
+            dataRange = null;
+
+            // Take the questions and labels
+            var questionsAndLabels = from classRow in classesDataTable.AsEnumerable().AsQueryable()
+                let classe = classRow.Field<string?>("Classe")
+                where classe == (scale == TableType.Scale5 ? "A" : "G") ||
+                      classe == (scale == TableType.Scale5 ? "a" : "g")
+                select new
+                {
+                    Question = classRow.Field<string?>("Domanda"),
+                    Label = classRow.Field<string?>("Etichetta")
+                };
+
+            // Find the columns to delete
+            var columnsToRemove = dataDataTable.Columns
+                .Cast<DataColumn>()
+                .Where(column => column.ColumnName != "D.1 PUNTO DI CAMPIONAMENTO" &&
+                                 !questionsAndLabels.Any(q => string.Compare(q.Question, column.ColumnName,
+                                     StringComparison.CurrentCultureIgnoreCase) == 0))
+                .ToList();
+
+            foreach (var column in columnsToRemove) dataDataTable.Columns.Remove(column);
+
+            IEnumerable<KeyValuePair<string, DataTable>> dataTables = [];
+
+            // For each question/label, create the frequency table
+            foreach (var qAndL in questionsAndLabels)
+            {
+                // Compute the number of people who answered with a certain value and the percentage, excluding the invalid ones
+                var excludedCount = dataDataTable.AsEnumerable()
+                    .Count(dataRow =>
+                    {
+                        var value = Convert.ToUInt32(dataRow.Field<string?>(qAndL.Question));
+                        return (TableType.Scale5 == scale && value is < 1 or > 5) ||
+                               (TableType.Scale9 == scale && value is < 1 or > 9);
+                    });
+
+
+                var results = from dataRow in dataDataTable.AsEnumerable().AsQueryable()
+                    orderby Convert.ToUInt32(dataRow.Field<string?>(qAndL.Question))
+                    group dataRow by Convert.ToUInt32(dataRow.Field<string?>(qAndL.Question))
+                    into resultGroup
+                    where (TableType.Scale5 == scale && resultGroup.Key >= 1 && resultGroup.Key <= 5) ||
+                          (TableType.Scale9 == scale && resultGroup.Key >= 1 && resultGroup.Key <= 9)
+                    select new
+                    {
+                        Value = resultGroup.Key,
+                        Percentage = (double)resultGroup.Count() / (dataDataTable.Rows.Count - excludedCount),
+                        Count = resultGroup.Count()
+                    };
+
+                // If some data is missing, add it
+                if ((scale == TableType.Scale5 && results.Count() != 5) ||
+                    (scale == TableType.Scale9 && results.Count() != 9))
+                {
+                    // Find out the missing values
+                    var values = Enumerable.Sequence(1, scale == TableType.Scale5 ? 5 : 9, 1);
+                    var missingValues = values.Except(results.Select(r => Convert.ToInt32(r.Value)));
+
+                    // Add them with 0 count and 0 percentage
+                    results = missingValues.Aggregate(results,
+                        (current, missingValue) =>
+                            current.Append(new { Value = (uint)missingValue, Percentage = 0.0, Count = 0 }));
+                    // Sort the results again
+                    results = results.OrderBy(r => r.Value);
+                }
+
+                // Create the table that contains the data and add it
+                var frequencyTable = new DataTable();
+                frequencyTable.Columns.Add(new DataColumn(qAndL.Label, typeof(uint)));
+                frequencyTable.Columns.Add(new DataColumn("Percentuale", typeof(double)));
+                frequencyTable.Columns.Add(new DataColumn("Totale", typeof(uint)));
+
+                foreach (var result in results)
+                {
+                    var newRow = frequencyTable.NewRow();
+                    newRow[qAndL.Label] = Convert.ToUInt32(result.Value);
+                    newRow["Percentuale"] = result.Percentage;
+                    newRow["Totale"] = result.Count;
+
+                    frequencyTable.Rows.Add(newRow);
+                }
+
+                dataTables = dataTables.Append(new KeyValuePair<string, DataTable>(qAndL.Label, frequencyTable));
+            }
+
+            // Write all the datatables to the worksheet
+            foreach (var kvp in dataTables) kvp.Value.WriteFrequenciesTableToWorksheet(destinationSheet, kvp.Key);
         }
         finally // Clean up the resources not managed by the base class
         {
