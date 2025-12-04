@@ -929,7 +929,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                             StringComparison.CurrentCultureIgnoreCase) == 0);
 
                     var values = questionRows
-                        .Select(row => Convert.ToDouble(row.Field<string?>(qAndL.Question)))
+                        .Select(row => Convert.ToDouble(row.Field<string?>(qAndL.Question.Trim())))
                         .ToList();
 
                     var average = values.Average();
@@ -938,7 +938,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
 
                     var newRow = locationTable.NewRow();
                     newRow[location.ApplyCase(LetterCasing.Sentence)] =
-                        string.IsNullOrEmpty(qAndL.Label) ? qAndL.Question : qAndL.Label;
+                        string.IsNullOrEmpty(qAndL.Label.Trim()) ? qAndL.Question.Trim() : qAndL.Label.Trim();
                     newRow["Media"] = average;
                     newRow["LSD"] = lsd;
                     locationTable.Rows.Add(newRow);
@@ -963,7 +963,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                     var questionRows = dataDataTable.AsEnumerable();
 
                     var values = questionRows
-                        .Select(row => Convert.ToDouble(row.Field<string?>(qAndL.Question)))
+                        .Select(row => Convert.ToDouble(row.Field<string?>(qAndL.Question.Trim())))
                         .ToList();
 
                     var average = values.Average();
@@ -971,7 +971,9 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                                       Math.Sqrt(values.Count));
 
                     var newRow = genericTable.NewRow();
-                    newRow["Generale"] = string.IsNullOrEmpty(qAndL.Label) ? qAndL.Question : qAndL.Label;
+                    newRow["Generale"] = string.IsNullOrEmpty(qAndL.Label.Trim())
+                        ? qAndL.Question.Trim()
+                        : qAndL.Label.Trim();
                     newRow["Media"] = average;
                     newRow["LSD"] = lsd;
                     genericTable.Rows.Add(newRow);
@@ -1064,6 +1066,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             foreach (var column in columnsToRemove) dataDataTable.Columns.Remove(column);
 
             IEnumerable<KeyValuePair<string, DataTable>> dataTables = [];
+            IEnumerable<KeyValuePair<string, DataTable>> cumulativeDataTables = [];
 
             // For each question/label, create the frequency table
             foreach (var qAndL in questionsAndLabels)
@@ -1072,15 +1075,15 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                 var excludedCount = dataDataTable.AsEnumerable()
                     .Count(dataRow =>
                     {
-                        var value = Convert.ToUInt32(dataRow.Field<string?>(qAndL.Question));
+                        var value = Convert.ToUInt32(dataRow.Field<string?>(qAndL.Question.Trim()));
                         return (TableType.Scale5 == scale && value is < 1 or > 5) ||
                                (TableType.Scale9 == scale && value is < 1 or > 9);
                     });
 
 
                 var results = from dataRow in dataDataTable.AsEnumerable().AsQueryable()
-                    orderby Convert.ToUInt32(dataRow.Field<string?>(qAndL.Question))
-                    group dataRow by Convert.ToUInt32(dataRow.Field<string?>(qAndL.Question))
+                    orderby Convert.ToUInt32(dataRow.Field<string?>(qAndL.Question.Trim()))
+                    group dataRow by Convert.ToUInt32(dataRow.Field<string?>(qAndL.Question.Trim()))
                     into resultGroup
                     where (TableType.Scale5 == scale && resultGroup.Key >= 1 && resultGroup.Key <= 5) ||
                           (TableType.Scale9 == scale && resultGroup.Key >= 1 && resultGroup.Key <= 9)
@@ -1109,25 +1112,90 @@ internal sealed class ExcelService(INotificationService notificationService) : E
 
                 // Create the table that contains the data and add it
                 var frequencyTable = new DataTable();
-                frequencyTable.Columns.Add(new DataColumn(qAndL.Label, typeof(uint)));
+                frequencyTable.Columns.Add(new DataColumn(qAndL.Label.Trim(), typeof(uint)));
                 frequencyTable.Columns.Add(new DataColumn("Percentuale", typeof(double)));
                 frequencyTable.Columns.Add(new DataColumn("Totale", typeof(uint)));
 
                 foreach (var result in results)
                 {
                     var newRow = frequencyTable.NewRow();
-                    newRow[qAndL.Label] = Convert.ToUInt32(result.Value);
+                    newRow[qAndL.Label.Trim()] = Convert.ToUInt32(result.Value);
                     newRow["Percentuale"] = result.Percentage;
                     newRow["Totale"] = result.Count;
 
                     frequencyTable.Rows.Add(newRow);
                 }
 
-                dataTables = dataTables.Append(new KeyValuePair<string, DataTable>(qAndL.Label, frequencyTable));
+                dataTables = dataTables.Append(new KeyValuePair<string, DataTable>(qAndL.Label.Trim(), frequencyTable));
+
+                // Compute the cumulative results
+                var cumulativeFrequencyTable = new DataTable();
+                cumulativeFrequencyTable.Columns.Add(new DataColumn(qAndL.Label.Trim(), typeof(string)));
+                cumulativeFrequencyTable.Columns.Add(new DataColumn("Percentuale", typeof(double)));
+                cumulativeFrequencyTable.Columns.Add(new DataColumn("Totale", typeof(uint)));
+
+                if (scale == TableType.Scale5)
+                {
+                    // Group results into three partitions
+                    var partition1 = results.Where(r => r.Value == 1 || r.Value == 2);
+                    var partition2 = results.Where(r => r.Value == 3);
+                    var partition3 = results.Where(r => r.Value == 4 || r.Value == 5);
+
+                    // Add rows for each partition
+                    var row1 = cumulativeFrequencyTable.NewRow();
+                    row1[qAndL.Label.Trim()] = "da 1 a 2";
+                    row1["Percentuale"] = partition1.Sum(r => r.Percentage);
+                    row1["Totale"] = partition1.Sum(r => r.Count);
+                    cumulativeFrequencyTable.Rows.Add(row1);
+
+                    var row2 = cumulativeFrequencyTable.NewRow();
+                    row2[qAndL.Label.Trim()] = "3";
+                    row2["Percentuale"] = partition2.Sum(r => r.Percentage);
+                    row2["Totale"] = partition2.Sum(r => r.Count);
+                    cumulativeFrequencyTable.Rows.Add(row2);
+
+                    var row3 = cumulativeFrequencyTable.NewRow();
+                    row3[qAndL.Label.Trim()] = "da 4 a 5";
+                    row3["Percentuale"] = partition3.Sum(r => r.Percentage);
+                    row3["Totale"] = partition3.Sum(r => r.Count);
+                    cumulativeFrequencyTable.Rows.Add(row3);
+                }
+                else
+                {
+                    // Group results into three partitions
+                    var partition1 = results.Where(r => r.Value >= 1 && r.Value <= 4);
+                    var partition2 = results.Where(r => r.Value == 5);
+                    var partition3 = results.Where(r => r.Value >= 6 && r.Value <= 9);
+
+                    // Add rows for each partition
+                    var row1 = cumulativeFrequencyTable.NewRow();
+                    row1[qAndL.Label.Trim()] = "da 1 a 4";
+                    row1["Percentuale"] = partition1.Sum(r => r.Percentage);
+                    row1["Totale"] = partition1.Sum(r => r.Count);
+                    cumulativeFrequencyTable.Rows.Add(row1);
+
+                    var row2 = cumulativeFrequencyTable.NewRow();
+                    row2[qAndL.Label.Trim()] = "5";
+                    row2["Percentuale"] = partition2.Sum(r => r.Percentage);
+                    row2["Totale"] = partition2.Sum(r => r.Count);
+                    cumulativeFrequencyTable.Rows.Add(row2);
+
+                    var row3 = cumulativeFrequencyTable.NewRow();
+                    row3[qAndL.Label.Trim()] = "da 6 a 9";
+                    row3["Percentuale"] = partition3.Sum(r => r.Percentage);
+                    row3["Totale"] = partition3.Sum(r => r.Count);
+                    cumulativeFrequencyTable.Rows.Add(row3);
+                }
+
+                cumulativeDataTables =
+                    cumulativeDataTables.Append(
+                        new KeyValuePair<string, DataTable>(qAndL.Label.Trim(), cumulativeFrequencyTable));
             }
 
             // Write all the datatables to the worksheet
             foreach (var kvp in dataTables) kvp.Value.WriteFrequenciesTableToWorksheet(destinationSheet, kvp.Key);
+            foreach (var kvp in cumulativeDataTables)
+                kvp.Value.WriteCumulativeFrequenciesTableToWorksheet(destinationSheet, kvp.Key);
         }
         finally // Clean up the resources not managed by the base class
         {
