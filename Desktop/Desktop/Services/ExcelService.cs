@@ -4,6 +4,7 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Windows.Storage;
 using AdactaInternational.AdactaReportsShoppingBag.Desktop.Extensions;
@@ -872,8 +873,9 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             // Take the questions and labels
             var questionsAndLabels = from classRow in classesDataTable.AsEnumerable().AsQueryable()
                 let classe = classRow.Field<string?>("Classe")
-                where classe == (scale == TableType.Scale5 ? "A" : "G") ||
-                      classe == (scale == TableType.Scale5 ? "a" : "g")
+                where (scale == TableType.Scale5 &&
+                       Regex.IsMatch(classe, "[AI]", RegexOptions.IgnoreCase | RegexOptions.Compiled, TimeSpan.FromMilliseconds(100))) ||
+                      (scale == TableType.Scale9 && string.Compare(classe, "G", StringComparison.CurrentCultureIgnoreCase) == 0)
                 select new
                 {
                     Question = classRow.Field<string?>("Domanda"),
@@ -1047,8 +1049,9 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             // Take the questions and labels
             var questionsAndLabels = from classRow in classesDataTable.AsEnumerable().AsQueryable()
                 let classe = classRow.Field<string?>("Classe")
-                where classe == (scale == TableType.Scale5 ? "A" : "G") ||
-                      classe == (scale == TableType.Scale5 ? "a" : "g")
+                where (scale == TableType.Scale5 &&
+                       Regex.IsMatch(classe, "[AI]", RegexOptions.IgnoreCase | RegexOptions.Compiled, TimeSpan.FromMilliseconds(100))) ||
+                      (scale == TableType.Scale9 && string.Compare(classe, "G", StringComparison.CurrentCultureIgnoreCase) == 0)
                 select new
                 {
                     Question = classRow.Field<string?>("Domanda"),
