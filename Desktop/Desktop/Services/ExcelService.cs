@@ -1064,6 +1064,11 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                     Label = classRow.Field<string?>("Etichetta")
                 };
 
+            // Put the "Gradimento complessivo" label at the first position if scale is 9
+            if (scale == TableType.Scale9)
+                questionsAndLabels = questionsAndLabels.OrderByDescending(q =>
+                    string.Compare(q.Label, "Gradimento complessivo", StringComparison.CurrentCultureIgnoreCase) == 0);
+
             // Find the columns to delete
             var columnsToRemove = dataDataTable.Columns
                 .Cast<DataColumn>()
@@ -1222,14 +1227,14 @@ internal sealed class ExcelService(INotificationService notificationService) : E
         IEnumerable<KeyValuePair<string, DataTable>> scale5FrequencyTables)
     {
         Sheets? worksheets = null;
-        Worksheet? lastFrequenciesSheet = null;
+        Worksheet? lastSheet = null;
         Worksheet? destinationSheet = null;
         ListObjects? tables = null;
 
         try
         {
             worksheets = workbook.Worksheets;
-            lastFrequenciesSheet = worksheets["Frequenze 9"];
+            lastSheet = worksheets[worksheets.Count];
 
             // Check if the sheet already exists, if so clean it
             try
@@ -1247,7 +1252,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             }
             catch
             {
-                destinationSheet = worksheets.Add(After: lastFrequenciesSheet);
+                destinationSheet = worksheets.Add(After: lastSheet);
                 destinationSheet.Name = "Adeguatezze";
             }
 
@@ -1262,6 +1267,11 @@ internal sealed class ExcelService(INotificationService notificationService) : E
 
             foreach (var kvp in transposedTables)
             {
+                // Do not insert the "Propensione al riconsumo" and "Confronto abituale" attributes
+                if (Regex.IsMatch(kvp.Key, "Propensione al riconsumo|Confronto abituale",
+                        RegexOptions.IgnoreCase | RegexOptions.Compiled,
+                        TimeSpan.FromMilliseconds(100))) continue;
+
                 var row = adequacyTable.NewRow();
                 row["Attributo"] = kvp.Key;
                 row["Troppo poco"] = (double)kvp.Value.Rows[0]["da 1 a 2"] * 100;
@@ -1276,7 +1286,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
         {
             if (tables is not null) Marshal.ReleaseComObject(tables);
             if (destinationSheet is not null) Marshal.ReleaseComObject(destinationSheet);
-            if (lastFrequenciesSheet is not null) Marshal.ReleaseComObject(lastFrequenciesSheet);
+            if (lastSheet is not null) Marshal.ReleaseComObject(lastSheet);
             if (worksheets is not null) Marshal.ReleaseComObject(worksheets);
         }
     }
