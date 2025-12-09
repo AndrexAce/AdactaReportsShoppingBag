@@ -787,8 +787,9 @@ internal sealed class ExcelService(INotificationService notificationService) : E
 
                 ProcessClosedTable(workbook, TableType.Scale9);
                 ProcessClosedTable(workbook, TableType.Scale5);
-                ProcessFrequenciesTable(workbook, TableType.Scale9);
-                ProcessFrequenciesTable(workbook, TableType.Scale5);
+                _ = ProcessFrequencyTable(workbook, TableType.Scale9);
+                var scale5FrequencyTables = ProcessFrequencyTable(workbook, TableType.Scale5);
+                ProcessAdequacyTable(workbook, scale5FrequencyTables);
 
                 workbook.Save();
 
@@ -872,10 +873,12 @@ internal sealed class ExcelService(INotificationService notificationService) : E
 
             // Take the questions and labels
             var questionsAndLabels = from classRow in classesDataTable.AsEnumerable().AsQueryable()
-                let classe = classRow.Field<string?>("Classe")
+                let classe = classRow.Field<string?>("Classe") ?? ""
                 where (scale == TableType.Scale5 &&
-                       Regex.IsMatch(classe, "[AI]", RegexOptions.IgnoreCase | RegexOptions.Compiled, TimeSpan.FromMilliseconds(100))) ||
-                      (scale == TableType.Scale9 && string.Compare(classe, "G", StringComparison.CurrentCultureIgnoreCase) == 0)
+                       Regex.IsMatch(classe, "[AI]", RegexOptions.IgnoreCase | RegexOptions.Compiled,
+                           TimeSpan.FromMilliseconds(100))) ||
+                      (scale == TableType.Scale9 &&
+                       string.Compare(classe, "G", StringComparison.CurrentCultureIgnoreCase) == 0)
                 select new
                 {
                     Question = classRow.Field<string?>("Domanda"),
@@ -911,7 +914,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                 into locationGroup
                 select locationGroup.Key;
 
-            IEnumerable<KeyValuePair<string, DataTable>> dataTables = [];
+            ICollection<KeyValuePair<string, DataTable>> dataTables = [];
 
             // Create a table for each location
             foreach (var location in locations)
@@ -946,7 +949,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                     locationTable.Rows.Add(newRow);
                 }
 
-                dataTables = dataTables.Append(new KeyValuePair<string, DataTable>(location, locationTable));
+                dataTables.Add(new KeyValuePair<string, DataTable>(location, locationTable));
             }
 
             if (locations.Any())
@@ -981,7 +984,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                     genericTable.Rows.Add(newRow);
                 }
 
-                dataTables = dataTables.Prepend(new KeyValuePair<string, DataTable>("Generale", genericTable));
+                dataTables.Add(new KeyValuePair<string, DataTable>("Generale", genericTable));
             }
 
             // Write all the datatables to the worksheet
@@ -998,7 +1001,8 @@ internal sealed class ExcelService(INotificationService notificationService) : E
         }
     }
 
-    private static void ProcessFrequenciesTable(Workbook workbook, TableType scale)
+    private static IEnumerable<KeyValuePair<string, DataTable>> ProcessFrequencyTable(Workbook workbook,
+        TableType scale)
     {
         if (scale != TableType.Scale5 && scale != TableType.Scale9)
             throw new ArgumentOutOfRangeException(nameof(scale), "Invalid table type.");
@@ -1048,10 +1052,12 @@ internal sealed class ExcelService(INotificationService notificationService) : E
 
             // Take the questions and labels
             var questionsAndLabels = from classRow in classesDataTable.AsEnumerable().AsQueryable()
-                let classe = classRow.Field<string?>("Classe")
+                let classe = classRow.Field<string?>("Classe") ?? ""
                 where (scale == TableType.Scale5 &&
-                       Regex.IsMatch(classe, "[AI]", RegexOptions.IgnoreCase | RegexOptions.Compiled, TimeSpan.FromMilliseconds(100))) ||
-                      (scale == TableType.Scale9 && string.Compare(classe, "G", StringComparison.CurrentCultureIgnoreCase) == 0)
+                       Regex.IsMatch(classe, "[AI]", RegexOptions.IgnoreCase | RegexOptions.Compiled,
+                           TimeSpan.FromMilliseconds(100))) ||
+                      (scale == TableType.Scale9 &&
+                       string.Compare(classe, "G", StringComparison.CurrentCultureIgnoreCase) == 0)
                 select new
                 {
                     Question = classRow.Field<string?>("Domanda"),
@@ -1068,8 +1074,8 @@ internal sealed class ExcelService(INotificationService notificationService) : E
 
             foreach (var column in columnsToRemove) dataDataTable.Columns.Remove(column);
 
-            IEnumerable<KeyValuePair<string, DataTable>> dataTables = [];
-            IEnumerable<KeyValuePair<string, DataTable>> cumulativeDataTables = [];
+            ICollection<KeyValuePair<string, DataTable>> dataTables = [];
+            ICollection<KeyValuePair<string, DataTable>> cumulativeDataTables = [];
 
             // For each question/label, create the frequency table
             foreach (var qAndL in questionsAndLabels)
@@ -1129,7 +1135,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                     frequencyTable.Rows.Add(newRow);
                 }
 
-                dataTables = dataTables.Append(new KeyValuePair<string, DataTable>(qAndL.Label.Trim(), frequencyTable));
+                dataTables.Add(new KeyValuePair<string, DataTable>(qAndL.Label.Trim(), frequencyTable));
 
                 // Compute the cumulative results
                 var cumulativeFrequencyTable = new DataTable();
@@ -1190,15 +1196,16 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                     cumulativeFrequencyTable.Rows.Add(row3);
                 }
 
-                cumulativeDataTables =
-                    cumulativeDataTables.Append(
-                        new KeyValuePair<string, DataTable>(qAndL.Label.Trim(), cumulativeFrequencyTable));
+                cumulativeDataTables.Add(
+                    new KeyValuePair<string, DataTable>(qAndL.Label.Trim(), cumulativeFrequencyTable));
             }
 
             // Write all the datatables to the worksheet
-            foreach (var kvp in dataTables) kvp.Value.WriteFrequenciesTableToWorksheet(destinationSheet, kvp.Key);
+            foreach (var kvp in dataTables) kvp.Value.WriteFrequencyTableToWorksheet(destinationSheet, kvp.Key);
             foreach (var kvp in cumulativeDataTables)
-                kvp.Value.WriteCumulativeFrequenciesTableToWorksheet(destinationSheet, kvp.Key);
+                kvp.Value.WriteCumulativeFrequencyTableToWorksheet(destinationSheet, kvp.Key);
+
+            return cumulativeDataTables;
         }
         finally // Clean up the resources not managed by the base class
         {
@@ -1207,6 +1214,69 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             if (destinationSheet is not null) Marshal.ReleaseComObject(destinationSheet);
             if (dataSheet is not null) Marshal.ReleaseComObject(dataSheet);
             if (classesSheet is not null) Marshal.ReleaseComObject(classesSheet);
+            if (worksheets is not null) Marshal.ReleaseComObject(worksheets);
+        }
+    }
+
+    private static void ProcessAdequacyTable(Workbook workbook,
+        IEnumerable<KeyValuePair<string, DataTable>> scale5FrequencyTables)
+    {
+        Sheets? worksheets = null;
+        Worksheet? lastFrequenciesSheet = null;
+        Worksheet? destinationSheet = null;
+        ListObjects? tables = null;
+
+        try
+        {
+            worksheets = workbook.Worksheets;
+            lastFrequenciesSheet = worksheets["Frequenze 9"];
+
+            // Check if the sheet already exists, if so clean it
+            try
+            {
+                destinationSheet = worksheets.Item["Adeguatezze"];
+
+                // Clean the previous table if there is any
+                tables = destinationSheet.ListObjects;
+
+                foreach (ListObject table in tables)
+                {
+                    table.Delete();
+                    Marshal.ReleaseComObject(table);
+                }
+            }
+            catch
+            {
+                destinationSheet = worksheets.Add(After: lastFrequenciesSheet);
+                destinationSheet.Name = "Adeguatezze";
+            }
+
+            var transposedTables = scale5FrequencyTables.Select(kvp =>
+                new KeyValuePair<string, DataTable>(kvp.Key, kvp.Value.Transpose()));
+
+            var adequacyTable = new DataTable();
+            adequacyTable.Columns.Add("Attributo", typeof(string));
+            adequacyTable.Columns.Add("Troppo poco", typeof(double));
+            adequacyTable.Columns.Add("Giusto", typeof(double));
+            adequacyTable.Columns.Add("Troppo", typeof(double));
+
+            foreach (var kvp in transposedTables)
+            {
+                var row = adequacyTable.NewRow();
+                row["Attributo"] = kvp.Key;
+                row["Troppo poco"] = (double)kvp.Value.Rows[0]["da 1 a 2"] * 100;
+                row["Giusto"] = (double)kvp.Value.Rows[0]["3"] * 100;
+                row["Troppo"] = (double)kvp.Value.Rows[0]["da 4 a 5"] * 100;
+                adequacyTable.Rows.Add(row);
+            }
+
+            adequacyTable.WriteAdequacyTableToWorksheet(destinationSheet, "Adeguatezze");
+        }
+        finally // Clean up the resources not managed by the base class
+        {
+            if (tables is not null) Marshal.ReleaseComObject(tables);
+            if (destinationSheet is not null) Marshal.ReleaseComObject(destinationSheet);
+            if (lastFrequenciesSheet is not null) Marshal.ReleaseComObject(lastFrequenciesSheet);
             if (worksheets is not null) Marshal.ReleaseComObject(worksheets);
         }
     }
