@@ -790,6 +790,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                 _ = ProcessFrequencyTable(workbook, TableType.Scale9);
                 var scale5FrequencyTables = ProcessFrequencyTable(workbook, TableType.Scale5);
                 ProcessAdequacyTable(workbook, scale5FrequencyTables);
+                ProcessSynopticTable(workbook);
 
                 workbook.Save();
 
@@ -1285,6 +1286,260 @@ internal sealed class ExcelService(INotificationService notificationService) : E
         finally // Clean up the resources not managed by the base class
         {
             if (tables is not null) Marshal.ReleaseComObject(tables);
+            if (destinationSheet is not null) Marshal.ReleaseComObject(destinationSheet);
+            if (lastSheet is not null) Marshal.ReleaseComObject(lastSheet);
+            if (worksheets is not null) Marshal.ReleaseComObject(worksheets);
+        }
+    }
+
+    private static void ProcessSynopticTable(Workbook workbook)
+    {
+        Sheets? worksheets = null;
+        Worksheet? lastSheet = null;
+        Worksheet? destinationSheet = null;
+        Worksheet? scale9Sheet = null;
+        ListObjects? tables = null;
+        ListObject? table = null;
+        Range? dataRange = null;
+
+        try
+        {
+            worksheets = workbook.Worksheets;
+            lastSheet = worksheets[worksheets.Count];
+
+            // Check if the sheet already exists, if so clean it
+            try
+            {
+                destinationSheet = worksheets.Item["Sinottiche"];
+
+                // Clean the previous table if there is any
+                tables = destinationSheet.ListObjects;
+
+                foreach (ListObject t in tables)
+                {
+                    t.Delete();
+                    Marshal.ReleaseComObject(t);
+                }
+
+                tables = null;
+            }
+            catch
+            {
+                destinationSheet = worksheets.Add(After: lastSheet);
+                destinationSheet.Name = "Sinottiche";
+            }
+
+            #region Gradimento complessivo
+
+            // Create the synoptic table structure
+            var synopticTable = new DataTable();
+            synopticTable.Columns.Add("Macrocategoria");
+            synopticTable.Columns.Add("Categoria");
+            synopticTable.Columns.Add("Attributo", typeof(string));
+            synopticTable.Columns.Add("Valore", typeof(double));
+
+            // Read the "Generale" table from Tabelle 9 to get overall rating
+            scale9Sheet = worksheets["Tabelle 9"];
+            tables = scale9Sheet.ListObjects;
+            table = tables["Generale"];
+            dataRange = table.Range;
+
+            var overallDataRows = dataRange.MakeDataTable().Rows.Cast<DataRow>().ToArray();
+            foreach (var overallDataRow in overallDataRows.Take(1))
+            {
+                var newRow = synopticTable.NewRow();
+                newRow["Macrocategoria"] = "Valutazione";
+                newRow["Categoria"] = "Gradimento complessivo";
+                newRow["Attributo"] = overallDataRow.Field<string?>("Generale");
+                newRow["Valore"] = Convert.ToDouble(overallDataRow.Field<string?>("Media"));
+                synopticTable.Rows.Add(newRow);
+            }
+
+            Marshal.ReleaseComObject(dataRange);
+            dataRange = null;
+            Marshal.ReleaseComObject(table);
+            table = null;
+            Marshal.ReleaseComObject(tables);
+            tables = null;
+            Marshal.ReleaseComObject(scale9Sheet);
+            scale9Sheet = null;
+
+            // Read the "C_Gradimento complessivo" table from Frequenze 9 to get cumulative rating
+            scale9Sheet = worksheets["Frequenze 9"];
+            tables = scale9Sheet.ListObjects;
+            table = tables["C_Gradimento complessivo"];
+            dataRange = table.Range;
+
+            var overallFrequencyDataRows = dataRange.MakeDataTable().Rows.Cast<DataRow>().SkipLast(1);
+            foreach (var overallFrequencyDataRow in overallFrequencyDataRows)
+            {
+                var newRow = synopticTable.NewRow();
+                newRow["Macrocategoria"] = "Valutazione";
+                newRow["Categoria"] = "Gradimento complessivo";
+                newRow["Attributo"] = overallFrequencyDataRow.Field<string?>("Gradimento complessivo");
+                newRow["Valore"] = Convert.ToDouble(overallFrequencyDataRow.Field<string?>("Percentuale"));
+                synopticTable.Rows.Add(newRow);
+            }
+
+            Marshal.ReleaseComObject(dataRange);
+            dataRange = null;
+            Marshal.ReleaseComObject(table);
+            table = null;
+            Marshal.ReleaseComObject(tables);
+            tables = null;
+            Marshal.ReleaseComObject(scale9Sheet);
+            scale9Sheet = null;
+
+            foreach (var overallDataRow in overallDataRows.Skip(1))
+            {
+                var newRow = synopticTable.NewRow();
+                newRow["Macrocategoria"] = "Valutazione";
+                newRow["Categoria"] = "Profilo di gradimento";
+                newRow["Attributo"] = overallDataRow.Field<string?>("Generale");
+                newRow["Valore"] = Convert.ToDouble(overallDataRow.Field<string?>("Media"));
+                synopticTable.Rows.Add(newRow);
+            }
+
+            synopticTable.WriteSynopticTableToWorksheet(destinationSheet, "Gradimento complessivo");
+
+            #endregion
+
+            #region Propensione al riconsumo
+
+            // Create the synoptic table structure
+            synopticTable = new DataTable();
+            synopticTable.Columns.Add("Macrocategoria");
+            synopticTable.Columns.Add("Categoria");
+            synopticTable.Columns.Add("Attributo", typeof(string));
+            synopticTable.Columns.Add("Valore", typeof(double));
+
+            // Read the "Generale" table from Tabelle 5 to get overall rating
+            scale9Sheet = worksheets["Tabelle 5"];
+            tables = scale9Sheet.ListObjects;
+            table = tables["Generale"];
+            dataRange = table.Range;
+
+            overallDataRows = dataRange.MakeDataTable().Rows.Cast<DataRow>().ToArray();
+            foreach (var overallDataRow in overallDataRows.TakeLast(1))
+            {
+                var newRow = synopticTable.NewRow();
+                newRow["Macrocategoria"] = "Valutazione";
+                newRow["Categoria"] = "Propensione al riconsumo";
+                newRow["Attributo"] = overallDataRow.Field<string?>("Generale");
+                newRow["Valore"] = Convert.ToDouble(overallDataRow.Field<string?>("Media"));
+                synopticTable.Rows.Add(newRow);
+            }
+
+            Marshal.ReleaseComObject(dataRange);
+            dataRange = null;
+            Marshal.ReleaseComObject(table);
+            table = null;
+            Marshal.ReleaseComObject(tables);
+            tables = null;
+            Marshal.ReleaseComObject(scale9Sheet);
+            scale9Sheet = null;
+
+            // Read the "C_Propensione al riconsumo" table from Frequenze 5 to get cumulative rating
+            scale9Sheet = worksheets["Frequenze 5"];
+            tables = scale9Sheet.ListObjects;
+            table = tables["C_Propensione al riconsumo"];
+            dataRange = table.Range;
+
+            overallFrequencyDataRows = dataRange.MakeDataTable().Rows.Cast<DataRow>().SkipLast(1);
+            foreach (var overallFrequencyDataRow in overallFrequencyDataRows)
+            {
+                var newRow = synopticTable.NewRow();
+                newRow["Macrocategoria"] = "Valutazione";
+                newRow["Categoria"] = "Propensione al riconsumo";
+                newRow["Attributo"] = overallFrequencyDataRow.Field<string?>("Propensione al riconsumo");
+                newRow["Valore"] = Convert.ToDouble(overallFrequencyDataRow.Field<string?>("Percentuale"));
+                synopticTable.Rows.Add(newRow);
+            }
+
+            Marshal.ReleaseComObject(dataRange);
+            dataRange = null;
+            Marshal.ReleaseComObject(table);
+            table = null;
+            Marshal.ReleaseComObject(tables);
+            tables = null;
+            Marshal.ReleaseComObject(scale9Sheet);
+            scale9Sheet = null;
+
+            synopticTable.WriteSynopticTableToWorksheet(destinationSheet, "Propensione al riconsumo");
+
+            #endregion
+
+            #region Confronto abituale
+
+            // Create the synoptic table structure
+            synopticTable = new DataTable();
+            synopticTable.Columns.Add("Macrocategoria");
+            synopticTable.Columns.Add("Categoria");
+            synopticTable.Columns.Add("Attributo", typeof(string));
+            synopticTable.Columns.Add("Valore", typeof(double));
+
+            // Read the "Generale" table from Tabelle 5 to get overall rating
+            scale9Sheet = worksheets["Tabelle 5"];
+            tables = scale9Sheet.ListObjects;
+            table = tables["Generale"];
+            dataRange = table.Range;
+
+            overallDataRows = dataRange.MakeDataTable().Rows.Cast<DataRow>().ToArray();
+            foreach (var overallDataRow in overallDataRows.TakeLast(2).Take(1))
+            {
+                var newRow = synopticTable.NewRow();
+                newRow["Macrocategoria"] = "Valutazione";
+                newRow["Categoria"] = "Confronto abituale";
+                newRow["Attributo"] = overallDataRow.Field<string?>("Generale");
+                newRow["Valore"] = Convert.ToDouble(overallDataRow.Field<string?>("Media"));
+                synopticTable.Rows.Add(newRow);
+            }
+
+            Marshal.ReleaseComObject(dataRange);
+            dataRange = null;
+            Marshal.ReleaseComObject(table);
+            table = null;
+            Marshal.ReleaseComObject(tables);
+            tables = null;
+            Marshal.ReleaseComObject(scale9Sheet);
+            scale9Sheet = null;
+
+            // Read the "C_Confronto abituale" table from Frequenze 5 to get cumulative rating
+            scale9Sheet = worksheets["Frequenze 5"];
+            tables = scale9Sheet.ListObjects;
+            table = tables["C_Confronto abituale"];
+            dataRange = table.Range;
+
+            overallFrequencyDataRows = dataRange.MakeDataTable().Rows.Cast<DataRow>().SkipLast(1);
+            foreach (var overallFrequencyDataRow in overallFrequencyDataRows)
+            {
+                var newRow = synopticTable.NewRow();
+                newRow["Macrocategoria"] = "Valutazione";
+                newRow["Categoria"] = "Confronto abituale";
+                newRow["Attributo"] = overallFrequencyDataRow.Field<string?>("Confronto abituale");
+                newRow["Valore"] = Convert.ToDouble(overallFrequencyDataRow.Field<string?>("Percentuale"));
+                synopticTable.Rows.Add(newRow);
+            }
+
+            Marshal.ReleaseComObject(dataRange);
+            dataRange = null;
+            Marshal.ReleaseComObject(table);
+            table = null;
+            Marshal.ReleaseComObject(tables);
+            tables = null;
+            Marshal.ReleaseComObject(scale9Sheet);
+            scale9Sheet = null;
+
+            synopticTable.WriteSynopticTableToWorksheet(destinationSheet, "Confronto abituale");
+
+            #endregion
+        }
+        finally
+        {
+            if (dataRange is not null) Marshal.ReleaseComObject(dataRange);
+            if (table is not null) Marshal.ReleaseComObject(table);
+            if (tables is not null) Marshal.ReleaseComObject(tables);
+            if (scale9Sheet is not null) Marshal.ReleaseComObject(scale9Sheet);
             if (destinationSheet is not null) Marshal.ReleaseComObject(destinationSheet);
             if (lastSheet is not null) Marshal.ReleaseComObject(lastSheet);
             if (worksheets is not null) Marshal.ReleaseComObject(worksheets);

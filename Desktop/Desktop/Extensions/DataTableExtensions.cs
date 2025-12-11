@@ -566,6 +566,127 @@ internal static class DataTableExtensions
             }
         }
 
+        public void WriteSynopticTableToWorksheet(Worksheet worksheet, string tableName)
+        {
+            var rowCount = dataTable.Rows.Count;
+            var colCount = dataTable.Columns.Count;
+
+            // Build a 2D object array for bulk write
+            var values = new object[rowCount, colCount];
+
+            // Write data rows
+            for (var r = 0; r < rowCount; r++)
+            for (var c = 0; c < colCount; c++)
+            {
+                var cellValue = dataTable.Rows[r][c];
+                values[r, c] = cellValue == DBNull.Value ? "" : cellValue;
+            }
+
+            Range? startCell = null;
+            Range? endCell = null;
+            Range? writeRange = null;
+            ListObjects? tables = null;
+            ListObject? table = null;
+            Range? lastTableRange = null;
+            Range? lastTableRows = null;
+            ListColumns? tableColumns = null;
+            ListColumn? tableColumn = null;
+            Range? tableColumnRange = null;
+
+            try
+            {
+                // Find the next available row (after last table + blank row)
+                var startRow = 1;
+                tables = worksheet.ListObjects;
+
+                if (tables.Count > 0)
+                {
+                    // Get the last table's end row
+                    table = tables[tables.Count];
+                    lastTableRange = table.Range;
+                    lastTableRows = lastTableRange.Rows;
+                    startRow = lastTableRange.Row + lastTableRows.Count + 1;
+
+                    Marshal.ReleaseComObject(lastTableRows);
+                    lastTableRows = null;
+                    Marshal.ReleaseComObject(lastTableRange);
+                    lastTableRange = null;
+                    Marshal.ReleaseComObject(table);
+                    table = null;
+                }
+
+                // Determine target range
+                startCell = worksheet.Cells[startRow, 1];
+                endCell = worksheet.Cells[startRow + rowCount - 1, colCount];
+                writeRange = worksheet.Range[startCell, endCell];
+
+                // Write values in one operation
+                writeRange.Value2 = values;
+
+                Marshal.ReleaseComObject(startCell);
+                startCell = null;
+                Marshal.ReleaseComObject(endCell);
+                endCell = null;
+
+                // Create an Excel table from the range
+                table = tables.Add(XlListObjectSourceType.xlSrcRange, writeRange,
+                    XlListObjectHasHeaders: XlYesNoGuess.xlNo);
+                table.Name = tableName;
+                table.ShowHeaders = false;
+
+                // Format the values in the columns
+                tableColumns = table.ListColumns;
+
+                // Third column
+                tableColumn = tableColumns[3];
+                tableColumnRange = tableColumn.DataBodyRange;
+                if (tableColumnRange is not null)
+                {
+                    tableColumnRange.NumberFormat = "@";
+
+                    Marshal.ReleaseComObject(tableColumnRange);
+                    tableColumnRange = null;
+                }
+
+                Marshal.ReleaseComObject(tableColumn);
+                tableColumn = null;
+
+                // Fourth column
+                tableColumn = tableColumns[4];
+                tableColumnRange = tableColumn.DataBodyRange;
+                if (tableColumnRange is not null)
+                {
+                    tableColumnRange.NumberFormat = "0.#";
+
+                    startCell = tableColumnRange.Cells[2, 1];
+                    endCell = tableColumnRange.Cells[4, 1];
+
+                    Marshal.ReleaseComObject(tableColumnRange);
+                    tableColumnRange = null;
+
+                    tableColumnRange = worksheet.Range[startCell, endCell];
+                    tableColumnRange.NumberFormat = "0%";
+                }
+
+                // Final formatting
+                table.TableStyle = "TableStyleLight1";
+                writeRange.Columns.AutoFit();
+            }
+            finally
+            {
+                if (tableColumnRange is not null) Marshal.ReleaseComObject(tableColumnRange);
+                if (tableColumn is not null) Marshal.ReleaseComObject(tableColumn);
+                if (tableColumns is not null) Marshal.ReleaseComObject(tableColumns);
+                if (lastTableRows is not null) Marshal.ReleaseComObject(lastTableRows);
+                if (lastTableRange is not null) Marshal.ReleaseComObject(lastTableRange);
+                if (table is not null) Marshal.ReleaseComObject(table);
+                if (tables is not null) Marshal.ReleaseComObject(tables);
+                if (writeRange is not null) Marshal.ReleaseComObject(writeRange);
+                if (endCell is not null) Marshal.ReleaseComObject(endCell);
+                if (startCell is not null) Marshal.ReleaseComObject(startCell);
+            }
+        }
+
         public DataTable RemoveLastColumns(uint amount)
         {
             if (dataTable.Columns.Count <= amount)
