@@ -84,7 +84,8 @@ internal sealed class ExcelService(INotificationService notificationService) : E
 
     private void CreateSurveyDataFileInternal(ReportPrj project, string projectFolderPath)
     {
-        Worksheet? worksheet = null;
+        Worksheet? evaluationsWorksheet = null;
+        Worksheet? expectationsWorksheet = null;
 
         try
         {
@@ -104,24 +105,33 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             {
                 if (i == 0)
                     // Use the first default sheet
-                    worksheet = (Worksheet)Worksheets[1];
+                    evaluationsWorksheet = (Worksheet)Worksheets[1];
                 else
                     // Add new sheet after the last one
-                    worksheet = (Worksheet)Worksheets.Add();
+                    evaluationsWorksheet = (Worksheet)Worksheets.Add();
 
                 // Rename the worksheet to match the product code
-                worksheet.Name = project.Products.ElementAt(i).Code;
+                evaluationsWorksheet.Name = project.Products.ElementAt(i).Code;
 
-                // Release the worksheet on each iteration
-                Marshal.ReleaseComObject(worksheet);
-                worksheet = null;
+                // Add new sheet after the last one
+                expectationsWorksheet = (Worksheet)Worksheets.Add();
+
+                // Rename the worksheet to match the product code
+                expectationsWorksheet.Name = $"ASP_{project.Products.ElementAt(i).Code}";
+
+                // Release the resources on each iteration
+                Marshal.ReleaseComObject(evaluationsWorksheet);
+                evaluationsWorksheet = null;
+                Marshal.ReleaseComObject(expectationsWorksheet);
+                expectationsWorksheet = null;
             }
 
             Workbook.SaveAs(excelFilePath);
         }
         finally
         {
-            if (worksheet is not null) Marshal.ReleaseComObject(worksheet);
+            if (evaluationsWorksheet is not null) Marshal.ReleaseComObject(evaluationsWorksheet);
+            if (expectationsWorksheet is not null) Marshal.ReleaseComObject(expectationsWorksheet);
         }
     }
 
@@ -147,7 +157,8 @@ internal sealed class ExcelService(INotificationService notificationService) : E
         Sheets? classesSheets = null;
         Sheets? dataSheets = null;
         Worksheet? classesWorksheet = null;
-        Worksheet? dataWorksheet = null;
+        Worksheet? evaluationsWorksheet = null;
+        Worksheet? expectationsWorksheet = null;
         ListObjects? tables = null;
         ListObject? table = null;
         Range? responseTableRange = null;
@@ -173,81 +184,92 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             // For each worksheet in the input file, find the corresponding worksheet in the files and populate it
             foreach (Worksheet sheet in Worksheets)
             {
-                // Find the corresponding worksheets in the app's files.
-                // If there are none, create the sheets.
-                try
+                if (!sheet.Name.Contains("ASP", StringComparison.CurrentCultureIgnoreCase))
                 {
-                    classesWorksheet = classesSheets.Item[sheet.Name];
-
-                    // Clean the previous table if there is any
-                    tables = classesWorksheet.ListObjects;
-
-                    if (tables.Count > 0)
+                    // Find the corresponding worksheets in the app's files.
+                    // If there are none, create the sheets.
+                    try
                     {
-                        table = tables["Classi"];
-                        table.Delete();
+                        classesWorksheet = classesSheets.Item[sheet.Name];
+
+                        // Clean the previous table if there is any
+                        tables = classesWorksheet.ListObjects;
+
+                        if (tables.Count > 0)
+                        {
+                            table = tables["Classi"];
+                            table.Delete();
+                        }
+
+                        if (table is not null) Marshal.ReleaseComObject(table);
+                        table = null;
+                        Marshal.ReleaseComObject(tables);
+                        tables = null;
                     }
-                }
-                catch
-                {
-                    classesWorksheet = classesSheets.Add();
-                    classesWorksheet.Name = sheet.Name;
-                }
-
-                try
-                {
-                    dataWorksheet = dataSheets.Item[sheet.Name];
-
-                    // Clean the previous table if there is any
-                    tables = dataWorksheet.ListObjects;
-
-                    if (tables.Count > 0)
+                    catch
                     {
-                        table = tables["Dati"];
-                        table.Delete();
+                        classesWorksheet = classesSheets.Add();
+                        classesWorksheet.Name = sheet.Name;
                     }
+
+                    try
+                    {
+                        evaluationsWorksheet = dataSheets.Item[sheet.Name];
+
+                        // Clean the previous table if there is any
+                        tables = evaluationsWorksheet.ListObjects;
+
+                        if (tables.Count > 0)
+                        {
+                            table = tables["Dati"];
+                            table.Delete();
+                        }
+                    }
+                    catch
+                    {
+                        evaluationsWorksheet = dataSheets.Add();
+                        evaluationsWorksheet.Name = sheet.Name;
+                    }
+
+                    responseTableRange = sheet.UsedRange;
+
+                    var originalDataTable = responseTableRange.MakeDataTable();
+
+                    // Step 1: Make the questions column
+                    var newClassesDataTable = AddQuestionsColumn(originalDataTable);
+
+                    // Step 2: Add the field name column
+                    newClassesDataTable = AddFieldNameColumn(newClassesDataTable);
+
+                    // Step 3: Add the category column
+                    newClassesDataTable = AddCategoryColumn(newClassesDataTable);
+
+                    // Step 4: Write the new datatable to the classes worksheet
+                    newClassesDataTable.WriteToWorksheet(classesWorksheet, "Classi");
+
+                    // Step 5: Keep only the question data from the original datatable
+                    var newDataDataTable = KeepDataColumns(originalDataTable);
+
+                    // Step 6: Write the new datatable to the data worksheet
+                    newDataDataTable.WriteToWorksheet(evaluationsWorksheet, "Dati");
                 }
-                catch
-                {
-                    dataWorksheet = dataSheets.Add();
-                    dataWorksheet.Name = sheet.Name;
-                }
-
-                responseTableRange = sheet.UsedRange;
-
-                var originalDataTable = responseTableRange.MakeDataTable();
-
-                // Step 1: Make the questions column
-                var newClassesDataTable = AddQuestionsColumn(originalDataTable);
-
-                // Step 2: Add the field name column
-                newClassesDataTable = AddFieldNameColumn(newClassesDataTable);
-
-                // Step 3: Add the category column
-                newClassesDataTable = AddCategoryColumn(newClassesDataTable);
-
-                // Step 4: Write the new datatable to the classes worksheet
-                newClassesDataTable.WriteToWorksheet(classesWorksheet, "Classi");
-
-                // Step 5: Keep only the question data from the original datatable
-                var newDataDataTable = KeepDataColumns(originalDataTable);
-
-                // Step 6: Write the new datatable to the data worksheet
-                newDataDataTable.WriteToWorksheet(dataWorksheet, "Dati");
 
                 // Release the resources on each iteration
-                Marshal.ReleaseComObject(responseTableRange);
+                if (responseTableRange is not null) Marshal.ReleaseComObject(responseTableRange);
                 responseTableRange = null;
                 if (table is not null) Marshal.ReleaseComObject(table);
                 table = null;
                 if (tables is not null) Marshal.ReleaseComObject(tables);
                 tables = null;
-                Marshal.ReleaseComObject(dataWorksheet);
-                dataWorksheet = null;
-                Marshal.ReleaseComObject(classesWorksheet);
+                if (evaluationsWorksheet is not null) Marshal.ReleaseComObject(evaluationsWorksheet);
+                evaluationsWorksheet = null;
+                if (classesWorksheet is not null) Marshal.ReleaseComObject(classesWorksheet);
                 classesWorksheet = null;
                 Marshal.ReleaseComObject(sheet);
             }
+
+            // For the expectations sheet in the input file, partition the data and write it in the right sheet
+            // TODO
 
             classesWorkbook.Save();
             dataWorkbook.Save();
@@ -270,7 +292,8 @@ internal sealed class ExcelService(INotificationService notificationService) : E
 
             if (tables is not null) Marshal.ReleaseComObject(tables);
 
-            if (dataWorksheet is not null) Marshal.ReleaseComObject(dataWorksheet);
+            if (expectationsWorksheet is not null) Marshal.ReleaseComObject(expectationsWorksheet);
+            if (evaluationsWorksheet is not null) Marshal.ReleaseComObject(evaluationsWorksheet);
             if (classesWorksheet is not null) Marshal.ReleaseComObject(classesWorksheet);
 
             if (dataSheets is not null) Marshal.ReleaseComObject(dataSheets);
@@ -616,7 +639,6 @@ internal sealed class ExcelService(INotificationService notificationService) : E
     private void ProcessExcelFilesInternal(Guid notificationId, ICollection<Product> products, string projectFolderPath,
         string projectCode)
     {
-        // Filter the products to create files only for those that don't have one yet
         var productTotalCount = products.Count;
         var productCurrentCount = 0;
 
@@ -629,7 +651,8 @@ internal sealed class ExcelService(INotificationService notificationService) : E
         Sheets? classesSheets = null;
         Sheets? dataSheets = null;
         Worksheet? classesWorksheet = null;
-        Worksheet? dataWorksheet = null;
+        Worksheet? evaluationsWorksheet = null;
+        Worksheet? expectationsWorksheet = null;
 
         try
         {
@@ -656,7 +679,8 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                 classesSheets = classesWorkbook.Sheets;
                 dataSheets = dataWorkbook.Sheets;
                 classesWorksheet = classesSheets.Item[product.Code];
-                dataWorksheet = dataSheets.Item[product.Code];
+                evaluationsWorksheet = dataSheets.Item[product.Code];
+                expectationsWorksheet = dataSheets.Item[$"ASP_{product.Code}"];
 
                 // Copy the sheets and paste them in the product file and rename
                 classesWorksheet.Copy(After: worksheet);
@@ -665,11 +689,17 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                 classesWorksheet = worksheets[worksheets.Count];
                 classesWorksheet.Name = "Classi";
 
-                dataWorksheet.Copy(After: classesWorksheet);
-                Marshal.ReleaseComObject(dataWorksheet);
-                dataWorksheet = null;
-                dataWorksheet = worksheets[worksheets.Count];
-                dataWorksheet.Name = "Dati";
+                evaluationsWorksheet.Copy(After: classesWorksheet);
+                Marshal.ReleaseComObject(evaluationsWorksheet);
+                evaluationsWorksheet = null;
+                evaluationsWorksheet = worksheets[worksheets.Count];
+                evaluationsWorksheet.Name = "Dati";
+
+                expectationsWorksheet.Copy(After: evaluationsWorksheet);
+                Marshal.ReleaseComObject(expectationsWorksheet);
+                expectationsWorksheet = null;
+                expectationsWorksheet = worksheets[worksheets.Count];
+                expectationsWorksheet.Name = "Aspettative";
 
                 // Delete the first empty sheet in the product file
                 worksheet.Delete();
@@ -679,8 +709,10 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                 workbook.SaveAs(excelFilePath);
 
                 // Release the resources on each iteration
-                Marshal.ReleaseComObject(dataWorksheet);
-                dataWorksheet = null;
+                Marshal.ReleaseComObject(expectationsWorksheet);
+                expectationsWorksheet = null;
+                Marshal.ReleaseComObject(evaluationsWorksheet);
+                evaluationsWorksheet = null;
                 Marshal.ReleaseComObject(classesWorksheet);
                 classesWorksheet = null;
                 Marshal.ReleaseComObject(dataSheets);
@@ -717,7 +749,8 @@ internal sealed class ExcelService(INotificationService notificationService) : E
         }
         finally // Clean up the resources not managed by the base class
         {
-            if (dataWorksheet is not null) Marshal.ReleaseComObject(dataWorksheet);
+            if (expectationsWorksheet is not null) Marshal.ReleaseComObject(expectationsWorksheet);
+            if (evaluationsWorksheet is not null) Marshal.ReleaseComObject(evaluationsWorksheet);
             if (classesWorksheet is not null) Marshal.ReleaseComObject(classesWorksheet);
 
             if (dataSheets is not null) Marshal.ReleaseComObject(dataSheets);
