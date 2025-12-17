@@ -160,7 +160,6 @@ internal sealed class ExcelService(INotificationService notificationService) : E
         Worksheet? evaluationsWorksheet = null;
         Worksheet? expectationsWorksheet = null;
         ListObjects? tables = null;
-        ListObject? table = null;
         Range? responseTableRange = null;
 
         try
@@ -195,14 +194,12 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                         // Clean the previous table if there is any
                         tables = classesWorksheet.ListObjects;
 
-                        if (tables.Count > 0)
+                        foreach (ListObject table in tables)
                         {
-                            table = tables["Classi"];
                             table.Delete();
+                            Marshal.ReleaseComObject(table);
                         }
 
-                        if (table is not null) Marshal.ReleaseComObject(table);
-                        table = null;
                         Marshal.ReleaseComObject(tables);
                         tables = null;
                     }
@@ -219,10 +216,10 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                         // Clean the previous table if there is any
                         tables = evaluationsWorksheet.ListObjects;
 
-                        if (tables.Count > 0)
+                        foreach (ListObject table in tables)
                         {
-                            table = tables["Dati"];
                             table.Delete();
+                            Marshal.ReleaseComObject(table);
                         }
                     }
                     catch
@@ -257,8 +254,6 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                 // Release the resources on each iteration
                 if (responseTableRange is not null) Marshal.ReleaseComObject(responseTableRange);
                 responseTableRange = null;
-                if (table is not null) Marshal.ReleaseComObject(table);
-                table = null;
                 if (tables is not null) Marshal.ReleaseComObject(tables);
                 tables = null;
                 if (evaluationsWorksheet is not null) Marshal.ReleaseComObject(evaluationsWorksheet);
@@ -269,7 +264,56 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             }
 
             // For the expectations sheet in the input file, partition the data and write it in the right sheet
-            // TODO
+            expectationsWorksheet = Worksheets["ASP"];
+
+            responseTableRange = expectationsWorksheet.UsedRange;
+
+            var expectationsDataTable = responseTableRange.MakeDataTable();
+
+            Marshal.ReleaseComObject(expectationsWorksheet);
+            expectationsWorksheet = null;
+            Marshal.ReleaseComObject(responseTableRange);
+            responseTableRange = null;
+
+            var expectationsByCode = from dataRow in expectationsDataTable.AsEnumerable().AsQueryable()
+                group dataRow by dataRow.Field<string?>("sigla")
+                into codeGroup
+                select codeGroup;
+
+            foreach (var group in expectationsByCode)
+            {
+                // Find the corresponding worksheet in the app's files.
+                // If there is none, create the sheet.
+                try
+                {
+                    expectationsWorksheet = dataSheets[group.Key];
+
+                    // Clean the previous table if there is any
+                    tables = expectationsWorksheet.ListObjects;
+
+                    foreach (ListObject table in tables)
+                    {
+                        table.Delete();
+                        Marshal.ReleaseComObject(table);
+                    }
+                }
+                catch
+                {
+                    expectationsWorksheet = dataSheets.Add();
+                    expectationsWorksheet.Name = group.Key;
+                }
+
+                var expectationsTable = group.CopyToDataTable();
+                expectationsTable.Columns.Remove("NumQuestionario");
+                expectationsTable.Columns.Remove("sigla");
+                expectationsTable.WriteToWorksheet(expectationsWorksheet, "Aspettative");
+
+                // Release the resources on each iteration
+                if (tables is not null) Marshal.ReleaseComObject(tables);
+                tables = null;
+                Marshal.ReleaseComObject(expectationsWorksheet);
+                expectationsWorksheet = null;
+            }
 
             classesWorkbook.Save();
             dataWorkbook.Save();
@@ -287,8 +331,6 @@ internal sealed class ExcelService(INotificationService notificationService) : E
         finally // Clean up the resources not managed by the base class
         {
             if (responseTableRange is not null) Marshal.ReleaseComObject(responseTableRange);
-
-            if (table is not null) Marshal.ReleaseComObject(table);
 
             if (tables is not null) Marshal.ReleaseComObject(tables);
 
@@ -406,7 +448,6 @@ internal sealed class ExcelService(INotificationService notificationService) : E
         Worksheet? classesWorksheet = null;
         Worksheet? dataWorksheet = null;
         ListObjects? tables = null;
-        ListObject? table = null;
         Range? tableRange = null;
 
         try
@@ -441,10 +482,10 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                         // Clean the previous table if there is any
                         tables = dataWorksheet.ListObjects;
 
-                        if (tables.Count > 0)
+                        foreach (ListObject table in tables)
                         {
-                            table = tables["Dati"];
                             table.Delete();
+                            Marshal.ReleaseComObject(table);
                         }
                     }
                     catch
@@ -474,10 +515,10 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                         // Clean the previous table if there is any
                         tables = classesWorksheet.ListObjects;
 
-                        if (tables.Count > 0)
+                        foreach (ListObject table in tables)
                         {
-                            table = tables["Classi"];
                             table.Delete();
+                            Marshal.ReleaseComObject(table);
                         }
                     }
                     catch
@@ -506,8 +547,6 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                 // Release the resources on each iteration
                 if (tableRange is not null) Marshal.ReleaseComObject(tableRange);
                 tableRange = null;
-                if (table is not null) Marshal.ReleaseComObject(table);
-                table = null;
                 if (tables is not null) Marshal.ReleaseComObject(tables);
                 tables = null;
                 if (dataWorksheet is not null) Marshal.ReleaseComObject(dataWorksheet);
@@ -533,8 +572,6 @@ internal sealed class ExcelService(INotificationService notificationService) : E
         finally // Clean up the resources not managed by the base class
         {
             if (tableRange is not null) Marshal.ReleaseComObject(tableRange);
-
-            if (table is not null) Marshal.ReleaseComObject(table);
 
             if (tables is not null) Marshal.ReleaseComObject(tables);
 
@@ -1128,7 +1165,6 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                                (TableType.Scale9 == scale && value is < 1 or > 9);
                     });
 
-
                 var results = from dataRow in dataDataTable.AsEnumerable().AsQueryable()
                     orderby Convert.ToUInt32(dataRow.Field<string?>(qAndL.Question.Trim()))
                     group dataRow by Convert.ToUInt32(dataRow.Field<string?>(qAndL.Question.Trim()))
@@ -1330,9 +1366,8 @@ internal sealed class ExcelService(INotificationService notificationService) : E
         Sheets? worksheets = null;
         Worksheet? lastSheet = null;
         Worksheet? destinationSheet = null;
-        Worksheet? scale9Sheet = null;
+        Worksheet? sourceSheet = null;
         ListObjects? tables = null;
-        ListObject? table = null;
         Range? dataRange = null;
 
         try
@@ -1372,12 +1407,20 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             synopticTable.Columns.Add("Valore", typeof(double));
 
             // Read the "Generale" table from Tabelle 9 to get overall rating
-            scale9Sheet = worksheets["Tabelle 9"];
-            tables = scale9Sheet.ListObjects;
-            table = tables["Generale"];
-            dataRange = table.Range;
+            sourceSheet = worksheets["Tabelle 9"];
+            tables = sourceSheet.ListObjects;
 
-            var overallDataRows = dataRange.MakeDataTable().Rows.Cast<DataRow>().ToArray();
+            foreach (ListObject table in tables)
+            {
+                if (table.Name.Contains("Generale", StringComparison.CurrentCultureIgnoreCase)) dataRange = table.Range;
+
+                Marshal.ReleaseComObject(table);
+            }
+
+            var overallDataRows = dataRange?.MakeDataTable().Rows.Cast<DataRow>().ToArray();
+
+            if (overallDataRows is null) return;
+
             foreach (var overallDataRow in overallDataRows.Take(1))
             {
                 var newRow = synopticTable.NewRow();
@@ -1388,22 +1431,29 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                 synopticTable.Rows.Add(newRow);
             }
 
-            Marshal.ReleaseComObject(dataRange);
+            if (dataRange is not null) Marshal.ReleaseComObject(dataRange);
             dataRange = null;
-            Marshal.ReleaseComObject(table);
-            table = null;
             Marshal.ReleaseComObject(tables);
             tables = null;
-            Marshal.ReleaseComObject(scale9Sheet);
-            scale9Sheet = null;
+            Marshal.ReleaseComObject(sourceSheet);
+            sourceSheet = null;
 
             // Read the "C_Gradimento complessivo" table from Frequenze 9 to get cumulative rating
-            scale9Sheet = worksheets["Frequenze 9"];
-            tables = scale9Sheet.ListObjects;
-            table = tables["C_Gradimento complessivo"];
-            dataRange = table.Range;
+            sourceSheet = worksheets["Frequenze 9"];
+            tables = sourceSheet.ListObjects;
 
-            var overallFrequencyDataRows = dataRange.MakeDataTable().Rows.Cast<DataRow>().SkipLast(1);
+            foreach (ListObject table in tables)
+            {
+                if (table.Name.Contains("C_Gradimento complessivo", StringComparison.CurrentCultureIgnoreCase))
+                    dataRange = table.Range;
+
+                Marshal.ReleaseComObject(table);
+            }
+
+            var overallFrequencyDataRows = dataRange?.MakeDataTable().Rows.Cast<DataRow>().SkipLast(1);
+
+            if (overallFrequencyDataRows is null) return;
+
             foreach (var overallFrequencyDataRow in overallFrequencyDataRows)
             {
                 var newRow = synopticTable.NewRow();
@@ -1414,14 +1464,12 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                 synopticTable.Rows.Add(newRow);
             }
 
-            Marshal.ReleaseComObject(dataRange);
+            if (dataRange is not null) Marshal.ReleaseComObject(dataRange);
             dataRange = null;
-            Marshal.ReleaseComObject(table);
-            table = null;
             Marshal.ReleaseComObject(tables);
             tables = null;
-            Marshal.ReleaseComObject(scale9Sheet);
-            scale9Sheet = null;
+            Marshal.ReleaseComObject(sourceSheet);
+            sourceSheet = null;
 
             foreach (var overallDataRow in overallDataRows.Skip(1))
             {
@@ -1447,12 +1495,20 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             synopticTable.Columns.Add("Valore", typeof(double));
 
             // Read the "Generale" table from Tabelle 5 to get overall rating
-            scale9Sheet = worksheets["Tabelle 5"];
-            tables = scale9Sheet.ListObjects;
-            table = tables["Generale"];
-            dataRange = table.Range;
+            sourceSheet = worksheets["Tabelle 5"];
+            tables = sourceSheet.ListObjects;
 
-            overallDataRows = dataRange.MakeDataTable().Rows.Cast<DataRow>().ToArray();
+            foreach (ListObject table in tables)
+            {
+                if (table.Name.Contains("Generale", StringComparison.CurrentCultureIgnoreCase)) dataRange = table.Range;
+
+                Marshal.ReleaseComObject(table);
+            }
+
+            overallDataRows = dataRange?.MakeDataTable().Rows.Cast<DataRow>().ToArray();
+
+            if (overallDataRows is null) return;
+
             foreach (var overallDataRow in overallDataRows.TakeLast(1))
             {
                 var newRow = synopticTable.NewRow();
@@ -1463,22 +1519,29 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                 synopticTable.Rows.Add(newRow);
             }
 
-            Marshal.ReleaseComObject(dataRange);
+            if (dataRange is not null) Marshal.ReleaseComObject(dataRange);
             dataRange = null;
-            Marshal.ReleaseComObject(table);
-            table = null;
             Marshal.ReleaseComObject(tables);
             tables = null;
-            Marshal.ReleaseComObject(scale9Sheet);
-            scale9Sheet = null;
+            Marshal.ReleaseComObject(sourceSheet);
+            sourceSheet = null;
 
             // Read the "C_Propensione al riconsumo" table from Frequenze 5 to get cumulative rating
-            scale9Sheet = worksheets["Frequenze 5"];
-            tables = scale9Sheet.ListObjects;
-            table = tables["C_Propensione al riconsumo"];
-            dataRange = table.Range;
+            sourceSheet = worksheets["Frequenze 5"];
+            tables = sourceSheet.ListObjects;
 
-            overallFrequencyDataRows = dataRange.MakeDataTable().Rows.Cast<DataRow>().SkipLast(1);
+            foreach (ListObject table in tables)
+            {
+                if (table.Name.Contains("C_Propensione al riconsumo", StringComparison.CurrentCultureIgnoreCase))
+                    dataRange = table.Range;
+
+                Marshal.ReleaseComObject(table);
+            }
+
+            overallFrequencyDataRows = dataRange?.MakeDataTable().Rows.Cast<DataRow>().SkipLast(1);
+
+            if (overallFrequencyDataRows is null) return;
+
             foreach (var overallFrequencyDataRow in overallFrequencyDataRows)
             {
                 var newRow = synopticTable.NewRow();
@@ -1489,14 +1552,12 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                 synopticTable.Rows.Add(newRow);
             }
 
-            Marshal.ReleaseComObject(dataRange);
+            if (dataRange is not null) Marshal.ReleaseComObject(dataRange);
             dataRange = null;
-            Marshal.ReleaseComObject(table);
-            table = null;
             Marshal.ReleaseComObject(tables);
             tables = null;
-            Marshal.ReleaseComObject(scale9Sheet);
-            scale9Sheet = null;
+            Marshal.ReleaseComObject(sourceSheet);
+            sourceSheet = null;
 
             synopticTable.WriteSynopticTableToWorksheet(destinationSheet, "Propensione al riconsumo");
 
@@ -1512,12 +1573,20 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             synopticTable.Columns.Add("Valore", typeof(double));
 
             // Read the "Generale" table from Tabelle 5 to get overall rating
-            scale9Sheet = worksheets["Tabelle 5"];
-            tables = scale9Sheet.ListObjects;
-            table = tables["Generale"];
-            dataRange = table.Range;
+            sourceSheet = worksheets["Tabelle 5"];
+            tables = sourceSheet.ListObjects;
 
-            overallDataRows = dataRange.MakeDataTable().Rows.Cast<DataRow>().ToArray();
+            foreach (ListObject table in tables)
+            {
+                if (table.Name.Contains("Generale", StringComparison.CurrentCultureIgnoreCase)) dataRange = table.Range;
+
+                Marshal.ReleaseComObject(table);
+            }
+
+            overallDataRows = dataRange?.MakeDataTable().Rows.Cast<DataRow>().ToArray();
+
+            if (overallDataRows is null) return;
+
             foreach (var overallDataRow in overallDataRows.TakeLast(2).Take(1))
             {
                 var newRow = synopticTable.NewRow();
@@ -1528,22 +1597,29 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                 synopticTable.Rows.Add(newRow);
             }
 
-            Marshal.ReleaseComObject(dataRange);
+            if (dataRange is not null) Marshal.ReleaseComObject(dataRange);
             dataRange = null;
-            Marshal.ReleaseComObject(table);
-            table = null;
             Marshal.ReleaseComObject(tables);
             tables = null;
-            Marshal.ReleaseComObject(scale9Sheet);
-            scale9Sheet = null;
+            Marshal.ReleaseComObject(sourceSheet);
+            sourceSheet = null;
 
             // Read the "C_Confronto abituale" table from Frequenze 5 to get cumulative rating
-            scale9Sheet = worksheets["Frequenze 5"];
-            tables = scale9Sheet.ListObjects;
-            table = tables["C_Confronto abituale"];
-            dataRange = table.Range;
+            sourceSheet = worksheets["Frequenze 5"];
+            tables = sourceSheet.ListObjects;
 
-            overallFrequencyDataRows = dataRange.MakeDataTable().Rows.Cast<DataRow>().SkipLast(1);
+            foreach (ListObject table in tables)
+            {
+                if (table.Name.Contains("C_Confronto abituale", StringComparison.CurrentCultureIgnoreCase))
+                    dataRange = table.Range;
+
+                Marshal.ReleaseComObject(table);
+            }
+
+            overallFrequencyDataRows = dataRange?.MakeDataTable().Rows.Cast<DataRow>().SkipLast(1);
+
+            if (overallFrequencyDataRows is null) return;
+
             foreach (var overallFrequencyDataRow in overallFrequencyDataRows)
             {
                 var newRow = synopticTable.NewRow();
@@ -1554,15 +1630,6 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                 synopticTable.Rows.Add(newRow);
             }
 
-            Marshal.ReleaseComObject(dataRange);
-            dataRange = null;
-            Marshal.ReleaseComObject(table);
-            table = null;
-            Marshal.ReleaseComObject(tables);
-            tables = null;
-            Marshal.ReleaseComObject(scale9Sheet);
-            scale9Sheet = null;
-
             synopticTable.WriteSynopticTableToWorksheet(destinationSheet, "Confronto abituale");
 
             #endregion
@@ -1570,9 +1637,8 @@ internal sealed class ExcelService(INotificationService notificationService) : E
         finally
         {
             if (dataRange is not null) Marshal.ReleaseComObject(dataRange);
-            if (table is not null) Marshal.ReleaseComObject(table);
             if (tables is not null) Marshal.ReleaseComObject(tables);
-            if (scale9Sheet is not null) Marshal.ReleaseComObject(scale9Sheet);
+            if (sourceSheet is not null) Marshal.ReleaseComObject(sourceSheet);
             if (destinationSheet is not null) Marshal.ReleaseComObject(destinationSheet);
             if (lastSheet is not null) Marshal.ReleaseComObject(lastSheet);
             if (worksheets is not null) Marshal.ReleaseComObject(worksheets);
