@@ -194,7 +194,7 @@ internal sealed partial class MainViewModel(
                                 throw new FileNotFoundException("The project folder path could not be reached.");
 
         var productsToProcess = ReportProject.Products.Where(product =>
-                !File.Exists(Path.Combine(Path.Combine(projectFolderPath, "Elaborazioni"), $"{product.Code}.xlsx")))
+                !File.Exists(Path.Combine(Path.Combine(projectFolderPath, "Elaborazioni"), $"{product.DisplayName.Trim()}.xlsx")))
             .ToList();
 
         var notificationId =

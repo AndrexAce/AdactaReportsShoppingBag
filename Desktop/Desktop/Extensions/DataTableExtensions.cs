@@ -687,43 +687,6 @@ internal static class DataTableExtensions
             }
         }
 
-        public DataTable RemoveLastColumns(uint amount)
-        {
-            if (dataTable.Columns.Count <= amount)
-                return dataTable;
-
-            var result = dataTable.Clone();
-            var columnsToRemove = dataTable.Columns.Cast<DataColumn>()
-                .Skip(dataTable.Columns.Count - (int)amount)
-                .ToList();
-
-            // Remove unwanted columns
-            foreach (var col in columnsToRemove)
-                result.Columns.Remove(col.ColumnName);
-
-            // Add rows to result
-            foreach (DataRow row in dataTable.Rows)
-                result.ImportRow(row);
-
-            return result;
-        }
-
-        public DataTable RemoveLastRows(uint amount)
-        {
-            if (dataTable.Rows.Count <= amount)
-                return dataTable;
-
-            var result = dataTable.Clone();
-            var rowsToKeep = dataTable.Rows.Cast<DataRow>()
-                .Take(dataTable.Rows.Count - (int)amount);
-
-            // Add rows to result
-            foreach (var row in rowsToKeep)
-                result.ImportRow(row);
-
-            return result;
-        }
-
         public DataTable Transpose()
         {
             var transposed = new DataTable();

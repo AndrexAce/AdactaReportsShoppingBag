@@ -121,19 +121,19 @@ type Product() =
     [<XmlIgnore>]
     [<JsonIgnore>]
     member this.ProductName =
-        let members = this.Name.Split([| '-' |], System.StringSplitOptions.RemoveEmptyEntries)
+        let members = this.Name.Split([| '_' |], System.StringSplitOptions.RemoveEmptyEntries)
         if members.Length >= 1 then members[0] else ""
 
     [<XmlIgnore>]
     [<JsonIgnore>]
     member this.Brand =
-        let members = this.Name.Split([| '-' |], System.StringSplitOptions.RemoveEmptyEntries)
+        let members = this.Name.Split([| '_' |], System.StringSplitOptions.RemoveEmptyEntries)
         if members.Length >= 2 then members[1] else ""
 
     [<XmlIgnore>]
     [<JsonIgnore>]
     member this.SubBrand =
-        let members = this.Name.Split([| '-' |], System.StringSplitOptions.RemoveEmptyEntries)
+        let members = this.Name.Split([| '_' |], System.StringSplitOptions.RemoveEmptyEntries)
         if members.Length >= 3 then members[2] else ""
 
     [<XmlIgnore>]
