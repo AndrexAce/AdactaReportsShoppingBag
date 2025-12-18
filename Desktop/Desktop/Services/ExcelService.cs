@@ -1335,7 +1335,8 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                 synopticTable.Rows.Add(newRow);
             }
 
-            synopticTable.WriteSynopticTableToWorksheet(destinationSheet, "Gradimento complessivo", SynopticTableType.GradimentoComplessivo);
+            synopticTable.WriteSynopticTableToWorksheet(destinationSheet, "Gradimento complessivo",
+                SynopticTableType.GradimentoComplessivo);
 
             #endregion
 
@@ -1413,7 +1414,8 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             Marshal.ReleaseComObject(sourceSheet);
             sourceSheet = null;
 
-            synopticTable.WriteSynopticTableToWorksheet(destinationSheet, "Propensione al riconsumo", SynopticTableType.PropensioneAlRiconsumo);
+            synopticTable.WriteSynopticTableToWorksheet(destinationSheet, "Propensione al riconsumo",
+                SynopticTableType.PropensioneAlRiconsumo);
 
             #endregion
 
@@ -1484,7 +1486,8 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                 synopticTable.Rows.Add(newRow);
             }
 
-            synopticTable.WriteSynopticTableToWorksheet(destinationSheet, "Confronto abituale", SynopticTableType.ConfrontoProdottoAbituale);
+            synopticTable.WriteSynopticTableToWorksheet(destinationSheet, "Confronto abituale",
+                SynopticTableType.ConfrontoProdottoAbituale);
 
             #endregion
         }

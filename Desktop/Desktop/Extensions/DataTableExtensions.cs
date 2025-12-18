@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Data;
-using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.Office.Interop.Excel;
 using static AdactaInternational.AdactaReportsShoppingBag.Desktop.Services.ExcelService;
@@ -657,13 +655,13 @@ internal static class DataTableExtensions
                 tableColumn = tableColumns[4];
                 tableColumnRange = tableColumn.DataBodyRange;
                 if (tableColumnRange is not null)
-                {
                     switch (synopticTableType)
                     {
                         case SynopticTableType.Confezione:
                             tableColumnRange.NumberFormat = "0.0";
                             break;
-                        case SynopticTableType.GradimentoComplessivo or SynopticTableType.PropensioneAlRiconsumo or SynopticTableType.ConfrontoProdottoAbituale:
+                        case SynopticTableType.GradimentoComplessivo or SynopticTableType.PropensioneAlRiconsumo
+                            or SynopticTableType.ConfrontoProdottoAbituale:
                             tableColumnRange.NumberFormat = "0.0";
 
                             startCell = tableColumnRange.Cells[2, 1];
@@ -678,7 +676,6 @@ internal static class DataTableExtensions
                         default:
                             throw new ArgumentOutOfRangeException(nameof(synopticTableType), synopticTableType, null);
                     }
-                }
 
                 // Final formatting
                 table.TableStyle = "TableStyleLight1";
