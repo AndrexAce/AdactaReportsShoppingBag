@@ -63,12 +63,6 @@
                         <KeyboardAccelerator Key="P" Modifiers="Control" />
                     </MenuFlyoutItem.KeyboardAccelerators>
                 </MenuFlyoutItem>
-                <MenuFlyoutItem Text="Importa input singolo (ActiveViewing)" Icon="Import"
-                                Command="{x:Bind ViewModel.ImportActiveViewingFileCommand}">
-                    <MenuFlyoutItem.KeyboardAccelerators>
-                        <KeyboardAccelerator Key="V" Modifiers="Control" />
-                    </MenuFlyoutItem.KeyboardAccelerators>
-                </MenuFlyoutItem>
                 <MenuFlyoutItem Text="Apri file classi domande" Icon="Document"
                                 Command="{x:Bind ViewModel.OpenClassesFileCommand}">
                     <MenuFlyoutItem.KeyboardAccelerators>

@@ -189,7 +189,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                     // If there are none, create the sheets.
                     try
                     {
-                        classesWorksheet = classesSheets.Item[sheet.Name];
+                        classesWorksheet = classesSheets[sheet.Name];
 
                         // Clean the previous table if there is any
                         tables = classesWorksheet.ListObjects;
@@ -211,7 +211,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
 
                     try
                     {
-                        evaluationsWorksheet = dataSheets.Item[sheet.Name];
+                        evaluationsWorksheet = dataSheets[sheet.Name];
 
                         // Clean the previous table if there is any
                         tables = evaluationsWorksheet.ListObjects;
@@ -419,244 +419,6 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                 newRow[column.ColumnName] = row[column.ColumnName];
             newDataTable.Rows.Add(newRow);
         }
-
-        return newDataTable;
-    }
-
-    #endregion
-
-    #region ActiveViewing file import
-
-    public async Task ImportActiveViewingFileAsync(IStorageFile storageFile, Guid notificationId, string projectCode,
-        string projectFolderPath, string productCode)
-    {
-        await Task.Run(() =>
-            ExecuteWithCleanup(() =>
-                ImportActiveViewingFileInternal(storageFile, notificationId, projectCode, projectFolderPath,
-                    productCode)));
-    }
-
-    private void ImportActiveViewingFileInternal(IStorageFile storageFile, Guid notificationId,
-        string projectCode,
-        string projectFolderPath, string productCode)
-    {
-        // Track the COM classes to be released
-        Workbook? classesWorkbook = null;
-        Workbook? dataWorkbook = null;
-        Sheets? classesSheets = null;
-        Sheets? dataSheets = null;
-        Worksheet? classesWorksheet = null;
-        Worksheet? dataWorksheet = null;
-        ListObjects? tables = null;
-        Range? tableRange = null;
-
-        try
-        {
-            // Create a silent Excel application
-            ExcelApp = new Application
-            {
-                Visible = false,
-                DisplayAlerts = false
-            };
-            Workbooks = ExcelApp.Workbooks;
-            Workbook = Workbooks.Open(storageFile.Path);
-            Worksheets = Workbook.Sheets;
-
-            // Open the survey classes and survey data file
-            classesWorkbook = Workbooks.Open(Path.Combine(projectFolderPath, $"Classi{projectCode}.xlsx"));
-            dataWorkbook = Workbooks.Open(Path.Combine(projectFolderPath, $"Dati{projectCode}.xlsx"));
-            classesSheets = classesWorkbook.Sheets;
-            dataSheets = dataWorkbook.Sheets;
-
-            // Find ActiveViewing's classes file and import it
-            foreach (Worksheet sheet in Worksheets)
-            {
-                if (string.Compare(sheet.Name, "Input", StringComparison.CurrentCultureIgnoreCase) == 0)
-                {
-                    // Find the corresponding worksheet in the app's files.
-                    // If there is none, create the sheet.
-                    try
-                    {
-                        dataWorksheet = dataSheets.Item[productCode];
-
-                        // Clean the previous table if there is any
-                        tables = dataWorksheet.ListObjects;
-
-                        foreach (ListObject table in tables)
-                        {
-                            table.Delete();
-                            Marshal.ReleaseComObject(table);
-                        }
-                    }
-                    catch
-                    {
-                        dataWorksheet = dataSheets.Add();
-                        dataWorksheet.Name = productCode;
-                    }
-
-                    tableRange = sheet.UsedRange;
-
-                    var originalDataTable = tableRange.MakeDataTable();
-
-                    // Step 1: Filter the datatable data by product code
-                    var newDataTable = GetTableByProductCode(originalDataTable, productCode);
-
-                    // Step 2 : Write the new datatable to the data worksheet
-                    newDataTable.WriteToWorksheet(dataWorksheet, "Dati");
-                }
-                else if (sheet.Name.Contains("Classi domande", StringComparison.CurrentCultureIgnoreCase))
-                {
-                    // Find the corresponding worksheet in the app's files.
-                    // If there is none, create the sheet.
-                    try
-                    {
-                        classesWorksheet = classesSheets.Item[productCode];
-
-                        // Clean the previous table if there is any
-                        tables = classesWorksheet.ListObjects;
-
-                        foreach (ListObject table in tables)
-                        {
-                            table.Delete();
-                            Marshal.ReleaseComObject(table);
-                        }
-                    }
-                    catch
-                    {
-                        classesWorksheet = classesSheets.Add();
-                        classesWorksheet.Name = productCode;
-                    }
-
-                    tableRange = sheet.UsedRange;
-
-                    var originalDataTable = tableRange.MakeDataTable();
-
-                    // Step 1: Remove the useless rows
-                    var newDataTable = originalDataTable.RemoveLastRows(3);
-
-                    // Step 2: Remove the useless columns
-                    newDataTable = newDataTable.RemoveLastColumns(6);
-
-                    // Step 3 : Take the needed columns and rename them
-                    newDataTable = TakeColumnsAndRename(newDataTable);
-
-                    // Step 4: Write the new datatable to the classes worksheet
-                    newDataTable.WriteToWorksheet(classesWorksheet, "Classi");
-                }
-
-                // Release the resources on each iteration
-                if (tableRange is not null) Marshal.ReleaseComObject(tableRange);
-                tableRange = null;
-                if (tables is not null) Marshal.ReleaseComObject(tables);
-                tables = null;
-                if (dataWorksheet is not null) Marshal.ReleaseComObject(dataWorksheet);
-                dataWorksheet = null;
-                if (classesWorksheet is not null) Marshal.ReleaseComObject(classesWorksheet);
-                classesWorksheet = null;
-                Marshal.ReleaseComObject(sheet);
-            }
-
-            classesWorkbook.Save();
-            dataWorkbook.Save();
-
-            notificationService.RemoveNotificationAsync(notificationId).GetAwaiter().GetResult();
-
-            notificationService.ShowNotification("Importazione completata",
-                "Il file è stato importato con successo.");
-        }
-        catch (Exception e)
-        {
-            notificationService.ShowNotification("Importazione fallita",
-                "Si è verificato un errore durante l'importazione del file: " + e.Message);
-        }
-        finally // Clean up the resources not managed by the base class
-        {
-            if (tableRange is not null) Marshal.ReleaseComObject(tableRange);
-
-            if (tables is not null) Marshal.ReleaseComObject(tables);
-
-            if (dataWorksheet is not null) Marshal.ReleaseComObject(dataWorksheet);
-            if (classesWorksheet is not null) Marshal.ReleaseComObject(classesWorksheet);
-
-            if (dataSheets is not null) Marshal.ReleaseComObject(dataSheets);
-            if (classesSheets is not null) Marshal.ReleaseComObject(classesSheets);
-
-            if (dataWorkbook is not null)
-            {
-                dataWorkbook.Close(false);
-                Marshal.ReleaseComObject(dataWorkbook);
-            }
-
-            if (classesWorkbook is not null)
-            {
-                classesWorkbook.Close(false);
-                Marshal.ReleaseComObject(classesWorkbook);
-            }
-        }
-    }
-
-    private static DataTable TakeColumnsAndRename(DataTable oldDataTable)
-    {
-        // Take only the needed columns and rename them
-        var newColumns = oldDataTable
-            .Clone()
-            .Columns
-            .Cast<DataColumn>()
-            .Where((_, index) => index is 1 or 4 or 5)
-            .Select(c =>
-            {
-                if (string.Compare(c.ColumnName, "Testo Domanda", StringComparison.CurrentCultureIgnoreCase) == 0)
-                    c.ColumnName = "Domanda";
-                else if (string.Compare(c.ColumnName, "Etichetta Domanda", StringComparison.CurrentCultureIgnoreCase) ==
-                         0) c.ColumnName = "Etichetta";
-
-                return c;
-            });
-
-        // Add the data to a new datatable with the new columns
-        var newDataTable = new DataTable();
-
-        foreach (var column in newColumns.Reverse())
-            newDataTable.Columns.Add(new DataColumn(column.ColumnName, typeof(string)));
-
-        foreach (DataRow row in oldDataTable.Rows)
-        {
-            var newRow = newDataTable.NewRow();
-            newRow["Domanda"] = row["Testo Domanda"];
-            newRow["Etichetta"] = row["Etichetta Domanda"];
-            newRow["Classe"] = row["Classe"];
-            newDataTable.Rows.Add(newRow);
-        }
-
-        return newDataTable;
-    }
-
-    private static DataTable GetTableByProductCode(DataTable dataTable, string productCode)
-    {
-        // Take only the rows related to the given product
-        var newDataTable = dataTable.AsEnumerable()
-            .Where(row =>
-                string.Compare(row.Field<string?>("Prodotto"), productCode,
-                    StringComparison.CurrentCultureIgnoreCase) ==
-                0 ||
-                string.Compare(row.Field<string?>("prodotto"), productCode,
-                    StringComparison.CurrentCultureIgnoreCase) ==
-                0)
-            .CopyToDataTable();
-
-        // Take the columns to remove
-        var columnsToRemove = newDataTable.Columns
-            .Cast<DataColumn>()
-            .Where(c => !c.ColumnName.StartsWith("D.", StringComparison.CurrentCultureIgnoreCase) &&
-                        string.Compare(c.ColumnName, "LegCampionamento", StringComparison.CurrentCultureIgnoreCase) !=
-                        0)
-            .ToArray();
-
-        // Remove the useless columns
-        foreach (var column in columnsToRemove) newDataTable.Columns.Remove(column);
-
-        // Rename first column
-        newDataTable.Columns[0].ColumnName = "D.1 PUNTO DI CAMPIONAMENTO";
 
         return newDataTable;
     }
@@ -915,7 +677,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             // Check if the sheet already exists, if so clean it
             try
             {
-                destinationSheet = worksheets.Item[scale == TableType.Scale5 ? "Tabelle 5" : "Tabelle 9"];
+                destinationSheet = worksheets[scale == TableType.Scale5 ? "Tabelle 5" : "Tabelle 9"];
 
                 // Clean the previous table if there is any
                 tables = destinationSheet.ListObjects;
@@ -1094,7 +856,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             // Check if the sheet already exists, if so clean it
             try
             {
-                destinationSheet = worksheets.Item[scale == TableType.Scale5 ? "Frequenze 5" : "Frequenze 9"];
+                destinationSheet = worksheets[scale == TableType.Scale5 ? "Frequenze 5" : "Frequenze 9"];
 
                 // Clean the previous table if there is any
                 tables = destinationSheet.ListObjects;
@@ -1309,7 +1071,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             // Check if the sheet already exists, if so clean it
             try
             {
-                destinationSheet = worksheets.Item["Adeguatezze"];
+                destinationSheet = worksheets["Adeguatezze"];
 
                 // Clean the previous table if there is any
                 tables = destinationSheet.ListObjects;
@@ -1378,7 +1140,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             // Check if the sheet already exists, if so clean it
             try
             {
-                destinationSheet = worksheets.Item["Sinottiche"];
+                destinationSheet = worksheets["Sinottiche"];
 
                 // Clean the previous table if there is any
                 tables = destinationSheet.ListObjects;

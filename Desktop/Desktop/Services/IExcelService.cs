@@ -16,9 +16,6 @@ internal interface IExcelService
     public Task ImportPenelopeFileAsync(IStorageFile storageFile, Guid notificationId, string projectCode,
         string projectFolderPath);
 
-    public Task ImportActiveViewingFileAsync(IStorageFile storageFile, Guid notificationId, string projectCode,
-        string projectFolderPath, string productCode);
-
     public Task CreateProductFilesAsync(Guid notificationId, ICollection<Product> products, string projectFolderPath,
         string projectCode);
 

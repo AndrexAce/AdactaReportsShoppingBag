@@ -186,33 +186,6 @@ internal sealed partial class MainViewModel(
     }
 
     [RelayCommand]
-    private async Task ImportActiveViewingFileAsync()
-    {
-        if (NavigationMenuSelectedItem is null)
-        {
-            await dialogService.ShowInformationDialogAsync("Selezione vuota",
-                "Seleziona un prodotto prima di importare da ActiveViewing.", "Ok");
-            return;
-        }
-
-        var file = await dialogService.ShowFileOpenPickerAsync(".xlsx", "AdactaReportsShoppingBagOpenInputFilePicker");
-
-        if (file is null) return;
-
-        var notificationId =
-            notificationService.ShowNotification("Importazione file in corso...",
-                "Potrebbero volerci alcuni minuti.");
-
-        if (ReportProject is null || _projectFilePath is null) return;
-
-        var projectFolderPath = Path.GetDirectoryName(_projectFilePath) ??
-                                throw new FileNotFoundException("The project folder path could not be reached.");
-        await excelService.ImportActiveViewingFileAsync(file, notificationId, ReportProject.ProjectCode,
-            projectFolderPath,
-            NavigationMenuSelectedItem.Code);
-    }
-
-    [RelayCommand]
     private async Task ProcessExcelFilesAsync()
     {
         if (ReportProject is null || _projectFilePath is null) return;
