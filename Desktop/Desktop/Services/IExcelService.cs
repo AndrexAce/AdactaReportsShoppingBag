@@ -19,5 +19,5 @@ internal interface IExcelService
     public Task CreateProductFilesAsync(Guid notificationId, ICollection<Product> products, string projectFolderPath,
         string projectCode);
 
-    public Task ProcessProductFilesAsync(Guid notificationId, string projectFolderPath);
+    public Task ProcessProductFilesAsync(Guid notificationId, ICollection<string> fileNames);
 }

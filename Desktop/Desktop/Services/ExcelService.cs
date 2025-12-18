@@ -477,9 +477,40 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                 dataWorkbook = Workbooks.Open(Path.Combine(projectFolderPath, $"Dati{projectCode}.xlsx"));
                 classesSheets = classesWorkbook.Sheets;
                 dataSheets = dataWorkbook.Sheets;
-                classesWorksheet = classesSheets.Item[product.Code];
-                evaluationsWorksheet = dataSheets.Item[product.Code];
-                expectationsWorksheet = dataSheets.Item[$"ASP_{product.Code}"];
+
+                try
+                {
+                    classesWorksheet = classesSheets[product.Code];
+                    evaluationsWorksheet = dataSheets[product.Code];
+                    expectationsWorksheet = dataSheets[$"ASP_{product.Code}"];
+                }
+                catch
+                {
+                    Marshal.ReleaseComObject(dataSheets);
+                    dataSheets = null;
+                    Marshal.ReleaseComObject(classesSheets);
+                    classesSheets = null;
+                    dataWorkbook.Close(false);
+                    Marshal.ReleaseComObject(dataWorkbook);
+                    dataWorkbook = null;
+                    classesWorkbook.Close(false);
+                    Marshal.ReleaseComObject(classesWorkbook);
+                    classesWorkbook = null;
+                    Marshal.ReleaseComObject(worksheet);
+                    worksheet = null;
+                    Marshal.ReleaseComObject(worksheets);
+                    worksheets = null;
+                    workbook.Close(false);
+                    Marshal.ReleaseComObject(workbook);
+                    workbook = null;
+
+                    notificationService.UpdateProgressNotificationAsync(notificationId,
+                        "Creazione file prodotti in corso...",
+                        (uint)productCurrentCount,
+                        (uint)--productTotalCount).GetAwaiter().GetResult();
+
+                    continue;
+                }
 
                 // Copy the sheets and paste them in the product file and rename
                 classesWorksheet.Copy(After: worksheet);
@@ -589,14 +620,22 @@ internal sealed class ExcelService(INotificationService notificationService) : E
         Scale9
     }
 
-    public async Task ProcessProductFilesAsync(Guid notificationId, string projectFolderPath)
+    public enum SynopticTableType
+    {
+        Confezione,
+        GradimentoComplessivo,
+        PropensioneAlRiconsumo,
+        ConfrontoProdottoAbituale
+    }
+
+    public async Task ProcessProductFilesAsync(Guid notificationId, ICollection<string> fileNames)
     {
         await Task.Run(() =>
             ExecuteWithCleanup(() =>
-                ProcessProductFileInternal(notificationId, projectFolderPath)));
+                ProcessProductFileInternal(notificationId, fileNames)));
     }
 
-    private void ProcessProductFileInternal(Guid notificationId, string projectFolderPath)
+    private void ProcessProductFileInternal(Guid notificationId, ICollection<string> fileNames)
     {
         // Create a silent Excel application
         ExcelApp = new Application
@@ -606,7 +645,6 @@ internal sealed class ExcelService(INotificationService notificationService) : E
         };
         Workbooks = ExcelApp.Workbooks;
 
-        var fileNames = Directory.GetFiles(Path.Combine(projectFolderPath, "Elaborazioni"), "*.xlsx");
         var processedFiles = 0u;
 
         Workbook? workbook = null;
@@ -629,7 +667,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                 notificationService.UpdateProgressNotificationAsync(notificationId,
                     "Elaborazione file prodotti in corso...",
                     ++processedFiles,
-                    (uint)fileNames.Length).GetAwaiter().GetResult();
+                    (uint)fileNames.Count).GetAwaiter().GetResult();
 
                 workbook.Close(false);
                 Marshal.ReleaseComObject(workbook);
@@ -749,6 +787,42 @@ internal sealed class ExcelService(INotificationService notificationService) : E
 
             ICollection<KeyValuePair<string, DataTable>> dataTables = [];
 
+            if (locations.Any())
+            {
+                // Create the generic table
+                var genericTable = new DataTable();
+                genericTable.Columns.Add(new DataColumn("Generale", typeof(string)));
+                // Add the product name column
+                genericTable.Columns.Add(new DataColumn("Media", typeof(double)));
+                // Add the lsd column
+                genericTable.Columns.Add(new DataColumn("LSD", typeof(double)));
+
+                // For each question, calculate the average and lsd
+                foreach (var qAndL in questionsAndLabels)
+                {
+                    var questionRows = dataDataTable.AsEnumerable();
+
+                    var values = questionRows
+                        .Select(row => Convert.ToDouble(row.Field<string?>(qAndL.Question.Trim())))
+                        .Where(value => scale != TableType.Scale5 || Convert.ToUInt32(value) != 6)
+                        .ToList();
+
+                    var average = values.Average();
+                    var lsd = 1.96 * (Math.Sqrt(values.Select(v => Math.Pow(v - average, 2)).Sum() / values.Count) /
+                                      Math.Sqrt(values.Count));
+
+                    var newRow = genericTable.NewRow();
+                    newRow["Generale"] = string.IsNullOrEmpty(qAndL.Label.Trim())
+                        ? qAndL.Question.Trim()
+                        : qAndL.Label.Trim();
+                    newRow["Media"] = average;
+                    newRow["LSD"] = lsd;
+                    genericTable.Rows.Add(newRow);
+                }
+
+                dataTables.Add(new KeyValuePair<string, DataTable>("Generale", genericTable));
+            }
+
             // Create a table for each location
             foreach (var location in locations)
             {
@@ -768,6 +842,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
 
                     var values = questionRows
                         .Select(row => Convert.ToDouble(row.Field<string?>(qAndL.Question.Trim())))
+                        .Where(value => scale != TableType.Scale5 || Convert.ToUInt32(value) != 6)
                         .ToList();
 
                     var average = values.Average();
@@ -783,41 +858,6 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                 }
 
                 dataTables.Add(new KeyValuePair<string, DataTable>(location, locationTable));
-            }
-
-            if (locations.Any())
-            {
-                // Create the generic table
-                var genericTable = new DataTable();
-                genericTable.Columns.Add(new DataColumn("Generale", typeof(string)));
-                // Add the product name column
-                genericTable.Columns.Add(new DataColumn("Media", typeof(double)));
-                // Add the lsd column
-                genericTable.Columns.Add(new DataColumn("LSD", typeof(double)));
-
-                // For each question, calculate the average and lsd
-                foreach (var qAndL in questionsAndLabels)
-                {
-                    var questionRows = dataDataTable.AsEnumerable();
-
-                    var values = questionRows
-                        .Select(row => Convert.ToDouble(row.Field<string?>(qAndL.Question.Trim())))
-                        .ToList();
-
-                    var average = values.Average();
-                    var lsd = 1.96 * (Math.Sqrt(values.Select(v => Math.Pow(v - average, 2)).Sum() / values.Count) /
-                                      Math.Sqrt(values.Count));
-
-                    var newRow = genericTable.NewRow();
-                    newRow["Generale"] = string.IsNullOrEmpty(qAndL.Label.Trim())
-                        ? qAndL.Question.Trim()
-                        : qAndL.Label.Trim();
-                    newRow["Media"] = average;
-                    newRow["LSD"] = lsd;
-                    genericTable.Rows.Add(newRow);
-                }
-
-                dataTables.Add(new KeyValuePair<string, DataTable>("Generale", genericTable));
             }
 
             // Write all the datatables to the worksheet
@@ -1009,25 +1049,25 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                 else
                 {
                     // Group results into three partitions
-                    var partition1 = results.Where(r => r.Value >= 1 && r.Value <= 4);
-                    var partition2 = results.Where(r => r.Value == 5);
-                    var partition3 = results.Where(r => r.Value >= 6 && r.Value <= 9);
+                    var partition1 = results.Where(r => r.Value >= 1 && r.Value <= 3);
+                    var partition2 = results.Where(r => r.Value >= 4 && r.Value <= 6);
+                    var partition3 = results.Where(r => r.Value >= 7 && r.Value <= 9);
 
                     // Add rows for each partition
                     var row1 = cumulativeFrequencyTable.NewRow();
-                    row1[qAndL.Label.Trim()] = "da 1 a 4";
+                    row1[qAndL.Label.Trim()] = "da 1 a 3";
                     row1["Percentuale"] = partition1.Sum(r => r.Percentage);
                     row1["Totale"] = partition1.Sum(r => r.Count);
                     cumulativeFrequencyTable.Rows.Add(row1);
 
                     var row2 = cumulativeFrequencyTable.NewRow();
-                    row2[qAndL.Label.Trim()] = "5";
+                    row2[qAndL.Label.Trim()] = "da 4 a 6";
                     row2["Percentuale"] = partition2.Sum(r => r.Percentage);
                     row2["Totale"] = partition2.Sum(r => r.Count);
                     cumulativeFrequencyTable.Rows.Add(row2);
 
                     var row3 = cumulativeFrequencyTable.NewRow();
-                    row3[qAndL.Label.Trim()] = "da 6 a 9";
+                    row3[qAndL.Label.Trim()] = "da 7 a 9";
                     row3["Percentuale"] = partition3.Sum(r => r.Percentage);
                     row3["Totale"] = partition3.Sum(r => r.Count);
                     cumulativeFrequencyTable.Rows.Add(row3);
@@ -1159,10 +1199,62 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                 destinationSheet.Name = "Sinottiche";
             }
 
-            #region Gradimento complessivo
+            #region Confezione
 
             // Create the synoptic table structure
             var synopticTable = new DataTable();
+            synopticTable.Columns.Add("Macrocategoria");
+            synopticTable.Columns.Add("Categoria");
+            synopticTable.Columns.Add("Attributo", typeof(string));
+            synopticTable.Columns.Add("Valore", typeof(double));
+
+            // Read the "Aspettative" table from Aspettative to get overall rating
+            sourceSheet = worksheets["Aspettative"];
+            tables = sourceSheet.ListObjects;
+
+            foreach (ListObject table in tables)
+            {
+                if (table.Name.Contains("Aspettative", StringComparison.CurrentCultureIgnoreCase))
+                    dataRange = table.Range;
+
+                Marshal.ReleaseComObject(table);
+            }
+
+            var expectationsDataTable = dataRange?.MakeDataTable();
+
+            if (expectationsDataTable is null) return;
+
+            for (var i = 1; i < 4; i++)
+            {
+                var newRow = synopticTable.NewRow();
+                newRow["Macrocategoria"] = "Aspettativa";
+                newRow["Categoria"] = "Confezione";
+                newRow["Attributo"] = i switch
+                {
+                    1 => "Gradimento atteso",
+                    2 => "Fiducia",
+                    3 => "Gradimento confezione",
+                    _ => ""
+                };
+                newRow["Valore"] = expectationsDataTable.AsEnumerable().Average(row => Convert.ToDouble(row[i]));
+                synopticTable.Rows.Add(newRow);
+            }
+
+            if (dataRange is not null) Marshal.ReleaseComObject(dataRange);
+            dataRange = null;
+            Marshal.ReleaseComObject(tables);
+            tables = null;
+            Marshal.ReleaseComObject(sourceSheet);
+            sourceSheet = null;
+
+            synopticTable.WriteSynopticTableToWorksheet(destinationSheet, "Confezione", SynopticTableType.Confezione);
+
+            #endregion
+
+            #region Gradimento complessivo + profilo di gradimento
+
+            // Create the synoptic table structure
+            synopticTable = new DataTable();
             synopticTable.Columns.Add("Macrocategoria");
             synopticTable.Columns.Add("Categoria");
             synopticTable.Columns.Add("Attributo", typeof(string));
@@ -1243,7 +1335,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                 synopticTable.Rows.Add(newRow);
             }
 
-            synopticTable.WriteSynopticTableToWorksheet(destinationSheet, "Gradimento complessivo");
+            synopticTable.WriteSynopticTableToWorksheet(destinationSheet, "Gradimento complessivo", SynopticTableType.GradimentoComplessivo);
 
             #endregion
 
@@ -1321,7 +1413,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             Marshal.ReleaseComObject(sourceSheet);
             sourceSheet = null;
 
-            synopticTable.WriteSynopticTableToWorksheet(destinationSheet, "Propensione al riconsumo");
+            synopticTable.WriteSynopticTableToWorksheet(destinationSheet, "Propensione al riconsumo", SynopticTableType.PropensioneAlRiconsumo);
 
             #endregion
 
@@ -1392,7 +1484,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                 synopticTable.Rows.Add(newRow);
             }
 
-            synopticTable.WriteSynopticTableToWorksheet(destinationSheet, "Confronto abituale");
+            synopticTable.WriteSynopticTableToWorksheet(destinationSheet, "Confronto abituale", SynopticTableType.ConfrontoProdottoAbituale);
 
             #endregion
         }

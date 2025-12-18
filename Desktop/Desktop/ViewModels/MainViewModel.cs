@@ -194,7 +194,8 @@ internal sealed partial class MainViewModel(
                                 throw new FileNotFoundException("The project folder path could not be reached.");
 
         var productsToProcess = ReportProject.Products.Where(product =>
-                !File.Exists(Path.Combine(Path.Combine(projectFolderPath, "Elaborazioni"), $"{product.DisplayName.Trim()}.xlsx")))
+                !File.Exists(Path.Combine(Path.Combine(projectFolderPath, "Elaborazioni"),
+                    $"{product.DisplayName.Trim()}.xlsx")))
             .ToList();
 
         var notificationId =
@@ -205,11 +206,13 @@ internal sealed partial class MainViewModel(
         await excelService.CreateProductFilesAsync(notificationId, productsToProcess, projectFolderPath,
             ReportProject.ProjectCode);
 
+        var fileNames = Directory.GetFiles(Path.Combine(projectFolderPath, "Elaborazioni"), "*.xlsx");
+
         notificationId = await notificationService.ShowProgressNotificationAsync("Elaborazione in corso...",
             "Potrebbero volerci alcuni minuti.", "Elaborazione file prodotti in corso...",
-            (uint)ReportProject.Products.Count());
+            (uint)fileNames.Length);
 
-        await excelService.ProcessProductFilesAsync(notificationId, projectFolderPath);
+        await excelService.ProcessProductFilesAsync(notificationId, fileNames);
     }
 
     public async Task LoadProjectFileAsync(IStorageFile file)

@@ -3,6 +3,7 @@ using System.Data;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.Office.Interop.Excel;
+using static AdactaInternational.AdactaReportsShoppingBag.Desktop.Services.ExcelService;
 using DataTable = System.Data.DataTable;
 using Range = Microsoft.Office.Interop.Excel.Range;
 
@@ -566,7 +567,8 @@ internal static class DataTableExtensions
             }
         }
 
-        public void WriteSynopticTableToWorksheet(Worksheet worksheet, string tableName)
+        public void WriteSynopticTableToWorksheet(Worksheet worksheet, string tableName,
+            SynopticTableType synopticTableType)
         {
             var rowCount = dataTable.Rows.Count;
             var colCount = dataTable.Columns.Count;
@@ -656,16 +658,26 @@ internal static class DataTableExtensions
                 tableColumnRange = tableColumn.DataBodyRange;
                 if (tableColumnRange is not null)
                 {
-                    tableColumnRange.NumberFormat = "0.#";
+                    switch (synopticTableType)
+                    {
+                        case SynopticTableType.Confezione:
+                            tableColumnRange.NumberFormat = "0.0";
+                            break;
+                        case SynopticTableType.GradimentoComplessivo or SynopticTableType.PropensioneAlRiconsumo or SynopticTableType.ConfrontoProdottoAbituale:
+                            tableColumnRange.NumberFormat = "0.0";
 
-                    startCell = tableColumnRange.Cells[2, 1];
-                    endCell = tableColumnRange.Cells[4, 1];
+                            startCell = tableColumnRange.Cells[2, 1];
+                            endCell = tableColumnRange.Cells[4, 1];
 
-                    Marshal.ReleaseComObject(tableColumnRange);
-                    tableColumnRange = null;
+                            Marshal.ReleaseComObject(tableColumnRange);
+                            tableColumnRange = null;
 
-                    tableColumnRange = worksheet.Range[startCell, endCell];
-                    tableColumnRange.NumberFormat = "0%";
+                            tableColumnRange = worksheet.Range[startCell, endCell];
+                            tableColumnRange.NumberFormat = "0%";
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException(nameof(synopticTableType), synopticTableType, null);
+                    }
                 }
 
                 // Final formatting
