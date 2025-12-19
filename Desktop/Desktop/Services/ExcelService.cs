@@ -874,7 +874,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
         }
     }
 
-    private static IEnumerable<KeyValuePair<string, DataTable>> ProcessFrequencyTable(Workbook workbook,
+    private static IEnumerable<KeyValuePair<(string, char), DataTable>> ProcessFrequencyTable(Workbook workbook,
         TableType scale)
     {
         if (scale != TableType.Scale5 && scale != TableType.Scale9)
@@ -934,7 +934,8 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                 select new
                 {
                     Question = classRow.Field<string?>("Domanda"),
-                    Label = classRow.Field<string?>("Etichetta")
+                    Label = classRow.Field<string?>("Etichetta"),
+                    Class = Convert.ToChar(classe.Trim())
                 };
 
             // Put the "Gradimento complessivo" label at the first position if scale is 9
@@ -953,7 +954,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             foreach (var column in columnsToRemove) dataDataTable.Columns.Remove(column);
 
             ICollection<KeyValuePair<string, DataTable>> dataTables = [];
-            ICollection<KeyValuePair<string, DataTable>> cumulativeDataTables = [];
+            ICollection<KeyValuePair<(string, char), DataTable>> cumulativeDataTables = [];
 
             // For each question/label, create the frequency table
             foreach (var qAndL in questionsAndLabels)
@@ -1074,13 +1075,14 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                 }
 
                 cumulativeDataTables.Add(
-                    new KeyValuePair<string, DataTable>(qAndL.Label.Trim(), cumulativeFrequencyTable));
+                    new KeyValuePair<(string, char), DataTable>((qAndL.Label.Trim(), qAndL.Class),
+                        cumulativeFrequencyTable));
             }
 
             // Write all the datatables to the worksheet
             foreach (var kvp in dataTables) kvp.Value.WriteFrequencyTableToWorksheet(destinationSheet, kvp.Key);
             foreach (var kvp in cumulativeDataTables)
-                kvp.Value.WriteCumulativeFrequencyTableToWorksheet(destinationSheet, kvp.Key);
+                kvp.Value.WriteCumulativeFrequencyTableToWorksheet(destinationSheet, kvp.Key.Item1);
 
             return cumulativeDataTables;
         }
@@ -1096,7 +1098,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
     }
 
     private static void ProcessAdequacyTable(Workbook workbook,
-        IEnumerable<KeyValuePair<string, DataTable>> scale5FrequencyTables)
+        IEnumerable<KeyValuePair<(string, char), DataTable>> scale5FrequencyTables)
     {
         Sheets? worksheets = null;
         Worksheet? lastSheet = null;
@@ -1128,8 +1130,10 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                 destinationSheet.Name = "Adeguatezze";
             }
 
-            var transposedTables = scale5FrequencyTables.Select(kvp =>
-                new KeyValuePair<string, DataTable>(kvp.Key, kvp.Value.Transpose()));
+            var scale5FrequencyTablesArray = scale5FrequencyTables.ToArray();
+
+            var transposedAdequacyTables = scale5FrequencyTablesArray.Where(kvp => kvp.Key.Item2 is 'a' or 'A')
+                .Select(kvp => new KeyValuePair<string, DataTable>(kvp.Key.Item1, kvp.Value.Transpose()));
 
             var adequacyTable = new DataTable();
             adequacyTable.Columns.Add("Attributo", typeof(string));
@@ -1137,7 +1141,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             adequacyTable.Columns.Add("Giusto", typeof(double));
             adequacyTable.Columns.Add("Troppo", typeof(double));
 
-            foreach (var kvp in transposedTables)
+            foreach (var kvp in transposedAdequacyTables)
             {
                 // Do not insert the "Propensione al riconsumo" and "Confronto abituale" attributes
                 if (Regex.IsMatch(kvp.Key, "Propensione al riconsumo|Confronto abituale",
@@ -1153,6 +1157,27 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             }
 
             adequacyTable.WriteAdequacyTableToWorksheet(destinationSheet, "Adeguatezze");
+
+            var transposedIntensityTables = scale5FrequencyTablesArray.Where(kvp => kvp.Key.Item2 is 'i' or 'I')
+                .Select(kvp => new KeyValuePair<string, DataTable>(kvp.Key.Item1, kvp.Value.Transpose()));
+
+            var intensityTable = new DataTable();
+            intensityTable.Columns.Add("Attributo", typeof(string));
+            intensityTable.Columns.Add("Troppo poco intenso", typeof(double));
+            intensityTable.Columns.Add("Giusto", typeof(double));
+            intensityTable.Columns.Add("Troppo intenso", typeof(double));
+
+            foreach (var kvp in transposedIntensityTables)
+            {
+                var row = intensityTable.NewRow();
+                row["Attributo"] = kvp.Key;
+                row["Troppo poco intenso"] = (double)kvp.Value.Rows[0]["da 1 a 2"] * 100;
+                row["Giusto"] = (double)kvp.Value.Rows[0]["3"] * 100;
+                row["Troppo intenso"] = (double)kvp.Value.Rows[0]["da 4 a 5"] * 100;
+                intensityTable.Rows.Add(row);
+            }
+
+            intensityTable.WriteIntensityTableToWorksheet(destinationSheet, "Intensità");
         }
         finally // Clean up the resources not managed by the base class
         {
