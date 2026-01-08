@@ -635,7 +635,7 @@ internal static class DataTableExtensions
                 tableColumns = table.ListColumns;
 
                 // First column
-                tableColumn = tableColumns["Troppo poco intenso"];
+                tableColumn = tableColumns["Per niente"];
                 tableColumnRange = tableColumn.DataBodyRange;
                 if (tableColumnRange is not null)
                 {
@@ -649,7 +649,7 @@ internal static class DataTableExtensions
                 tableColumn = null;
 
                 // Second column
-                tableColumn = tableColumns["Giusto"];
+                tableColumn = tableColumns["Abbastanza"];
                 tableColumnRange = tableColumn.DataBodyRange;
                 if (tableColumnRange is not null)
                 {
@@ -663,7 +663,7 @@ internal static class DataTableExtensions
                 tableColumn = null;
 
                 // Third column
-                tableColumn = tableColumns["Troppo intenso"];
+                tableColumn = tableColumns["Estremamente"];
                 tableColumnRange = tableColumn.DataBodyRange;
                 if (tableColumnRange is not null)
                 {

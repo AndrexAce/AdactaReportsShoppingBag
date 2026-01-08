@@ -756,16 +756,18 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                     Label = classRow.Field<string?>("Etichetta")
                 };
 
-            // If the table is 9-scaled, put the "Gradimento complessivo" label at the first position
+            // If the table is 9-scaled, put the "Gradimento complessivo" / "Soddisfazione complessiva" label at the first position
             if (scale == TableType.Scale9)
             {
                 var firstRow = questionsAndLabels.FirstOrDefault(q =>
-                    string.Compare(q.Label, "Gradimento complessivo", StringComparison.CurrentCultureIgnoreCase) == 0);
+                    string.Compare(q.Label, "Gradimento complessivo", StringComparison.CurrentCultureIgnoreCase) == 0 ||
+                    string.Compare(q.Label, "Soddisfazione complessiva", StringComparison.CurrentCultureIgnoreCase) == 0);
 
                 if (firstRow is not null)
                     questionsAndLabels = questionsAndLabels
-                        .Where(q => string.Compare(q.Label, "Gradimento complessivo",
-                            StringComparison.CurrentCultureIgnoreCase) != 0)
+                        .Where(q =>
+                            string.Compare(q.Label, "Gradimento complessivo", StringComparison.CurrentCultureIgnoreCase) != 0 &&
+                            string.Compare(q.Label, "Soddisfazione complessiva", StringComparison.CurrentCultureIgnoreCase) != 0)
                         .Prepend(firstRow);
             }
 
@@ -938,10 +940,11 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                     Class = Convert.ToChar(classe.Trim())
                 };
 
-            // Put the "Gradimento complessivo" label at the first position if scale is 9
+            // Put the "Gradimento complessivo" or "Soddisfazione complessiva" label at the first position if scale is 9
             if (scale == TableType.Scale9)
                 questionsAndLabels = questionsAndLabels.OrderByDescending(q =>
-                    string.Compare(q.Label, "Gradimento complessivo", StringComparison.CurrentCultureIgnoreCase) == 0);
+                    string.Compare(q.Label, "Gradimento complessivo", StringComparison.CurrentCultureIgnoreCase) == 0 ||
+                    string.Compare(q.Label, "Soddisfazione complessiva", StringComparison.CurrentCultureIgnoreCase) == 0);
 
             // Find the columns to delete
             var columnsToRemove = dataDataTable.Columns
@@ -1163,17 +1166,17 @@ internal sealed class ExcelService(INotificationService notificationService) : E
 
             var intensityTable = new DataTable();
             intensityTable.Columns.Add("Attributo", typeof(string));
-            intensityTable.Columns.Add("Troppo poco intenso", typeof(double));
-            intensityTable.Columns.Add("Giusto", typeof(double));
-            intensityTable.Columns.Add("Troppo intenso", typeof(double));
+            intensityTable.Columns.Add("Per niente", typeof(double));
+            intensityTable.Columns.Add("Abbastanza", typeof(double));
+            intensityTable.Columns.Add("Estremamente", typeof(double));
 
             foreach (var kvp in transposedIntensityTables)
             {
                 var row = intensityTable.NewRow();
                 row["Attributo"] = kvp.Key;
-                row["Troppo poco intenso"] = (double)kvp.Value.Rows[0]["da 1 a 2"] * 100;
-                row["Giusto"] = (double)kvp.Value.Rows[0]["3"] * 100;
-                row["Troppo intenso"] = (double)kvp.Value.Rows[0]["da 4 a 5"] * 100;
+                row["Per niente"] = (double)kvp.Value.Rows[0]["da 1 a 2"] * 100;
+                row["Abbastanza"] = (double)kvp.Value.Rows[0]["3"] * 100;
+                row["Estremamente"] = (double)kvp.Value.Rows[0]["da 4 a 5"] * 100;
                 intensityTable.Rows.Add(row);
             }
 
@@ -1276,7 +1279,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
 
             #endregion
 
-            #region Gradimento complessivo + profilo di gradimento
+            #region Gradimento complessivo / Soddifazione complessiva + profilo di gradimento
 
             // Create the synoptic table structure
             synopticTable = new DataTable();
@@ -1304,7 +1307,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             {
                 var newRow = synopticTable.NewRow();
                 newRow["Macrocategoria"] = "Valutazione";
-                newRow["Categoria"] = "Gradimento complessivo";
+                newRow["Categoria"] = overallDataRow.Field<string?>("Generale");
                 newRow["Attributo"] = overallDataRow.Field<string?>("Generale");
                 newRow["Valore"] = Convert.ToDouble(overallDataRow.Field<string?>("Media"));
                 synopticTable.Rows.Add(newRow);
@@ -1317,13 +1320,14 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             Marshal.ReleaseComObject(sourceSheet);
             sourceSheet = null;
 
-            // Read the "C_Gradimento complessivo" table from Frequenze 9 to get cumulative rating
+            // Read the "C_Gradimento complessivo" or "C_Soddisfazione complessiva" table from Frequenze 9 to get cumulative rating
             sourceSheet = worksheets["Frequenze 9"];
             tables = sourceSheet.ListObjects;
 
             foreach (ListObject table in tables)
             {
-                if (table.Name.Contains("C_Gradimento complessivo", StringComparison.CurrentCultureIgnoreCase))
+                if (table.Name.Contains("C_Gradimento complessivo", StringComparison.CurrentCultureIgnoreCase) ||
+                    table.Name.Contains("C_Soddisfazione complessiva", StringComparison.CurrentCultureIgnoreCase))
                     dataRange = table.Range;
 
                 Marshal.ReleaseComObject(table);
@@ -1337,8 +1341,8 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             {
                 var newRow = synopticTable.NewRow();
                 newRow["Macrocategoria"] = "Valutazione";
-                newRow["Categoria"] = "Gradimento complessivo";
-                newRow["Attributo"] = overallFrequencyDataRow.Field<string?>("Gradimento complessivo");
+                newRow["Categoria"] = overallFrequencyDataRow.Field<string?>("Gradimento complessivo") is null ? "Soddisfazione complessiva" : "Gradimento complessivo";
+                newRow["Attributo"] = overallFrequencyDataRow.Field<string?>("Gradimento complessivo") ?? overallFrequencyDataRow.Field<string?>("Soddisfazione complessiva");
                 newRow["Valore"] = Convert.ToDouble(overallFrequencyDataRow.Field<string?>("Percentuale"));
                 synopticTable.Rows.Add(newRow);
             }
@@ -1389,7 +1393,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
 
             if (overallDataRows is null) return;
 
-            foreach (var overallDataRow in overallDataRows.TakeLast(1))
+            foreach (var overallDataRow in overallDataRows.TakeLast(2).Take(1))
             {
                 var newRow = synopticTable.NewRow();
                 newRow["Macrocategoria"] = "Valutazione";
@@ -1468,7 +1472,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
 
             if (overallDataRows is null) return;
 
-            foreach (var overallDataRow in overallDataRows.TakeLast(2).Take(1))
+            foreach (var overallDataRow in overallDataRows.TakeLast(1))
             {
                 var newRow = synopticTable.NewRow();
                 newRow["Macrocategoria"] = "Valutazione";
