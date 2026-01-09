@@ -761,13 +761,16 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             {
                 var firstRow = questionsAndLabels.FirstOrDefault(q =>
                     string.Compare(q.Label, "Gradimento complessivo", StringComparison.CurrentCultureIgnoreCase) == 0 ||
-                    string.Compare(q.Label, "Soddisfazione complessiva", StringComparison.CurrentCultureIgnoreCase) == 0);
+                    string.Compare(q.Label, "Soddisfazione complessiva", StringComparison.CurrentCultureIgnoreCase) ==
+                    0);
 
                 if (firstRow is not null)
                     questionsAndLabels = questionsAndLabels
                         .Where(q =>
-                            string.Compare(q.Label, "Gradimento complessivo", StringComparison.CurrentCultureIgnoreCase) != 0 &&
-                            string.Compare(q.Label, "Soddisfazione complessiva", StringComparison.CurrentCultureIgnoreCase) != 0)
+                            string.Compare(q.Label, "Gradimento complessivo",
+                                StringComparison.CurrentCultureIgnoreCase) != 0 &&
+                            string.Compare(q.Label, "Soddisfazione complessiva",
+                                StringComparison.CurrentCultureIgnoreCase) != 0)
                         .Prepend(firstRow);
             }
 
@@ -944,7 +947,8 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             if (scale == TableType.Scale9)
                 questionsAndLabels = questionsAndLabels.OrderByDescending(q =>
                     string.Compare(q.Label, "Gradimento complessivo", StringComparison.CurrentCultureIgnoreCase) == 0 ||
-                    string.Compare(q.Label, "Soddisfazione complessiva", StringComparison.CurrentCultureIgnoreCase) == 0);
+                    string.Compare(q.Label, "Soddisfazione complessiva", StringComparison.CurrentCultureIgnoreCase) ==
+                    0);
 
             // Find the columns to delete
             var columnsToRemove = dataDataTable.Columns
@@ -1026,29 +1030,55 @@ internal sealed class ExcelService(INotificationService notificationService) : E
 
                 if (scale == TableType.Scale5)
                 {
-                    // Group results into three partitions
-                    var partition1 = results.Where(r => r.Value == 1 || r.Value == 2);
-                    var partition2 = results.Where(r => r.Value == 3);
-                    var partition3 = results.Where(r => r.Value == 4 || r.Value == 5);
+                    // Group results into partitions and add rows for each partition
+                    // Do not add the "da 1 a 2" row for the "Confronto abituale" label
+                    if (string.Compare(qAndL.Label.Trim(), "Confronto abituale",
+                            StringComparison.CurrentCultureIgnoreCase) != 0)
+                    {
+                        var partition1 = results.Where(r => r.Value == 1 || r.Value == 2);
+                        var row1 = cumulativeFrequencyTable.NewRow();
+                        row1[qAndL.Label.Trim()] = "da 1 a 2";
+                        row1["Percentuale"] = partition1.Sum(r => r.Percentage);
+                        row1["Totale"] = partition1.Sum(r => r.Count);
+                        cumulativeFrequencyTable.Rows.Add(row1);
+                    }
 
-                    // Add rows for each partition
-                    var row1 = cumulativeFrequencyTable.NewRow();
-                    row1[qAndL.Label.Trim()] = "da 1 a 2";
-                    row1["Percentuale"] = partition1.Sum(r => r.Percentage);
-                    row1["Totale"] = partition1.Sum(r => r.Count);
-                    cumulativeFrequencyTable.Rows.Add(row1);
+                    // Add the "3" and "4" rows instead of the "3" and "da 4 a 5" rows for the "Propensione al riconsumo" label
+                    if (string.Compare(qAndL.Label.Trim(), "Propensione al riconsumo",
+                            StringComparison.CurrentCultureIgnoreCase) != 0)
+                    {
+                        var partition2 = results.Where(r => r.Value == 3);
+                        var partition3 = results.Where(r => r.Value == 4 || r.Value == 5);
 
-                    var row2 = cumulativeFrequencyTable.NewRow();
-                    row2[qAndL.Label.Trim()] = "3";
-                    row2["Percentuale"] = partition2.Sum(r => r.Percentage);
-                    row2["Totale"] = partition2.Sum(r => r.Count);
-                    cumulativeFrequencyTable.Rows.Add(row2);
+                        var row2 = cumulativeFrequencyTable.NewRow();
+                        row2[qAndL.Label.Trim()] = "3";
+                        row2["Percentuale"] = partition2.Sum(r => r.Percentage);
+                        row2["Totale"] = partition2.Sum(r => r.Count);
+                        cumulativeFrequencyTable.Rows.Add(row2);
 
-                    var row3 = cumulativeFrequencyTable.NewRow();
-                    row3[qAndL.Label.Trim()] = "da 4 a 5";
-                    row3["Percentuale"] = partition3.Sum(r => r.Percentage);
-                    row3["Totale"] = partition3.Sum(r => r.Count);
-                    cumulativeFrequencyTable.Rows.Add(row3);
+                        var row3 = cumulativeFrequencyTable.NewRow();
+                        row3[qAndL.Label.Trim()] = "da 4 a 5";
+                        row3["Percentuale"] = partition3.Sum(r => r.Percentage);
+                        row3["Totale"] = partition3.Sum(r => r.Count);
+                        cumulativeFrequencyTable.Rows.Add(row3);
+                    }
+                    else
+                    {
+                        var partition2 = results.Where(r => r.Value == 4);
+                        var partition3 = results.Where(r => r.Value == 5);
+
+                        var row2 = cumulativeFrequencyTable.NewRow();
+                        row2[qAndL.Label.Trim()] = "4";
+                        row2["Percentuale"] = partition2.Sum(r => r.Percentage);
+                        row2["Totale"] = partition2.Sum(r => r.Count);
+                        cumulativeFrequencyTable.Rows.Add(row2);
+
+                        var row3 = cumulativeFrequencyTable.NewRow();
+                        row3[qAndL.Label.Trim()] = "5";
+                        row3["Percentuale"] = partition3.Sum(r => r.Percentage);
+                        row3["Totale"] = partition3.Sum(r => r.Count);
+                        cumulativeFrequencyTable.Rows.Add(row3);
+                    }
                 }
                 else
                 {
@@ -1341,8 +1371,11 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             {
                 var newRow = synopticTable.NewRow();
                 newRow["Macrocategoria"] = "Valutazione";
-                newRow["Categoria"] = overallFrequencyDataRow.Field<string?>("Gradimento complessivo") is null ? "Soddisfazione complessiva" : "Gradimento complessivo";
-                newRow["Attributo"] = overallFrequencyDataRow.Field<string?>("Gradimento complessivo") ?? overallFrequencyDataRow.Field<string?>("Soddisfazione complessiva");
+                newRow["Categoria"] = overallFrequencyDataRow.Field<string?>("Gradimento complessivo") is null
+                    ? "Soddisfazione complessiva"
+                    : "Gradimento complessivo";
+                newRow["Attributo"] = overallFrequencyDataRow.Field<string?>("Gradimento complessivo") ??
+                                      overallFrequencyDataRow.Field<string?>("Soddisfazione complessiva");
                 newRow["Valore"] = Convert.ToDouble(overallFrequencyDataRow.Field<string?>("Percentuale"));
                 synopticTable.Rows.Add(newRow);
             }
