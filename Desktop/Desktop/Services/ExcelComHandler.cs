@@ -1,11 +1,8 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using Microsoft.Office.Interop.Excel;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.Services;
 
-[SuppressMessage("Critical Code Smell", "S1215:\"GC.Collect\" should not be called",
-    Justification = "COM objects lifetime should be manually managed.")]
 internal abstract class ExcelComHandler : BaseComHandler
 {
     protected Application? ExcelApp;
