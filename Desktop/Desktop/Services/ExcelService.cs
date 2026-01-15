@@ -1426,7 +1426,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
 
             if (overallDataRows is null) return;
 
-            foreach (var overallDataRow in overallDataRows.TakeLast(2).Take(1))
+            foreach (var overallDataRow in overallDataRows.Where(dataRow => string.Compare(dataRow["Generale"].ToString(), "Propensione al riconsumo", StringComparison.CurrentCultureIgnoreCase) == 0))
             {
                 var newRow = synopticTable.NewRow();
                 newRow["Macrocategoria"] = "Valutazione";
@@ -1505,7 +1505,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
 
             if (overallDataRows is null) return;
 
-            foreach (var overallDataRow in overallDataRows.TakeLast(1))
+            foreach (var overallDataRow in overallDataRows.Where(dataRow => string.Compare(dataRow["Generale"].ToString(), "Confronto abituale", StringComparison.CurrentCultureIgnoreCase) == 0))
             {
                 var newRow = synopticTable.NewRow();
                 newRow["Macrocategoria"] = "Valutazione";
