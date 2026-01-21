@@ -790,7 +790,9 @@ internal static class DataTableExtensions
                         case SynopticTableType.Confezione:
                             tableColumnRange.NumberFormat = "0.0";
                             break;
-                        case SynopticTableType.GradimentoComplessivo or SynopticTableType.PropensioneAlRiconsumo
+                        case SynopticTableType.GradimentoComplessivo
+                            or SynopticTableType.SoddisfazioneComplessiva
+                            or SynopticTableType.PropensioneAlRiconsumo
                             or SynopticTableType.ConfrontoProdottoAbituale:
                             tableColumnRange.NumberFormat = "0.0";
 
