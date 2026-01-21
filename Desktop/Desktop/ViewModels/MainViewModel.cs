@@ -25,6 +25,7 @@ internal sealed partial class MainViewModel(
     IStorageService storageService,
     IProductsRepository productsRepository,
     IExcelService excelService,
+    IPowerPointService powerPointService,
     INotificationService notificationService)
     : ObservableObject
 {

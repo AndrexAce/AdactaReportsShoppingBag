@@ -624,6 +624,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
     {
         Confezione,
         GradimentoComplessivo,
+        SoddisfazioneComplessiva,
         PropensioneAlRiconsumo,
         ConfrontoProdottoAbituale
     }
@@ -1353,13 +1354,18 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             // Read the "C_Gradimento complessivo" or "C_Soddisfazione complessiva" table from Frequenze 9 to get cumulative rating
             sourceSheet = worksheets["Frequenze 9"];
             tables = sourceSheet.ListObjects;
+            SynopticTableType synopticTableType = SynopticTableType.GradimentoComplessivo;
 
             foreach (ListObject table in tables)
             {
-                if (table.Name.Contains("C_Gradimento complessivo", StringComparison.CurrentCultureIgnoreCase) ||
-                    table.Name.Contains("C_Soddisfazione complessiva", StringComparison.CurrentCultureIgnoreCase))
+                if (table.Name.Contains("C_Gradimento complessivo", StringComparison.CurrentCultureIgnoreCase))
                     dataRange = table.Range;
-
+                else if (table.Name.Contains("C_Soddisfazione complessiva", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    dataRange = table.Range;
+                    synopticTableType = SynopticTableType.SoddisfazioneComplessiva;
+                }
+                    
                 Marshal.ReleaseComObject(table);
             }
 
@@ -1371,11 +1377,10 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             {
                 var newRow = synopticTable.NewRow();
                 newRow["Macrocategoria"] = "Valutazione";
-                newRow["Categoria"] = overallFrequencyDataRow.Field<string?>("Gradimento complessivo") is null
-                    ? "Soddisfazione complessiva"
-                    : "Gradimento complessivo";
-                newRow["Attributo"] = overallFrequencyDataRow.Field<string?>("Gradimento complessivo") ??
-                                      overallFrequencyDataRow.Field<string?>("Soddisfazione complessiva");
+                newRow["Categoria"] = synopticTableType == SynopticTableType.GradimentoComplessivo
+                    ? "Gradimento complessivo" : "Soddisfazione complessiva";
+                newRow["Attributo"] = synopticTableType == SynopticTableType.GradimentoComplessivo
+                    ? overallFrequencyDataRow.Field<string?>("Gradimento complessivo") : overallFrequencyDataRow.Field<string?>("Soddisfazione complessiva");
                 newRow["Valore"] = Convert.ToDouble(overallFrequencyDataRow.Field<string?>("Percentuale"));
                 synopticTable.Rows.Add(newRow);
             }
@@ -1397,8 +1402,11 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                 synopticTable.Rows.Add(newRow);
             }
 
-            synopticTable.WriteSynopticTableToWorksheet(destinationSheet, "Gradimento complessivo",
-                SynopticTableType.GradimentoComplessivo);
+            synopticTable.WriteSynopticTableToWorksheet(
+                destinationSheet,
+                synopticTableType == SynopticTableType.GradimentoComplessivo
+                    ? "Gradimento complessivo" : "Soddisfazione complessiva",
+                synopticTableType);
 
             #endregion
 

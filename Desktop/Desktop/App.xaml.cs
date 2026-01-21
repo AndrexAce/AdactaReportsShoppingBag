@@ -36,6 +36,7 @@ public sealed partial class App
                 .AddSingleton<IDialogService, DialogService>()
                 .AddSingleton<IStorageService, StorageService>()
                 .AddSingleton<IExcelService, ExcelService>()
+                .AddSingleton<IPowerPointService, PowerPointService>()
                 .AddSingleton<INotificationService, NotificationService>()
                 .AddSingleton<IProductsRepository, ProductRepository>()
                 .AddSingleton<IPenelopeClient, PenelopeClient>()
