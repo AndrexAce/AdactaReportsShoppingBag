@@ -140,16 +140,17 @@ internal sealed class ExcelService(INotificationService notificationService) : E
     #region Penelope file import
 
     public async Task ImportPenelopeFileAsync(IStorageFile storageFile, Guid notificationId, string projectCode,
-        string projectFolderPath)
+        string projectFolderPath, ICollection<Product> products)
     {
         await Task.Run(() =>
             ExecuteWithCleanup(() =>
-                ImportPenelopeFileInternal(storageFile, notificationId, projectCode, projectFolderPath)));
+                ImportPenelopeFileInternal(storageFile, notificationId, projectCode, projectFolderPath, products)));
     }
 
     private void ImportPenelopeFileInternal(IStorageFile storageFile, Guid notificationId,
         string projectCode,
-        string projectFolderPath)
+        string projectFolderPath,
+        ICollection<Product> products)
     {
         // Track the COM classes to be released
         Workbook? classesWorkbook = null;
@@ -233,7 +234,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                     var originalDataTable = responseTableRange.MakeDataTable();
 
                     // Step 1: Make the questions column
-                    var newClassesDataTable = AddQuestionsColumn(originalDataTable);
+                    var newClassesDataTable = AddQuestionsColumn(originalDataTable, products.First(product => product.Code == sheet.Name).DisplayName);
 
                     // Step 2: Add the field name column
                     newClassesDataTable = AddFieldNameColumn(newClassesDataTable);
@@ -355,11 +356,11 @@ internal sealed class ExcelService(INotificationService notificationService) : E
         }
     }
 
-    private static DataTable AddQuestionsColumn(DataTable oldDataTable)
+    private static DataTable AddQuestionsColumn(DataTable oldDataTable, string productDisplayName)
     {
         // Create the new datatable with the questions column
         var newDataTable = new DataTable();
-        newDataTable.Columns.Add(new DataColumn("Domanda", typeof(string)));
+        newDataTable.Columns.Add(new DataColumn(productDisplayName, typeof(string)));
 
         // Extract the questions from the original datatable's column names (the Excel header row)
         var questions = oldDataTable.Columns
@@ -656,10 +657,10 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             {
                 workbook = Workbooks.Open(fileName);
 
-                ProcessClosedTable(workbook, TableType.Scale9);
-                ProcessClosedTable(workbook, TableType.Scale5);
-                _ = ProcessFrequencyTable(workbook, TableType.Scale9);
-                var scale5FrequencyTables = ProcessFrequencyTable(workbook, TableType.Scale5);
+                ProcessClosedTable(workbook, TableType.Scale9, Path.GetFileNameWithoutExtension(fileName));
+                ProcessClosedTable(workbook, TableType.Scale5, Path.GetFileNameWithoutExtension(fileName));
+                _ = ProcessFrequencyTable(workbook, TableType.Scale9, Path.GetFileNameWithoutExtension(fileName));
+                var scale5FrequencyTables = ProcessFrequencyTable(workbook, TableType.Scale5, Path.GetFileNameWithoutExtension(fileName));
                 ProcessAdequacyTable(workbook, scale5FrequencyTables);
                 ProcessSynopticTable(workbook);
 
@@ -695,7 +696,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
         }
     }
 
-    private static void ProcessClosedTable(Workbook workbook, TableType scale)
+    private static void ProcessClosedTable(Workbook workbook, TableType scale, string productDisplayName)
     {
         if (scale != TableType.Scale5 && scale != TableType.Scale9)
             throw new ArgumentOutOfRangeException(nameof(scale), "Invalid table type.");
@@ -753,7 +754,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                        string.Compare(classe, "G", StringComparison.CurrentCultureIgnoreCase) == 0)
                 select new
                 {
-                    Question = classRow.Field<string?>("Domanda"),
+                    Question = classRow.Field<string?>(productDisplayName),
                     Label = classRow.Field<string?>("Etichetta")
                 };
 
@@ -881,7 +882,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
     }
 
     private static IEnumerable<KeyValuePair<(string, char), DataTable>> ProcessFrequencyTable(Workbook workbook,
-        TableType scale)
+        TableType scale, string productDisplayName)
     {
         if (scale != TableType.Scale5 && scale != TableType.Scale9)
             throw new ArgumentOutOfRangeException(nameof(scale), "Invalid table type.");
@@ -939,7 +940,7 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                        string.Compare(classe, "G", StringComparison.CurrentCultureIgnoreCase) == 0)
                 select new
                 {
-                    Question = classRow.Field<string?>("Domanda"),
+                    Question = classRow.Field<string?>(productDisplayName),
                     Label = classRow.Field<string?>("Etichetta"),
                     Class = Convert.ToChar(classe.Trim())
                 };

@@ -14,7 +14,7 @@ internal interface IExcelService
     public Task CreateSurveyDataFileAsync(ReportPrj project, string projectFolderPath);
 
     public Task ImportPenelopeFileAsync(IStorageFile storageFile, Guid notificationId, string projectCode,
-        string projectFolderPath);
+        string projectFolderPath, ICollection<Product> products);
 
     public Task CreateProductFilesAsync(Guid notificationId, ICollection<Product> products, string projectFolderPath,
         string projectCode);

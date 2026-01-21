@@ -183,7 +183,8 @@ internal sealed partial class MainViewModel(
 
         var projectFolderPath = Path.GetDirectoryName(_projectFilePath) ??
                                 throw new FileNotFoundException("The project folder path could not be reached.");
-        await excelService.ImportPenelopeFileAsync(file, notificationId, ReportProject.ProjectCode, projectFolderPath);
+
+        await excelService.ImportPenelopeFileAsync(file, notificationId, ReportProject.ProjectCode, projectFolderPath, [.. ReportProject.Products]);
     }
 
     [RelayCommand]
