@@ -70,10 +70,22 @@
                     </MenuFlyoutItem.KeyboardAccelerators>
                 </MenuFlyoutItem>
                 <MenuFlyoutSeparator />
-                <MenuFlyoutItem Text="Elabora" Icon="SlideShow"
+                <MenuFlyoutItem Text="Elabora file prodotti" Icon="SlideShow"
                                 Command="{x:Bind ViewModel.ProcessExcelFilesCommand}">
                     <MenuFlyoutItem.KeyboardAccelerators>
                         <KeyboardAccelerator Key="E" Modifiers="Control" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem Text="Elabora presentazione food" Icon="SlideShow"
+                                Command="{x:Bind ViewModel.ProcessFoodSlideshowCommand}">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="F" Modifiers="Control" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem Text="Elabora presentazione non food" Icon="SlideShow"
+                                Command="{x:Bind ViewModel.ProcessNonFoodSlideshowCommand}">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="H" Modifiers="Control" />
                     </MenuFlyoutItem.KeyboardAccelerators>
                 </MenuFlyoutItem>
             </muxc:MenuBarItem>

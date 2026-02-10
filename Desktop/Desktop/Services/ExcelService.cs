@@ -234,7 +234,8 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                     var originalDataTable = responseTableRange.MakeDataTable();
 
                     // Step 1: Make the questions column
-                    var newClassesDataTable = AddQuestionsColumn(originalDataTable, products.First(product => product.Code == sheet.Name).DisplayName);
+                    var newClassesDataTable = AddQuestionsColumn(originalDataTable,
+                        products.First(product => product.Code == sheet.Name).DisplayName);
 
                     // Step 2: Add the field name column
                     newClassesDataTable = AddFieldNameColumn(newClassesDataTable);
@@ -433,10 +434,11 @@ internal sealed class ExcelService(INotificationService notificationService) : E
     {
         await Task.Run(() =>
             ExecuteWithCleanup(() =>
-                ProcessExcelFilesInternal(notificationId, products, projectFolderPath, projectCode)));
+                CreateProductFilesInternal(notificationId, products, projectFolderPath, projectCode)));
     }
 
-    private void ProcessExcelFilesInternal(Guid notificationId, ICollection<Product> products, string projectFolderPath,
+    private void CreateProductFilesInternal(Guid notificationId, ICollection<Product> products,
+        string projectFolderPath,
         string projectCode)
     {
         var productTotalCount = products.Count;
@@ -660,7 +662,8 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                 ProcessClosedTable(workbook, TableType.Scale9, Path.GetFileNameWithoutExtension(fileName));
                 ProcessClosedTable(workbook, TableType.Scale5, Path.GetFileNameWithoutExtension(fileName));
                 _ = ProcessFrequencyTable(workbook, TableType.Scale9, Path.GetFileNameWithoutExtension(fileName));
-                var scale5FrequencyTables = ProcessFrequencyTable(workbook, TableType.Scale5, Path.GetFileNameWithoutExtension(fileName));
+                var scale5FrequencyTables = ProcessFrequencyTable(workbook, TableType.Scale5,
+                    Path.GetFileNameWithoutExtension(fileName));
                 ProcessAdequacyTable(workbook, scale5FrequencyTables);
                 ProcessSynopticTable(workbook);
 
@@ -1355,18 +1358,20 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             // Read the "C_Gradimento complessivo" or "C_Soddisfazione complessiva" table from Frequenze 9 to get cumulative rating
             sourceSheet = worksheets["Frequenze 9"];
             tables = sourceSheet.ListObjects;
-            SynopticTableType synopticTableType = SynopticTableType.GradimentoComplessivo;
+            var synopticTableType = SynopticTableType.GradimentoComplessivo;
 
             foreach (ListObject table in tables)
             {
                 if (table.Name.Contains("C_Gradimento complessivo", StringComparison.CurrentCultureIgnoreCase))
+                {
                     dataRange = table.Range;
+                }
                 else if (table.Name.Contains("C_Soddisfazione complessiva", StringComparison.CurrentCultureIgnoreCase))
                 {
                     dataRange = table.Range;
                     synopticTableType = SynopticTableType.SoddisfazioneComplessiva;
                 }
-                    
+
                 Marshal.ReleaseComObject(table);
             }
 
@@ -1379,9 +1384,11 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                 var newRow = synopticTable.NewRow();
                 newRow["Macrocategoria"] = "Valutazione";
                 newRow["Categoria"] = synopticTableType == SynopticTableType.GradimentoComplessivo
-                    ? "Gradimento complessivo" : "Soddisfazione complessiva";
+                    ? "Gradimento complessivo"
+                    : "Soddisfazione complessiva";
                 newRow["Attributo"] = synopticTableType == SynopticTableType.GradimentoComplessivo
-                    ? overallFrequencyDataRow.Field<string?>("Gradimento complessivo") : overallFrequencyDataRow.Field<string?>("Soddisfazione complessiva");
+                    ? overallFrequencyDataRow.Field<string?>("Gradimento complessivo")
+                    : overallFrequencyDataRow.Field<string?>("Soddisfazione complessiva");
                 newRow["Valore"] = Convert.ToDouble(overallFrequencyDataRow.Field<string?>("Percentuale"));
                 synopticTable.Rows.Add(newRow);
             }
@@ -1406,7 +1413,8 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             synopticTable.WriteSynopticTableToWorksheet(
                 destinationSheet,
                 synopticTableType == SynopticTableType.GradimentoComplessivo
-                    ? "Gradimento complessivo" : "Soddisfazione complessiva",
+                    ? "Gradimento complessivo"
+                    : "Soddisfazione complessiva",
                 synopticTableType);
 
             #endregion
@@ -1435,7 +1443,9 @@ internal sealed class ExcelService(INotificationService notificationService) : E
 
             if (overallDataRows is null) return;
 
-            foreach (var overallDataRow in overallDataRows.Where(dataRow => string.Compare(dataRow["Generale"].ToString(), "Propensione al riconsumo", StringComparison.CurrentCultureIgnoreCase) == 0))
+            foreach (var overallDataRow in overallDataRows.Where(dataRow =>
+                         string.Compare(dataRow["Generale"].ToString(), "Propensione al riconsumo",
+                             StringComparison.CurrentCultureIgnoreCase) == 0))
             {
                 var newRow = synopticTable.NewRow();
                 newRow["Macrocategoria"] = "Valutazione";
@@ -1514,7 +1524,9 @@ internal sealed class ExcelService(INotificationService notificationService) : E
 
             if (overallDataRows is null) return;
 
-            foreach (var overallDataRow in overallDataRows.Where(dataRow => string.Compare(dataRow["Generale"].ToString(), "Confronto abituale", StringComparison.CurrentCultureIgnoreCase) == 0))
+            foreach (var overallDataRow in overallDataRows.Where(dataRow =>
+                         string.Compare(dataRow["Generale"].ToString(), "Confronto abituale",
+                             StringComparison.CurrentCultureIgnoreCase) == 0))
             {
                 var newRow = synopticTable.NewRow();
                 newRow["Macrocategoria"] = "Valutazione";

@@ -184,7 +184,8 @@ internal sealed partial class MainViewModel(
         var projectFolderPath = Path.GetDirectoryName(_projectFilePath) ??
                                 throw new FileNotFoundException("The project folder path could not be reached.");
 
-        await excelService.ImportPenelopeFileAsync(file, notificationId, ReportProject.ProjectCode, projectFolderPath, [.. ReportProject.Products]);
+        await excelService.ImportPenelopeFileAsync(file, notificationId, ReportProject.ProjectCode, projectFolderPath,
+            [.. ReportProject.Products]);
     }
 
     [RelayCommand]
@@ -195,17 +196,12 @@ internal sealed partial class MainViewModel(
         var projectFolderPath = Path.GetDirectoryName(_projectFilePath) ??
                                 throw new FileNotFoundException("The project folder path could not be reached.");
 
-        var productsToProcess = ReportProject.Products.Where(product =>
-                !File.Exists(Path.Combine(Path.Combine(projectFolderPath, "Elaborazioni"),
-                    $"{product.DisplayName.Trim()}.xlsx")))
-            .ToList();
-
         var notificationId =
             await notificationService.ShowProgressNotificationAsync("Elaborazione in corso...",
                 "Potrebbero volerci alcuni minuti.", "Creazione file prodotti in corso...",
-                (uint)productsToProcess.Count);
+                (uint)ReportProject.Products.Count());
 
-        await excelService.CreateProductFilesAsync(notificationId, productsToProcess, projectFolderPath,
+        await excelService.CreateProductFilesAsync(notificationId, [.. ReportProject.Products], projectFolderPath,
             ReportProject.ProjectCode);
 
         var fileNames = Directory.GetFiles(Path.Combine(projectFolderPath, "Elaborazioni"), "*.xlsx");
@@ -215,6 +211,50 @@ internal sealed partial class MainViewModel(
             (uint)fileNames.Length);
 
         await excelService.ProcessProductFilesAsync(notificationId, fileNames);
+    }
+
+    [RelayCommand]
+    private async Task ProcessFoodSlideshowAsync()
+    {
+        await ProcessSlideshowAsync(ProductClassification.Food);
+    }
+
+    [RelayCommand]
+    private async Task ProcessNonFoodSlideshowAsync()
+    {
+        await ProcessSlideshowAsync(ProductClassification.NonFood);
+    }
+
+    private async Task ProcessSlideshowAsync(ProductClassification productClassification)
+    {
+        if (ReportProject is null || _projectFilePath is null) return;
+
+        var projectFolderPath = Path.GetDirectoryName(_projectFilePath) ??
+                                throw new FileNotFoundException("The project folder path could not be reached.");
+
+        var notificationId =
+            await notificationService.ShowProgressNotificationAsync("Elaborazione in corso...",
+                "Potrebbero volerci alcuni minuti.", "Creazione presentazioni prodotti in corso...",
+                (uint)ReportProject.Products.Count());
+
+        await powerPointService.CreateProductSlideshowAsync(notificationId, [.. ReportProject.Products],
+            projectFolderPath, ReportProject.ProjectName, ReportProject.ProjectCode);
+
+        // Get only the files that match the requested classification
+        var fileNames = Directory.GetFiles(Path.Combine(projectFolderPath, "Elaborazioni"), "*.pptx");
+        var fileNamesToProcess = fileNames.Where(fileName =>
+        {
+            var fileProductName = Path.GetFileNameWithoutExtension(fileName);
+            var product = ReportProject.Products.FirstOrDefault(p => p.DisplayName.Trim() == fileProductName);
+            return product != null && product.Classification == productClassification;
+        }).ToArray();
+
+        notificationId = await notificationService.ShowProgressNotificationAsync("Elaborazione in corso...",
+            "Potrebbero volerci alcuni minuti.", "Elaborazione file prodotti in corso...",
+            (uint)fileNames.Length);
+
+        // Create the merged slideshow based on the classification
+        // TODO
     }
 
     public async Task LoadProjectFileAsync(IStorageFile file)

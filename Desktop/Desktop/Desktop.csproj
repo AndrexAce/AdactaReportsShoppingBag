@@ -13,6 +13,23 @@
 		<Nullable>enable</Nullable>
 		<EnableWindowsTargeting>true</EnableWindowsTargeting>
 	</PropertyGroup>
+	
+	<ItemGroup>
+	  <Content Remove="Assets\ab.png" />
+	  <Content Remove="Assets\consilia.png" />
+	  <Content Remove="Assets\consiliaoptima.png" />
+	  <Content Remove="Assets\consiliaperte.png" />
+	  <Content Remove="Assets\consiliapremium.png" />
+	  <Content Remove="Assets\consiliasaperscegliere.png" />
+	  <Content Remove="Assets\ilgigante.png" />
+	  <Content Remove="Assets\naturachiama.png" />
+	  <Content Remove="Assets\saperdisapori.png" />
+	  <Content Remove="Assets\selex.png" />
+	  <Content Remove="Assets\selexcasabella.png" />
+	  <Content Remove="Assets\selexego.png" />
+	  <Content Remove="Assets\selexvivibene.png" />
+	  <Content Remove="Assets\vale.png" />
+	</ItemGroup>
 	<ItemGroup>
 		<COMReference Include="Microsoft.Office.Interop.Excel">
 			<WrapperTool>tlbimp</WrapperTool>
@@ -30,7 +47,16 @@
 		  <Guid>91493440-5a91-11cf-8700-00aa0060263b</Guid>
 		  <Lcid>0</Lcid>
 		  <Isolated>false</Isolated>
-		  <EmbedInteropTypes>true</EmbedInteropTypes>
+		  <EmbedInteropTypes>false</EmbedInteropTypes>
+		</COMReference>
+		<COMReference Include="Microsoft.Office.Core">
+		  <WrapperTool>tlbimp</WrapperTool>
+		  <VersionMinor>8</VersionMinor>
+		  <VersionMajor>2</VersionMajor>
+		  <Guid>2df8d04c-5bfa-101b-bde5-00aa0044de52</Guid>
+		  <Lcid>0</Lcid>
+		  <Isolated>false</Isolated>
+		  <EmbedInteropTypes>false</EmbedInteropTypes>
 		</COMReference>
 	</ItemGroup>
 
@@ -55,7 +81,23 @@
 		<Content Update="Assets\favicon.ico">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</Content>
+		<EmbeddedResource Include="Assets\ab.png" />
+		<EmbeddedResource Include="Assets\consilia.png" />
+		<EmbeddedResource Include="Assets\consiliaoptima.png" />
+		<EmbeddedResource Include="Assets\consiliaperte.png" />
+		<EmbeddedResource Include="Assets\consiliapremium.png" />
+		<EmbeddedResource Include="Assets\consiliasaperscegliere.png" />
+		<EmbeddedResource Include="Assets\ilgigante.png" />
+		<EmbeddedResource Include="Assets\naturachiama.png" />
 		<EmbeddedResource Include="Assets\ReportPrj.schema.json" />
+		<EmbeddedResource Include="Assets\saperdisapori.png" />
+		<EmbeddedResource Include="Assets\selex.png" />
+		<EmbeddedResource Include="Assets\selexcasabella.png" />
+		<EmbeddedResource Include="Assets\selexego.png" />
+		<EmbeddedResource Include="Assets\selexvivibene.png" />
+		<EmbeddedResource Include="Assets\StartTemplate.pptx" />
+		<EmbeddedResource Include="Assets\ProductTemplate.pptx" />
+		<EmbeddedResource Include="Assets\vale.png" />
 	</ItemGroup>
 
 	<ItemGroup>

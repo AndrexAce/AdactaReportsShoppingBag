@@ -1,9 +1,9 @@
-﻿using Microsoft.Office.Interop.PowerPoint;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
+using Microsoft.Office.Interop.PowerPoint;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.Services;
 
-internal class PowerPointComHandler : BaseComHandler
+internal abstract class PowerPointComHandler : BaseComHandler
 {
     protected Application? PowerPointApp;
     protected Presentation? Presentation;
