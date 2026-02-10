@@ -1,8 +1,8 @@
-﻿using AdactaInternational.AdactaReportsShoppingBag.Model;
+﻿using System.Reflection;
+using Windows.Storage;
+using AdactaInternational.AdactaReportsShoppingBag.Model;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Schema;
-using System.Reflection;
-using Windows.Storage;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.Services;
 

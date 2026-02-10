@@ -1,4 +1,9 @@
-﻿using AdactaInternational.AdactaReportsShoppingBag.Desktop.Exceptions;
+﻿using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Reflection;
+using Windows.Storage;
+using AdactaInternational.AdactaReportsShoppingBag.Desktop.Exceptions;
 using AdactaInternational.AdactaReportsShoppingBag.Desktop.Repositories;
 using AdactaInternational.AdactaReportsShoppingBag.Desktop.Services;
 using AdactaInternational.AdactaReportsShoppingBag.Model;
@@ -7,11 +12,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Reflection;
-using Windows.Storage;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.ViewModels;
 
@@ -228,26 +228,27 @@ internal sealed partial class MainViewModel(
         var projectFolderPath = Path.GetDirectoryName(_projectFilePath) ??
                                 throw new FileNotFoundException("The project folder path could not be reached.");
 
+        // Get only the files that match the requested classification
+        var productsToProcess = ReportProject.Products.Where(p => p.Classification == productClassification).ToArray();
+
+        if (productsToProcess.Length == 0)
+        {
+            await dialogService.ShowInformationDialogAsync("Nessun prodotto da elaborare",
+                "Non sono presenti prodotti della classificazione selezionata.", "Ok");
+            return;
+        }
+
         var notificationId =
             await notificationService.ShowProgressNotificationAsync("Elaborazione in corso...",
                 "Potrebbero volerci alcuni minuti.", "Creazione presentazioni prodotti in corso...",
-                (uint)ReportProject.Products.Count());
+                (uint)productsToProcess.Length);
 
-        await powerPointService.CreateProductSlideshowAsync(notificationId, [.. ReportProject.Products],
+        await powerPointService.CreateProductSlideshowAsync(notificationId, productsToProcess,
             projectFolderPath, ReportProject.ProjectName, ReportProject.ProjectCode);
-
-        // Get only the files that match the requested classification
-        var fileNames = Directory.GetFiles(Path.Combine(projectFolderPath, "Elaborazioni"), "*.pptx");
-        var fileNamesToProcess = fileNames.Where(fileName =>
-        {
-            var fileProductName = Path.GetFileNameWithoutExtension(fileName);
-            var product = ReportProject.Products.FirstOrDefault(p => p.DisplayName.Trim() == fileProductName);
-            return product != null && product.Classification == productClassification;
-        }).ToArray();
 
         notificationId = await notificationService.ShowProgressNotificationAsync("Elaborazione in corso...",
             "Potrebbero volerci alcuni minuti.", "Elaborazione file prodotti in corso...",
-            (uint)fileNames.Length);
+            (uint)productsToProcess.Length);
 
         // Create the merged slideshow based on the classification
         // TODO

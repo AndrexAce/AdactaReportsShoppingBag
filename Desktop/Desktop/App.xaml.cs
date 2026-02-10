@@ -1,12 +1,12 @@
-﻿using AdactaInternational.AdactaReportsShoppingBag.Desktop.Repositories;
+﻿using Windows.ApplicationModel.Activation;
+using Windows.Storage;
+using AdactaInternational.AdactaReportsShoppingBag.Desktop.Repositories;
 using AdactaInternational.AdactaReportsShoppingBag.Desktop.Services;
 using AdactaInternational.AdactaReportsShoppingBag.Desktop.ViewModels;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Windows.AppLifecycle;
 using Microsoft.Windows.AppNotifications;
-using Windows.ApplicationModel.Activation;
-using Windows.Storage;
 using LaunchActivatedEventArgs = Microsoft.UI.Xaml.LaunchActivatedEventArgs;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop;

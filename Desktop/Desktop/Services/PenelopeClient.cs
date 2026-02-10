@@ -1,12 +1,12 @@
-﻿using AdactaInternational.AdactaReportsShoppingBag.Desktop.Exceptions;
-using AdactaInternational.AdactaReportsShoppingBag.Model.Soap;
-using AdactaInternational.AdactaReportsShoppingBag.Model.Soap.Request;
-using AdactaInternational.AdactaReportsShoppingBag.Model.Soap.Response;
-using System.Net.Mime;
+﻿using System.Net.Mime;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
+using AdactaInternational.AdactaReportsShoppingBag.Desktop.Exceptions;
+using AdactaInternational.AdactaReportsShoppingBag.Model.Soap;
+using AdactaInternational.AdactaReportsShoppingBag.Model.Soap.Request;
+using AdactaInternational.AdactaReportsShoppingBag.Model.Soap.Response;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.Services;
 

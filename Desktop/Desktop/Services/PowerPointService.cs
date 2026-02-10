@@ -1,11 +1,10 @@
-﻿using AdactaInternational.AdactaReportsShoppingBag.Model.Soap.Response;
-using Microsoft.Office.Core;
-using Microsoft.Office.Interop.Excel;
-using Microsoft.Office.Interop.PowerPoint;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Runtime.InteropServices;
-using ExcelApplication = Microsoft.Office.Interop.Excel.Application;
+using AdactaInternational.AdactaReportsShoppingBag.Model.Soap.Response;
+using Microsoft.Office.Core;
+using Microsoft.Office.Interop.PowerPoint;
 using PowerPointApplication = Microsoft.Office.Interop.PowerPoint.Application;
+using Shape = Microsoft.Office.Interop.PowerPoint.Shape;
 using TextFrame = Microsoft.Office.Interop.PowerPoint.TextFrame;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.Services;
@@ -28,10 +27,8 @@ internal sealed class PowerPointService(INotificationService notificationService
         var productCurrentCount = 0;
 
         // Track the COM classes to be released
-        ExcelApplication? excelApp = null;
-        Workbooks? workbooks = null;
-        Workbook? productWorkbook = null;
-        Sheets? productWorksheets = null;
+        Presentation? presentation = null;
+        Slides? slides = null;
 
         try
         {
@@ -44,58 +41,45 @@ internal sealed class PowerPointService(INotificationService notificationService
                 DisplayAlerts = PpAlertLevel.ppAlertsNone
             };
             Presentations = PowerPointApp.Presentations;
-            excelApp = new ExcelApplication
-            {
-                Visible = false,
-                DisplayAlerts = false
-            };
-            workbooks = excelApp.Workbooks;
 
             // Extract the embedded template to a temporary file
-            var templateStream = Assembly.GetExecutingAssembly()
-                                     .GetManifestResourceStream(
-                                         "AdactaInternational.AdactaReportsShoppingBag.Desktop.Assets.ProductTemplate.pptx")
-                                 ?? throw new FileNotFoundException(
-                                     "ProductTemplate.pptx embedded resource not found.");
-
             var tempTemplatePath = Path.Combine(Path.GetTempPath(), "ProductTemplate_temp.pptx");
 
-            using (var fileStream = File.Create(tempTemplatePath))
+            using (var templateStream = Assembly.GetExecutingAssembly()
+                                            .GetManifestResourceStream(
+                                                "AdactaInternational.AdactaReportsShoppingBag.Desktop.Assets.ProductTemplate.pptx")
+                                        ?? throw new FileNotFoundException(
+                                            "ProductTemplate.pptx embedded resource not found."))
             {
-                templateStream.CopyTo(fileStream);
+                using (var fileStream = File.Create(tempTemplatePath))
+                {
+                    templateStream.CopyTo(fileStream);
+                }
             }
-
-            templateStream.Dispose();
 
             foreach (var product in products)
             {
                 // Open the presentation file
-                Presentation = Presentations.Open(tempTemplatePath);
-                Slides = Presentation.Slides;
+                presentation = Presentations.Open(tempTemplatePath);
+                slides = presentation.Slides;
 
-                // Open the product Excel file in read-only mode
-                productWorkbook = workbooks.Open(
-                    Path.Combine(projectFolderPath, "Elaborazioni", $"{product.DisplayName.Trim()}.xlsx"),
-                    ReadOnly: true);
-                productWorksheets = productWorkbook.Sheets;
-
-                ProcessCoverSlideForProduct(product, Slides, projectName, projectCode);
+                ProcessCoverSlideForProduct(product, slides, projectName, projectCode);
+                ProcessFirstSlideForProduct(product, slides, projectName, projectCode);
 
                 // Save the product presentation in the project folder
                 var outputPath = Path.Combine(projectFolderPath, "Elaborazioni", $"{product.DisplayName.Trim()}.pptx");
-                Presentation.SaveAs(outputPath);
-
-                // Clean up for next iteration
-                Marshal.ReleaseComObject(productWorksheets);
-                productWorksheets = null;
-                productWorkbook.Close(false);
-                Marshal.ReleaseComObject(productWorkbook);
-                productWorkbook = null;
+                presentation.SaveAs(outputPath);
 
                 notificationService.UpdateProgressNotificationAsync(notificationId,
                     "Creazione file prodotti in corso...",
                     (uint)++productCurrentCount,
                     (uint)productTotalCount).GetAwaiter().GetResult();
+
+                if (slides is not null) Marshal.ReleaseComObject(slides);
+                slides = null;
+                presentation.Close();
+                Marshal.ReleaseComObject(presentation);
+                presentation = null;
             }
 
             notificationService.RemoveNotificationAsync(notificationId).GetAwaiter().GetResult();
@@ -112,18 +96,12 @@ internal sealed class PowerPointService(INotificationService notificationService
         }
         finally // Clean up the resources not managed by the base class
         {
-            if (productWorksheets is not null) Marshal.ReleaseComObject(productWorksheets);
-            if (productWorkbook is not null)
-            {
-                productWorkbook.Close(false);
-                Marshal.ReleaseComObject(productWorkbook);
-            }
+            if (slides is not null) Marshal.ReleaseComObject(slides);
 
-            if (workbooks is not null) Marshal.ReleaseComObject(workbooks);
-            if (excelApp is not null)
+            if (presentation is not null)
             {
-                excelApp.Quit();
-                Marshal.ReleaseComObject(excelApp);
+                presentation.Close();
+                Marshal.ReleaseComObject(presentation);
             }
         }
     }
@@ -134,27 +112,26 @@ internal sealed class PowerPointService(INotificationService notificationService
         var coverSlide = productSlides[1];
         var shapes = coverSlide.Shapes;
 
-        for (var i = shapes.Count; i >= 1; i--)
+        foreach (Shape? shape in shapes)
         {
-            var shape = shapes[i];
-            var shapeType = shape.Type;
-            var shapeName = shape.Name;
+            var shapeType = shape?.Type;
+            var shapeName = shape?.Name;
             TextFrame? textFrame = null;
             TextRange? textRange = null;
 
             switch (shapeType, shapeName)
             {
                 case (MsoShapeType.msoPlaceholder, PlaceholderConstants.Footer):
-                    textFrame = shape.TextFrame;
-                    textRange = textFrame.TextRange;
-                    textRange.Text = $"{projectName} - job {projectCode} - {DateOnly.FromDateTime(DateTime.Now)}";
+                    textFrame = shape?.TextFrame;
+                    textRange = textFrame?.TextRange;
+                    textRange?.Text = $"{projectName} - job {projectCode} - {DateOnly.FromDateTime(DateTime.Now)}";
 
                     break;
 
                 case (MsoShapeType.msoPlaceholder, PlaceholderConstants.Title):
-                    textFrame = shape.TextFrame;
-                    textRange = textFrame.TextRange;
-                    textRange.Text = product.DisplayName;
+                    textFrame = shape?.TextFrame;
+                    textRange = textFrame?.TextRange;
+                    textRange?.Text = product.ProductName;
 
                     break;
 
@@ -168,18 +145,19 @@ internal sealed class PowerPointService(INotificationService notificationService
                         if (localImagePath is not null && File.Exists(localImagePath))
                         {
                             // Get placeholder dimensions and position
-                            var left = shape.Left;
-                            var top = shape.Top;
+                            var left = shape?.Left;
+                            var top = shape?.Top;
 
                             // Add the picture at the same position
                             var picture = shapes.AddPicture(
                                 localImagePath,
                                 MsoTriState.msoFalse,
                                 MsoTriState.msoTrue,
-                                left, top);
+                                left ?? 0, top ?? 0);
 
                             picture.ScaleHeight(0.2f, MsoTriState.msoTrue);
                             picture.ScaleWidth(0.2f, MsoTriState.msoTrue);
+                            picture.Name = PlaceholderConstants.Photo;
 
                             File.Delete(localImagePath);
                             Marshal.ReleaseComObject(picture);
@@ -196,18 +174,19 @@ internal sealed class PowerPointService(INotificationService notificationService
                         if (localImagePath is not null && File.Exists(localImagePath))
                         {
                             // Get placeholder dimensions and position
-                            var left = shape.Left;
-                            var top = shape.Top;
+                            var left = shape?.Left;
+                            var top = shape?.Top;
 
                             // Add the picture at the same position
                             var picture = shapes.AddPicture(
                                 localImagePath,
                                 MsoTriState.msoFalse,
                                 MsoTriState.msoTrue,
-                                left, top);
+                                left ?? 0, top ?? 0);
 
                             picture.ScaleHeight(0.5f, MsoTriState.msoTrue);
                             picture.ScaleWidth(0.5f, MsoTriState.msoTrue);
+                            picture.Name = PlaceholderConstants.Logo;
 
                             File.Delete(localImagePath);
                             Marshal.ReleaseComObject(picture);
@@ -219,7 +198,73 @@ internal sealed class PowerPointService(INotificationService notificationService
 
             if (textRange is not null) Marshal.ReleaseComObject(textRange);
             if (textFrame is not null) Marshal.ReleaseComObject(textFrame);
-            Marshal.ReleaseComObject(shape);
+            if (shape is not null) Marshal.ReleaseComObject(shape);
+        }
+
+        Marshal.ReleaseComObject(shapes);
+        Marshal.ReleaseComObject(coverSlide);
+    }
+
+    private static void ProcessFirstSlideForProduct(Product product, Slides productSlides, string projectName,
+        string projectCode)
+    {
+        var coverSlide = productSlides[2];
+        var shapes = coverSlide.Shapes;
+
+        foreach (Shape? shape in shapes)
+        {
+            var shapeType = shape?.Type;
+            var shapeName = shape?.Name;
+            TextFrame? textFrame = null;
+            TextRange? textRange = null;
+
+            switch (shapeType, shapeName)
+            {
+                case (MsoShapeType.msoPlaceholder, PlaceholderConstants.Footer):
+                    textFrame = shape?.TextFrame;
+                    textRange = textFrame?.TextRange;
+                    textRange?.Text = $"{projectName} - job {projectCode} - {DateOnly.FromDateTime(DateTime.Now)}";
+
+                    break;
+
+                case (MsoShapeType.msoPlaceholder, PlaceholderConstants.Title):
+                    textFrame = shape?.TextFrame;
+                    textRange = textFrame?.TextRange;
+                    textRange?.Text = product.ProductName;
+
+                    break;
+
+                case (MsoShapeType.msoPlaceholder, PlaceholderConstants.Logo):
+                    if (!string.IsNullOrEmpty(product.Brand))
+                    {
+                        var localImagePath = LoadBrandImageAsync(product.Brand).GetAwaiter().GetResult();
+
+                        if (localImagePath is not null && File.Exists(localImagePath))
+                        {
+                            // Get placeholder dimensions and position
+                            var left = shape?.Left;
+                            var top = shape?.Top;
+
+                            // Add the picture at the same position
+                            var picture = shapes.AddPicture(
+                                localImagePath,
+                                MsoTriState.msoFalse,
+                                MsoTriState.msoTrue,
+                                left ?? 0, top ?? 0);
+
+                            picture.Name = PlaceholderConstants.Logo;
+
+                            File.Delete(localImagePath);
+                            Marshal.ReleaseComObject(picture);
+                        }
+                    }
+
+                    break;
+            }
+
+            if (textRange is not null) Marshal.ReleaseComObject(textRange);
+            if (textFrame is not null) Marshal.ReleaseComObject(textFrame);
+            if (shape is not null) Marshal.ReleaseComObject(shape);
         }
 
         Marshal.ReleaseComObject(shapes);

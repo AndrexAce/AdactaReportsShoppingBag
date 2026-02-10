@@ -1,3 +1,7 @@
+using Windows.Graphics;
+using Windows.Storage;
+using Windows.UI;
+using Windows.UI.ViewManagement;
 using AdactaInternational.AdactaReportsShoppingBag.Desktop.Pages;
 using AdactaInternational.AdactaReportsShoppingBag.Desktop.ViewModels;
 using AdactaInternational.AdactaReportsShoppingBag.Model;
@@ -8,10 +12,6 @@ using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media.Imaging;
-using Windows.Graphics;
-using Windows.Storage;
-using Windows.UI;
-using Windows.UI.ViewManagement;
 using WinRT.Interop;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop;

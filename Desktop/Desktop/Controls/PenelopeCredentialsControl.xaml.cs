@@ -1,7 +1,7 @@
+using System.ComponentModel;
 using AdactaInternational.AdactaReportsShoppingBag.Desktop.ViewModels;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using Microsoft.UI.Xaml;
-using System.ComponentModel;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.Controls;
 

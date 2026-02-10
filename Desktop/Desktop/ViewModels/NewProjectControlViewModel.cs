@@ -1,6 +1,6 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using System.ComponentModel.DataAnnotations;
+using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.UI.Xaml;
-using System.ComponentModel.DataAnnotations;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.ViewModels;
 

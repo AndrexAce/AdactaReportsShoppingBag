@@ -1,6 +1,6 @@
-﻿using AdactaInternational.AdactaReportsShoppingBag.Model;
+﻿using Windows.Storage;
+using AdactaInternational.AdactaReportsShoppingBag.Model;
 using AdactaInternational.AdactaReportsShoppingBag.Model.Soap.Response;
-using Windows.Storage;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.Services;
 

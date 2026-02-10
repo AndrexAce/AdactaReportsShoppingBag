@@ -1,5 +1,5 @@
-﻿using Microsoft.Office.Interop.Excel;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
+using Microsoft.Office.Interop.Excel;
 using static AdactaInternational.AdactaReportsShoppingBag.Desktop.Services.ExcelService;
 using DataTable = System.Data.DataTable;
 using Range = Microsoft.Office.Interop.Excel.Range;
@@ -23,11 +23,11 @@ internal static class DataTableExtensions
 
             // Write data rows
             for (var r = 0; r < rowCount; r++)
-                for (var c = 0; c < colCount; c++)
-                {
-                    var cellValue = dataTable.Rows[r][c];
-                    values[r + 1, c] = cellValue == DBNull.Value ? "" : cellValue;
-                }
+            for (var c = 0; c < colCount; c++)
+            {
+                var cellValue = dataTable.Rows[r][c];
+                values[r + 1, c] = cellValue == DBNull.Value ? "" : cellValue;
+            }
 
             Range? startCell = null;
             Range? endCell = null;
@@ -79,11 +79,11 @@ internal static class DataTableExtensions
 
             // Write data rows
             for (var r = 0; r < rowCount; r++)
-                for (var c = 0; c < colCount; c++)
-                {
-                    var cellValue = dataTable.Rows[r][c];
-                    values[r + 1, c] = cellValue == DBNull.Value ? "" : cellValue;
-                }
+            for (var c = 0; c < colCount; c++)
+            {
+                var cellValue = dataTable.Rows[r][c];
+                values[r + 1, c] = cellValue == DBNull.Value ? "" : cellValue;
+            }
 
             Range? startCell = null;
             Range? endCell = null;
@@ -195,11 +195,11 @@ internal static class DataTableExtensions
 
             // Write data rows
             for (var r = 0; r < rowCount; r++)
-                for (var c = 0; c < colCount; c++)
-                {
-                    var cellValue = dataTable.Rows[r][c];
-                    values[r + 1, c] = cellValue == DBNull.Value ? "" : cellValue;
-                }
+            for (var c = 0; c < colCount; c++)
+            {
+                var cellValue = dataTable.Rows[r][c];
+                values[r + 1, c] = cellValue == DBNull.Value ? "" : cellValue;
+            }
 
             Range? startCell = null;
             Range? endCell = null;
@@ -325,11 +325,11 @@ internal static class DataTableExtensions
 
             // Write data rows
             for (var r = 0; r < rowCount; r++)
-                for (var c = 0; c < colCount; c++)
-                {
-                    var cellValue = dataTable.Rows[r][c];
-                    values[r + 1, c] = cellValue == DBNull.Value ? "" : cellValue;
-                }
+            for (var c = 0; c < colCount; c++)
+            {
+                var cellValue = dataTable.Rows[r][c];
+                values[r + 1, c] = cellValue == DBNull.Value ? "" : cellValue;
+            }
 
             Range? startCell = null;
             Range? endCell = null;
@@ -447,11 +447,11 @@ internal static class DataTableExtensions
 
             // Write data rows
             for (var r = 0; r < rowCount; r++)
-                for (var c = 0; c < colCount; c++)
-                {
-                    var cellValue = dataTable.Rows[r][c];
-                    values[r + 1, c] = cellValue == DBNull.Value ? "" : cellValue;
-                }
+            for (var c = 0; c < colCount; c++)
+            {
+                var cellValue = dataTable.Rows[r][c];
+                values[r + 1, c] = cellValue == DBNull.Value ? "" : cellValue;
+            }
 
             Range? startCell = null;
             Range? endCell = null;
@@ -577,11 +577,11 @@ internal static class DataTableExtensions
 
             // Write data rows
             for (var r = 0; r < rowCount; r++)
-                for (var c = 0; c < colCount; c++)
-                {
-                    var cellValue = dataTable.Rows[r][c];
-                    values[r + 1, c] = cellValue == DBNull.Value ? "" : cellValue;
-                }
+            for (var c = 0; c < colCount; c++)
+            {
+                var cellValue = dataTable.Rows[r][c];
+                values[r + 1, c] = cellValue == DBNull.Value ? "" : cellValue;
+            }
 
             Range? startCell = null;
             Range? endCell = null;
@@ -705,11 +705,11 @@ internal static class DataTableExtensions
 
             // Write data rows
             for (var r = 0; r < rowCount; r++)
-                for (var c = 0; c < colCount; c++)
-                {
-                    var cellValue = dataTable.Rows[r][c];
-                    values[r, c] = cellValue == DBNull.Value ? "" : cellValue;
-                }
+            for (var c = 0; c < colCount; c++)
+            {
+                var cellValue = dataTable.Rows[r][c];
+                values[r, c] = cellValue == DBNull.Value ? "" : cellValue;
+            }
 
             Range? startCell = null;
             Range? endCell = null;
