@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.Services;
+﻿namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.Services;
 
 internal abstract class BaseComHandler
 {

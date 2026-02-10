@@ -1,17 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Net.Http;
-using System.Net.Mime;
-using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml;
-using System.Xml.Serialization;
-using AdactaInternational.AdactaReportsShoppingBag.Desktop.Exceptions;
+﻿using AdactaInternational.AdactaReportsShoppingBag.Desktop.Exceptions;
 using AdactaInternational.AdactaReportsShoppingBag.Model.Soap;
 using AdactaInternational.AdactaReportsShoppingBag.Model.Soap.Request;
 using AdactaInternational.AdactaReportsShoppingBag.Model.Soap.Response;
+using System.Net.Mime;
+using System.Runtime.Serialization;
+using System.Text;
+using System.Xml;
+using System.Xml.Serialization;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.Services;
 

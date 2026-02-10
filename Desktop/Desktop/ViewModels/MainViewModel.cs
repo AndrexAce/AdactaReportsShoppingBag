@@ -1,13 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Threading.Tasks;
-using Windows.Storage;
-using AdactaInternational.AdactaReportsShoppingBag.Desktop.Exceptions;
+﻿using AdactaInternational.AdactaReportsShoppingBag.Desktop.Exceptions;
 using AdactaInternational.AdactaReportsShoppingBag.Desktop.Repositories;
 using AdactaInternational.AdactaReportsShoppingBag.Desktop.Services;
 using AdactaInternational.AdactaReportsShoppingBag.Model;
@@ -16,6 +7,11 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Reflection;
+using Windows.Storage;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.ViewModels;
 

@@ -1,17 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using Windows.Storage;
-using AdactaInternational.AdactaReportsShoppingBag.Desktop.Extensions;
+﻿using AdactaInternational.AdactaReportsShoppingBag.Desktop.Extensions;
 using AdactaInternational.AdactaReportsShoppingBag.Model;
 using AdactaInternational.AdactaReportsShoppingBag.Model.Soap.Response;
 using Humanizer;
 using Microsoft.Office.Interop.Excel;
+using System.Data;
+using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
+using Windows.Storage;
 using DataTable = System.Data.DataTable;
 using Range = Microsoft.Office.Interop.Excel.Range;
 
@@ -278,9 +273,9 @@ internal sealed class ExcelService(INotificationService notificationService) : E
             responseTableRange = null;
 
             var expectationsByCode = from dataRow in expectationsDataTable.AsEnumerable().AsQueryable()
-                group dataRow by dataRow.Field<string?>("sigla")
+                                     group dataRow by dataRow.Field<string?>("sigla")
                 into codeGroup
-                select codeGroup;
+                                     select codeGroup;
 
             foreach (var group in expectationsByCode)
             {
@@ -749,17 +744,17 @@ internal sealed class ExcelService(INotificationService notificationService) : E
 
             // Take the questions and labels
             var questionsAndLabels = from classRow in classesDataTable.AsEnumerable().AsQueryable()
-                let classe = classRow.Field<string?>("Classe") ?? ""
-                where (scale == TableType.Scale5 &&
-                       Regex.IsMatch(classe, "[AI]", RegexOptions.IgnoreCase | RegexOptions.Compiled,
-                           TimeSpan.FromMilliseconds(100))) ||
-                      (scale == TableType.Scale9 &&
-                       string.Compare(classe, "G", StringComparison.CurrentCultureIgnoreCase) == 0)
-                select new
-                {
-                    Question = classRow.Field<string?>(productDisplayName),
-                    Label = classRow.Field<string?>("Etichetta")
-                };
+                                     let classe = classRow.Field<string?>("Classe") ?? ""
+                                     where (scale == TableType.Scale5 &&
+                                            Regex.IsMatch(classe, "[AI]", RegexOptions.IgnoreCase | RegexOptions.Compiled,
+                                                TimeSpan.FromMilliseconds(100))) ||
+                                           (scale == TableType.Scale9 &&
+                                            string.Compare(classe, "G", StringComparison.CurrentCultureIgnoreCase) == 0)
+                                     select new
+                                     {
+                                         Question = classRow.Field<string?>(productDisplayName),
+                                         Label = classRow.Field<string?>("Etichetta")
+                                     };
 
             // If the table is 9-scaled, put the "Gradimento complessivo" / "Soddisfazione complessiva" label at the first position
             if (scale == TableType.Scale9)
@@ -791,9 +786,9 @@ internal sealed class ExcelService(INotificationService notificationService) : E
 
             // Take the list of possible locations and create groups
             var locations = from dataRow in dataDataTable.AsEnumerable().AsQueryable()
-                group dataRow by dataRow.Field<string?>("D.1 PUNTO DI CAMPIONAMENTO")
+                            group dataRow by dataRow.Field<string?>("D.1 PUNTO DI CAMPIONAMENTO")
                 into locationGroup
-                select locationGroup.Key;
+                            select locationGroup.Key;
 
             ICollection<KeyValuePair<string, DataTable>> dataTables = [];
 
@@ -935,18 +930,18 @@ internal sealed class ExcelService(INotificationService notificationService) : E
 
             // Take the questions and labels
             var questionsAndLabels = from classRow in classesDataTable.AsEnumerable().AsQueryable()
-                let classe = classRow.Field<string?>("Classe") ?? ""
-                where (scale == TableType.Scale5 &&
-                       Regex.IsMatch(classe, "[AI]", RegexOptions.IgnoreCase | RegexOptions.Compiled,
-                           TimeSpan.FromMilliseconds(100))) ||
-                      (scale == TableType.Scale9 &&
-                       string.Compare(classe, "G", StringComparison.CurrentCultureIgnoreCase) == 0)
-                select new
-                {
-                    Question = classRow.Field<string?>(productDisplayName),
-                    Label = classRow.Field<string?>("Etichetta"),
-                    Class = Convert.ToChar(classe.Trim())
-                };
+                                     let classe = classRow.Field<string?>("Classe") ?? ""
+                                     where (scale == TableType.Scale5 &&
+                                            Regex.IsMatch(classe, "[AI]", RegexOptions.IgnoreCase | RegexOptions.Compiled,
+                                                TimeSpan.FromMilliseconds(100))) ||
+                                           (scale == TableType.Scale9 &&
+                                            string.Compare(classe, "G", StringComparison.CurrentCultureIgnoreCase) == 0)
+                                     select new
+                                     {
+                                         Question = classRow.Field<string?>(productDisplayName),
+                                         Label = classRow.Field<string?>("Etichetta"),
+                                         Class = Convert.ToChar(classe.Trim())
+                                     };
 
             // Put the "Gradimento complessivo" or "Soddisfazione complessiva" label at the first position if scale is 9
             if (scale == TableType.Scale9)
@@ -981,17 +976,17 @@ internal sealed class ExcelService(INotificationService notificationService) : E
                     });
 
                 var results = from dataRow in dataDataTable.AsEnumerable().AsQueryable()
-                    orderby Convert.ToUInt32(dataRow.Field<string?>(qAndL.Question.Trim()))
-                    group dataRow by Convert.ToUInt32(dataRow.Field<string?>(qAndL.Question.Trim()))
+                              orderby Convert.ToUInt32(dataRow.Field<string?>(qAndL.Question.Trim()))
+                              group dataRow by Convert.ToUInt32(dataRow.Field<string?>(qAndL.Question.Trim()))
                     into resultGroup
-                    where (TableType.Scale5 == scale && resultGroup.Key >= 1 && resultGroup.Key <= 5) ||
-                          (TableType.Scale9 == scale && resultGroup.Key >= 1 && resultGroup.Key <= 9)
-                    select new
-                    {
-                        Value = resultGroup.Key,
-                        Percentage = (double)resultGroup.Count() / (dataDataTable.Rows.Count - excludedCount),
-                        Count = resultGroup.Count()
-                    };
+                              where (TableType.Scale5 == scale && resultGroup.Key >= 1 && resultGroup.Key <= 5) ||
+                                    (TableType.Scale9 == scale && resultGroup.Key >= 1 && resultGroup.Key <= 9)
+                              select new
+                              {
+                                  Value = resultGroup.Key,
+                                  Percentage = (double)resultGroup.Count() / (dataDataTable.Rows.Count - excludedCount),
+                                  Count = resultGroup.Count()
+                              };
 
                 // If some data is missing, add it
                 if ((scale == TableType.Scale5 && results.Count() != 5) ||

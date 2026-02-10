@@ -1,7 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-
-namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.Services;
+﻿namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.Services;
 
 internal interface INotificationService
 {

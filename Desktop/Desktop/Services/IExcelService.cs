@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Windows.Storage;
-using AdactaInternational.AdactaReportsShoppingBag.Model;
+﻿using AdactaInternational.AdactaReportsShoppingBag.Model;
 using AdactaInternational.AdactaReportsShoppingBag.Model.Soap.Response;
+using Windows.Storage;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.Services;
 

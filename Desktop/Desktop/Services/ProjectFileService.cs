@@ -1,10 +1,8 @@
-﻿using System.IO;
-using System.Reflection;
-using System.Threading.Tasks;
-using Windows.Storage;
-using AdactaInternational.AdactaReportsShoppingBag.Model;
+﻿using AdactaInternational.AdactaReportsShoppingBag.Model;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Schema;
+using System.Reflection;
+using Windows.Storage;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.Services;
 

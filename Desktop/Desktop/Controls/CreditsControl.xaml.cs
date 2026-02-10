@@ -1,6 +1,5 @@
-using System;
-using System.Reflection;
 using Microsoft.UI.Xaml;
+using System.Reflection;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.Controls;
 

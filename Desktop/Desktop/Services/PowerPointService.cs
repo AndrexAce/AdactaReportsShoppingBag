@@ -1,15 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net.Http;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Threading.Tasks;
-using AdactaInternational.AdactaReportsShoppingBag.Model.Soap.Response;
+﻿using AdactaInternational.AdactaReportsShoppingBag.Model.Soap.Response;
 using Microsoft.Office.Core;
 using Microsoft.Office.Interop.Excel;
 using Microsoft.Office.Interop.PowerPoint;
+using System.Reflection;
+using System.Runtime.InteropServices;
 using ExcelApplication = Microsoft.Office.Interop.Excel.Application;
 using PowerPointApplication = Microsoft.Office.Interop.PowerPoint.Application;
 using TextFrame = Microsoft.Office.Interop.PowerPoint.TextFrame;

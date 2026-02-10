@@ -12,6 +12,7 @@
 		<WinUISDKReferences>false</WinUISDKReferences>
 		<Nullable>enable</Nullable>
 		<EnableWindowsTargeting>true</EnableWindowsTargeting>
+		<ImplicitUsings>enable</ImplicitUsings>
 	</PropertyGroup>
 	
 	<ItemGroup>

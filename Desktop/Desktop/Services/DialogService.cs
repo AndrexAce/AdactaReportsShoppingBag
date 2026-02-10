@@ -1,15 +1,12 @@
-﻿using System;
-using System.Net.Http;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.Threading.Tasks;
-using Windows.Storage;
-using Windows.Storage.Pickers;
-using Windows.Storage.Streams;
-using AdactaInternational.AdactaReportsShoppingBag.Desktop.Controls;
+﻿using AdactaInternational.AdactaReportsShoppingBag.Desktop.Controls;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
+using System.Runtime.InteropServices.WindowsRuntime;
+using Windows.Storage;
+using Windows.Storage.Pickers;
+using Windows.Storage.Streams;
 using WinRT.Interop;
 
 namespace AdactaInternational.AdactaReportsShoppingBag.Desktop.Services;
